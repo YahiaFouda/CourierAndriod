@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#E54728</color>
+    <color name="colorPrimaryDark">#E54728</color>
+    <color name="colorAccent">#059719</color>
+    <color name="colorSecondary">#FFFFFF</color>
+    <color name="textColor">#000000</color>
+    <color name="background">#E1E1E1</color>
+    <color name="white">#FFF</color>
+    <color name="black">#000</color>
+    <color name="link">#008CDB</color>
+
+    <color name="line">#c1cad5</color>
+    <color name="shadow">#0f000000</color>
+    <color name="darkGray">#aaa</color>
+    <color name="transparent">#00000000</color>
+    <color name="whiteGray">#aaa</color>
+    <color name="colorLabel">#143150</color>
+    <color name="colorHintLabel">#c1cad5</color>
+    <color name="colorShadow">#14000000</color>
+    <color name="colorWelcome">#425972</color>
+    <color name="colorApp">#38a0cd</color>
+    <color name="error">#FF0202</color>
+    <color name="default_tab_color">#99ffffff</color>
+    <color name="colorBack">#fafcff</color>
+    <color name="text_color">#4a4a4a</color>
+    <color name="back_color">#19000000</color>
+    <color name="rate_active_color">#ff9600</color>
+    <color name="rate_non_active_color">#19ff9600</color>
+    <color name="title_color">#76000000</color>>
+    <color name="green">#00BE12</color>
+    <color name="delete_back">#19c34a4a</color>
+    <color name="color_cv">#4c000000</color>
+    <color name="primary">#00BCD4</color>
+    <color name="primary_dark">#0097A7</color>
+    <color name="primary_light">#B2EBF2</color>
+    <color name="accent">#607D8B</color>
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#727272</color>
+    <color name="icons">#FFFFFF</color>
+    <color name="divider">#B6B6B6</color>
+
+
+</resources>
+

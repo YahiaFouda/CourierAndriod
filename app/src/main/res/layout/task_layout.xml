@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="15dp"
+    android:layout_marginRight="15dp"
+    android:layout_marginBottom="10dp"
+    android:background="@color/white">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp">
+
+
+        <ImageView
+            android:id="@+id/ivProductImage"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="10dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/placeholder" />
+        <!--</android.support.v7.widget.CardView>-->
+
+        <TextView
+            android:id="@+id/tvTaskName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_toEndOf="@+id/ivProductImage"
+            android:ellipsize="end"
+            android:gravity="left|start"
+            android:maxLength="14"
+            android:maxLines="1"
+            android:textStyle="bold"
+            android:text="@string/kadabra"
+            android:textColor="@color/colorApp"
+            android:textSize="13sp" />
+
+
+        <TextView
+            android:id="@+id/tvPickupLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvTaskName"
+            android:layout_alignStart="@+id/tvTaskAmount"
+            android:layout_marginTop="4dp"
+            android:text="@string/from"
+            android:textColor="@color/colorWelcome"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvDropOffLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvPickupLocation"
+            android:layout_alignStart="@+id/tvTaskName"
+            android:layout_marginTop="5dp"
+            android:text="@string/to"
+            android:textColor="@color/colorWelcome"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/tvTaskAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvDropOffLocation"
+            android:layout_alignStart="@+id/tvTaskName"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            android:text="@string/le"
+            android:textColor="@color/colorWelcome"
+            android:textSize="13sp" />
+
+
+    </RelativeLayout>
+
+
+</androidx.cardview.widget.CardView>

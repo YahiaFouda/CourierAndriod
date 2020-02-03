@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".task.TaskDetailsActivity">
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:fitsSystemWindows="true"
+        android:scrollbars="none">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/refresh"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/tvTask"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="30dp"
+                        android:gravity="center"
+                        android:text="@string/kadabra"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="30sp" />
+
+                    <TextView
+                        android:id="@+id/tvTaskAmount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvTask"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="30dp"
+                        android:gravity="center"
+                        android:text="@string/amount"
+                        android:textColor="@color/black"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:id="@+id/tvFrom"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvTaskAmount"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginTop="20dp"
+                        android:autoLink="web"
+                        android:clickable="true"
+                        android:gravity="center"
+                        android:linksClickable="true"
+                        android:text="@string/from"
+                        android:textColor="@color/link"
+                        android:textColorLink="@color/link"
+                        android:textSize="25sp"
+                        android:visibility="gone"
+                        tools:ignore="HardcodedText" />
+
+                    <TextView
+                        android:id="@+id/tvTo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvFrom"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginTop="20dp"
+                        android:autoLink="web"
+                        android:clickable="true"
+                        android:gravity="center"
+                        android:linksClickable="true"
+                        android:text="@string/to"
+                        android:textColor="@color/link"
+                        android:textColorLink="@color/link"
+                        android:textSize="25sp"
+                        android:visibility="gone"
+                        tools:ignore="HardcodedText" />
+
+                                 <com.wang.avi.AVLoadingIndicatorView
+                                     android:id="@+id/avi"
+                                     style="@style/AVLoadingIndicatorView.Large"
+                                     android:layout_width="wrap_content"
+                                     android:layout_height="wrap_content"
+                                     android:layout_centerInParent="true"
+                                     android:visibility="invisible"
+                                     app:indicatorColor="@color/colorPrimary"
+                                     app:indicatorName="BallScaleRippleIndicator" />
+
+                    <TextView
+                        android:id="@+id/tvStops"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvTaskAmount"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginTop="20dp"
+                        android:gravity="center"
+                        android:text="Stops"
+                        android:textColor="@color/link"
+                        android:textSize="20sp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvStops"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvStops"
+                        android:layout_marginLeft="24dp"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginRight="24dp"
+                        android:layout_marginBottom="60dp"
+                        android:orientation="vertical" />
+
+
+                    <Button
+                        android:id="@+id/btnEndTask"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentBottom="true"
+                        android:layout_marginStart="24dp"
+                        android:layout_marginEnd="24dp"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/rounded_button"
+                        android:text="@string/end_task"
+                        android:textColor="@color/colorSecondary" />
+
+                </RelativeLayout>
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </RelativeLayout>
+    </ScrollView>
+
+
+</RelativeLayout>

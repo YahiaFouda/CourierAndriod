@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "513841496056",
+    "firebase_url": "https://courier-25dd1.firebaseio.com",
+    "project_id": "courier-25dd1",
+    "storage_bucket": "courier-25dd1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:513841496056:android:838abe9a5d0eaaf1eb200d",
+        "android_client_info": {
+          "package_name": "com.kadabra.courier"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "513841496056-dlpt3h7iorpv5o5gr3co5dtd0o6hmi1t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kadabra.courier",
+            "certificate_hash": "05d6c042885309620fc256607f1b30921810018b"
+          }
+        },
+        {
+          "client_id": "513841496056-3mu9ak6g7t8j2gbh7mt0omm5tsgrhejl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC70zswBrDCnFMJKiTylr1ptCX3GdarKXQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "513841496056-3mu9ak6g7t8j2gbh7mt0omm5tsgrhejl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

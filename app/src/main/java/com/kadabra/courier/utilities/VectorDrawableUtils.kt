@@ -1,0 +1,31 @@
+package com.kadabra.courier.utilities
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
+
+
+object VectorDrawableUtils {
+
+    fun getDrawable(context: Context, drawableResId: Int): Drawable? {
+        return VectorDrawableCompat.create(context.resources, drawableResId, context.theme)
+    }
+
+//    fun getDrawable(context: Context, drawableResId: Int): Drawable {
+//        val drawable = getDrawable(context, drawableResId)
+//        return drawable
+//    }
+
+    fun getBitmap(context: Context, drawableId: Int): Bitmap {
+        val drawable = getDrawable(context, drawableId)
+
+        val bitmap = Bitmap.createBitmap(drawable!!.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+
+        return bitmap
+    }
+}
