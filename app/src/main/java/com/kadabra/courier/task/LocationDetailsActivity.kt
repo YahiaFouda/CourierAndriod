@@ -140,6 +140,10 @@ class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
         }
         createLocationRequest()
 
+
+        ivBack.setOnClickListener{
+            finish()
+        }
     }
 
     private fun setUpMap() {

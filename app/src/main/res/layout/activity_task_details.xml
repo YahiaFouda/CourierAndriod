@@ -5,14 +5,47 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".task.TaskDetailsActivity">
+    <RelativeLayout
+        android:id="@+id/rlBack"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/colorSecondary"
+        android:padding="10dp">
 
+        <ImageView
+            android:id="@+id/ivBack"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="12dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            app:srcCompat="@drawable/ic_back" />
+
+        <TextView
+            android:id="@+id/tvTaskDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginLeft="95.5dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="128.5dp"
+            android:text="@string/task_details"
+            android:textAllCaps="false"
+            android:textColor="@color/colorLabel"
+            android:textSize="18sp" />
+
+
+    </RelativeLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
         android:fitsSystemWindows="true"
-        android:scrollbars="none">
+        android:scrollbars="none"
+        android:layout_below="@+id/rlBack">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -113,7 +146,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/tvStops"
-                        android:layout_marginLeft="24dp"
+                        android:layout_marginStart="24dp"
                         android:layout_marginTop="20dp"
                         android:layout_marginRight="24dp"
                         android:layout_marginBottom="60dp"

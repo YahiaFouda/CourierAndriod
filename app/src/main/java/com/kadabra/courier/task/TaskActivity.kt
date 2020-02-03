@@ -30,6 +30,7 @@ import com.kadabra.courier.utilities.AppController
 import kotlinx.android.synthetic.main.activity_task.*
 import com.kadabra.courier.R
 import android.media.MediaPlayer
+import android.view.MenuItem
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
@@ -46,7 +47,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
     private var countDownTimer: CountDownTimer? = null
     private var locationCallback: LocationCallback? = null
     private var locationRequest: LocationRequest? = null
-    private  lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var locationUpdateState = false
     private var task = Task()
     private lateinit var listener: IBottomSheetCallback
@@ -206,7 +207,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
     private fun stopSound() {
         if (mediaPlayer != null)
-        mediaPlayer!!.stop()
+            mediaPlayer!!.stop()
     }
 
 
@@ -257,7 +258,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
     private fun cancelVibrate() {
         if (vibrator != null)
-        vibrator!!.cancel()
+            vibrator!!.cancel()
     }
 
     //endregion
@@ -267,6 +268,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         super.onCreate(savedInstanceState)
 //        window.addFlags(WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY)
         setContentView(R.layout.activity_task)
+
         init()
         requestLocation()
     }
@@ -331,6 +333,8 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         // killed and restarted.
         // etc.
     }
+
+
 
     private fun blink() {
         val hander = Handler()

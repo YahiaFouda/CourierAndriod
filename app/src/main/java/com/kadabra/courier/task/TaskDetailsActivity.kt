@@ -20,6 +20,9 @@ import com.kadabra.courier.utilities.AppController
 import kotlinx.android.synthetic.main.activity_task_details.*
 
 
+
+
+
 class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
 
 
@@ -36,7 +39,7 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
         tvFrom.setOnClickListener(this)
         tvTo.setOnClickListener(this)
         btnEndTask.setOnClickListener(this)
-
+        ivBack.setOnClickListener(this)
         task = AppConstants.CurrentSelectedTask
         loadTaskDetails(task)
 
@@ -251,13 +254,12 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_task_details)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         init()
     }
 
     override fun onClick(view: View?) {
         when (view!!.id) {
-            R.id.tvFrom -> {
+           R.id.tvFrom -> {
                 showPickUpLocation()
             }
             R.id.tvTo -> {
@@ -266,15 +268,21 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
             R.id.btnEndTask -> {
                 endTask(task.TaskId)
             }
+            R.id.ivBack -> {
+               finish()
+            }
+
+
 
         }
     }
 
     override fun onBackPressed() {
         super.onBackPressed()
-
         finish()
     }
+
+
     //endregion
 
 
