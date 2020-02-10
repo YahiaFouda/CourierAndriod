@@ -1,6 +1,7 @@
 package com.kadabra.courier.task
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
@@ -12,18 +13,18 @@ import com.kadabra.courier.R
 import com.kadabra.courier.adapter.StopAdapter
 import com.kadabra.courier.api.ApiResponse
 import com.kadabra.courier.api.ApiServices
+import com.kadabra.courier.base.BActivity
+import com.kadabra.courier.firebase.FirebaseHelper
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
+import com.kadabra.courier.model.location
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import kotlinx.android.synthetic.main.activity_task_details.*
 
 
-
-
-
-class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
+class TaskDetailsActivity : BActivity(), View.OnClickListener {
 
 
     //region Members
@@ -36,16 +37,32 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
     //region Helper Functions
     private fun init() {
 
+        FirebaseHelper.setUpFirebase()
+
         tvFrom.setOnClickListener(this)
         tvTo.setOnClickListener(this)
         btnEndTask.setOnClickListener(this)
+        btnLocation.setOnClickListener(this)
         ivBack.setOnClickListener(this)
+
         task = AppConstants.CurrentSelectedTask
         loadTaskDetails(task)
 
         refresh.setOnRefreshListener {
             getTaskDetails(task.TaskId)
         }
+
+        if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //
+            btnEndTask.text = getString(R.string.accept_task)
+        else {
+            if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {
+                btnEndTask.isEnabled = false
+            } else {
+                btnEndTask.isEnabled = true
+                btnEndTask.text = getString(R.string.end_task)
+            }
+        }
+
     }
 
     private fun showPickUpLocation() {
@@ -208,6 +225,9 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
 
                 override fun onSuccess(response: ApiResponse<Task>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
+
+                        FirebaseHelper.endTask(task)
+                        AppConstants.CurrentAcceptedTask = Task()
                         hideProgress()
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
@@ -235,6 +255,23 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
+    private fun acceptTask(task: Task) {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+            FirebaseHelper.createNewTask(task)
+            hideProgress()
+        } else {
+            hideProgress()
+            Alert.showMessage(
+                this@TaskDetailsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+
+
+    }
+
+
     private fun showProgress() {
         avi.visibility = View.VISIBLE
         avi.smoothToShow()
@@ -259,19 +296,43 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(view: View?) {
         when (view!!.id) {
-           R.id.tvFrom -> {
+            R.id.tvFrom -> {
                 showPickUpLocation()
             }
             R.id.tvTo -> {
                 showDropOffLocation()
             }
             R.id.btnEndTask -> {
-                endTask(task.TaskId)
+
+                if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) // create new task on fb
+                {
+                    AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
+                    AppConstants.CurrentAcceptedTask.isActive=true
+                    AppConstants.CurrentAcceptedTask.courierId=AppConstants.currentLoginCourier.CourierId
+                    AppConstants.CurrentAcceptedTask.location=
+                        location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants.CurrentLocation!!.longitude.toString())
+                    acceptTask(AppConstants.CurrentAcceptedTask!!)
+                    btnEndTask.text = getString(R.string.end_task)
+                } else {
+                    if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions
+                        btnEndTask.isEnabled = false
+                        btnEndTask.setBackgroundColor(Color.GRAY)
+                    } else {//the same task end task
+                        btnEndTask.isEnabled = true
+                        btnEndTask.text = getString(R.string.end_task)
+                        endTask(task.TaskId)
+                    }
+                }
+
+            }
+            R.id.btnLocation ->
+            {
+                task.location= location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants!!.CurrentLocation!!.longitude.toString())
+                FirebaseHelper.updateTaskLocation(task)
             }
             R.id.ivBack -> {
-               finish()
+                finish()
             }
-
 
 
         }

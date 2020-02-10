@@ -1,8 +1,10 @@
 package com.kadabra.courier.utilities
 
+import android.location.Location
 import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
+import com.kadabra.courier.model.location
 
 
 /**
@@ -41,8 +43,7 @@ object AppConstants {
     val OK = "ok"
     val CANCEL = "cancel"
     val IS_FIRST = "is_first"
-    val IS_LOGIN = "login"
-
+    val IS_LOGIN = "logIn"
 
 
     //endregion
@@ -66,11 +67,24 @@ object AppConstants {
     const val TRUE = "true"
     const val FALSE = "false"
     const val IS_ACCEPTED = "accepted"
-    var endTask=false
+    var endTask = false
 
     var currentLoginCourier: Courier = Courier()
     var CurrentSelectedTask: Task = Task()
+    var CurrentAcceptedTask: Task = Task()
     var currentSelectedStop: Stop = Stop()
+    var CurrentLocation: Location? = null
+    //endregion
+
+    //region Fire base
+    const val FIREBASE_TOKEN = "token"
+    const val FIREBASE_NAME = "name"
+    const val FIREBASE_CITY = "city"
+    const val FIREBASE_LOCATION = "location"
+    const val FIREBASE_LOCATION_LAT = "lat"
+    const val FIREBASE_LOCATION_LONG = "lnog"
+    const val FIREBASE_IS_ACTIVE = "isActive"
+
     //endregion
 
 

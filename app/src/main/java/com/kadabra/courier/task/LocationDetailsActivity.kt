@@ -259,7 +259,7 @@ class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
         // 1
         locationRequest = LocationRequest()
         // 2
-        locationRequest.interval = 10000
+        locationRequest.interval = 1000
         // 3
         locationRequest.fastestInterval = 5000
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY

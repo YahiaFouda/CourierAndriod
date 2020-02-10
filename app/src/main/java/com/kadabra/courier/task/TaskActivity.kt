@@ -1,5 +1,6 @@
 package com.kadabra.courier.task
 
+import android.Manifest
 import android.app.AlertDialog
 
 import android.content.Context
@@ -7,6 +8,7 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.PorterDuff
+import android.location.Location
 import android.os.*
 import android.view.MotionEvent
 import android.view.View
@@ -30,15 +32,16 @@ import com.kadabra.courier.utilities.AppController
 import kotlinx.android.synthetic.main.activity_task.*
 import com.kadabra.courier.R
 import android.media.MediaPlayer
-import android.view.MenuItem
+import android.util.Log
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.android.gms.maps.model.LatLng
-import com.kadabra.courier.direction.FetchURL
+import com.kadabra.courier.base.BActivity
+import com.kadabra.courier.firebase.FirebaseHelper
 
 
-class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCallback {
+class TaskActivity : BActivity(), View.OnClickListener, IBottomSheetCallback {
 
     //region Members
     private val durationTime = 60000L
@@ -60,6 +63,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
     //region Constructor
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+
         const val REQUEST_CHECK_SETTINGS = 2
         private const val PLACE_PICKER_REQUEST = 3
     }
@@ -167,6 +171,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
                 override fun onSuccess(response: ApiResponse<Courier>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
+                        FirebaseHelper.logOut()
                         UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
                         UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
                         startActivity(Intent(this@TaskActivity, LoginActivity::class.java))
@@ -268,9 +273,24 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         super.onCreate(savedInstanceState)
 //        window.addFlags(WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY)
         setContentView(R.layout.activity_task)
-
+        requestPermission()
         init()
-        requestLocation()
+        FirebaseHelper.setUpFirebase()
+        getCurrentActiveTask()
+
+    }
+
+    private fun getCurrentActiveTask() {
+        FirebaseHelper.getCurrentActiveTask(AppConstants.currentLoginCourier.CourierId.toString(),
+            object : FirebaseHelper.IFbOperation {
+                override fun onSuccess(code: Int) {
+                    // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                }
+
+                override fun onFailure(message: String) {
+                    //   TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                }
+            })
     }
 
     override fun onResume() {
@@ -333,7 +353,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         // killed and restarted.
         // etc.
     }
-
 
 
     private fun blink() {
@@ -438,7 +457,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         // 1
         locationRequest = LocationRequest()
         // 2
-        locationRequest!!.interval = 10000
+        locationRequest!!.interval = 1000
         // 3
         locationRequest!!.fastestInterval = 5000
         locationRequest!!.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -497,62 +516,66 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 //        )
     }
 
-    private fun requestLocation() {
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+    private fun requestPermission() {
+        if (NetworkManager().isNetworkAvailable(this)) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            if (checkPermission(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            ) {
+                fusedLocationClient?.lastLocation?.addOnSuccessListener(
+                    this
+                ) { location: Location? ->
+                    // Got last known location. In some rare
+                    // situations this can be null.
+                    if (location == null) {
+                        //no data
 
-        //prepare for update the current location
-//        locationCallback = object : LocationCallback() {
-//            override fun onLocationResult(p0: LocationResult) {
-//                super.onLocationResult(p0)
-//
-//                lastLocation = p0.lastLocation
-//                //todo move the marker position
-//
-//                if (isFirstTime) {
-//                    if (AppConstants.currentSelectedStop != null) {
-//                        var selectedStopLocation = LatLng(
-//                            AppConstants.currentSelectedStop.Latitude!!,
-//                            AppConstants.currentSelectedStop.Longitude!!
-//                        )
-//
-//                        placeMarkerOnMap(
-//                            selectedStopLocation,
-//                            AppConstants.currentSelectedStop.StopName
-//                        )
-//
-//                        try {
-//                            if (lastLocation != null) {
-//
-//                                var destination = LatLng(
-//                                    AppConstants.currentSelectedStop.Latitude!!,
-//                                    AppConstants.currentSelectedStop.Longitude!!
-//                                )
-////                                drawRouteOnMap(
-////                                    LatLng(lastLocation!!.latitude, lastLocation!!.longitude),
-////                                    destination
-////                                )
-//                                FetchURL(this@LocationDetailsActivity).execute(
-//                                    getUrl(
-//                                        LatLng(lastLocation!!.latitude, lastLocation!!.longitude),
-//                                        destination,
-//                                        "driving"
-//                                    ), "driving"
-//                                )
-//                            }
-//
-//                        } catch (ex: ExceptionInInitializerError) {
-//
-//                        }
-//
-//                    }
-//
-//                    isFirstTime = false
-//                }
-//
-//
-//            }
-//        }
-        createLocationRequest()
+                    } else location.apply {
+                        // Handle location object
+                        Log.e("LOG", location.toString())
+                        AppConstants.CurrentLocation = location
+                    }
+                }
+            }
+        } else {
+            Alert.showMessage(this@TaskActivity, getString(R.string.no_internet))
+        }
+    }
+
+    private fun checkPermission(vararg perm: String): Boolean {
+        val havePermissions = perm.toList().all {
+            ContextCompat.checkSelfPermission(this, it) ==
+                    PackageManager.PERMISSION_GRANTED
+        }
+        if (!havePermissions) {
+            if (perm.toList().any {
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, it)
+                }
+            ) {
+
+                val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.Permission))
+                    .setMessage(getString(R.string.error_location_permission_required))
+                    .setPositiveButton(getString(R.string.ok)) { id, v ->
+                        ActivityCompat.requestPermissions(
+                            this, perm, LOCATION_PERMISSION_REQUEST_CODE
+                        )
+                    }
+                    .setNegativeButton(getString(R.string.no)) { _, _ -> }
+                    .create()
+                dialog.show()
+            } else {
+                ActivityCompat.requestPermissions(
+                    this, perm,
+                    LOCATION_PERMISSION_REQUEST_CODE
+                )
+
+            }
+            return false
+        }
+        return true
     }
 
     override fun onRequestPermissionsResult(
@@ -577,5 +600,12 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
     }
     //endregion
 
+    override fun onStart() {
+        super.onStart()
+    }
 
+    override fun onStop() {
+        super.onStop()
+
+    }
 }
