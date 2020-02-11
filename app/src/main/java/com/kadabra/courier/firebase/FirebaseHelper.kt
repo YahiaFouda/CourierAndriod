@@ -64,7 +64,7 @@ object FirebaseHelper {
         var done = false
         auth.createUserWithEmailAndPassword(userName, password).addOnCompleteListener {
             if (it.isSuccessful) {// user created in auth and ready to insert to db
-                fireBaseUser = auth.currentUser!!
+                setCurrentUser(auth.currentUser!!)
                 listener.onSuccess(1)
                 done = true
             } else { //failed to auth user so it must be register and prevent deal with him
@@ -237,7 +237,7 @@ object FirebaseHelper {
     }
 
     //start listen
-    fun startAuthListener() {
+    fun onstartAuthListener() {
         auth.addAuthStateListener(firebaseAuthListener!!)
     }
 
@@ -251,7 +251,7 @@ object FirebaseHelper {
     fun checkCourierExist(): FirebaseUser? {
 
         firebaseAuthListener = FirebaseAuth.AuthStateListener {
-            fireBaseUser = FirebaseAuth.getInstance().currentUser
+        //    fireBaseUser = FirebaseAuth.getInstance().currentUser
         }
         if (fireBaseUser != null)
             fireBaseUser = FirebaseAuth.getInstance().currentUser

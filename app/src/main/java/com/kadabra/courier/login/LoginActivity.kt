@@ -297,6 +297,7 @@ class LoginActivity : BActivity(), View.OnClickListener {
         setContentView(R.layout.activity_login)
         requestPermission()
         FirebaseHelper.setUpFirebase()
+        FirebaseHelper.checkCourierExist()
         init()
 
 
@@ -324,7 +325,7 @@ class LoginActivity : BActivity(), View.OnClickListener {
 
     override fun onStart() {
         super.onStart()
-//        FirebaseHelper.startAuthListener()
+        FirebaseHelper.onstartAuthListener()
 //        FirebaseHelper.auth()!!.currentUser?.let {
 //            FirebaseHelper.setCurrentUser(it)
 //        }
@@ -332,7 +333,7 @@ class LoginActivity : BActivity(), View.OnClickListener {
 
     override fun onStop() {
         super.onStop()
-//        FirebaseHelper.stopAuthListener()
+        FirebaseHelper.stopAuthListener()
 
     }
 
