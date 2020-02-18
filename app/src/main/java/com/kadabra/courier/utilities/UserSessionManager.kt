@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.kadabra.courier.model.Courier
+import com.kadabra.courier.model.Task
 import com.kadabra.courier.utilities.AppConstants
 
 
@@ -22,6 +23,8 @@ class UserSessionManager(val context: Context) {
     companion object {
         var sUserSessionManager: UserSessionManager? = null
         private val USER_OBJECT = UserSessionManager::class.java.name + "_user_object"
+        private val USER_Task = UserSessionManager::class.java.name + "_user_task"
+
 
 
         @Synchronized
@@ -70,6 +73,23 @@ class UserSessionManager(val context: Context) {
         val json = sharedPreferences.getString(USER_OBJECT, null) ?: return null
 
         val type = object : TypeToken<Courier>() {
+        }.type
+
+        return gson.fromJson(json, type)
+    }
+
+    fun setAcceptedTask(task: Task?) {
+        val gson = Gson()
+        val json = gson.toJson(task)
+        editor.putString(USER_Task, json)
+        editor.commit()
+    }
+
+    fun getAcceptedTask(): Task? {
+        val gson = Gson()
+        val json = sharedPreferences.getString(USER_Task, null) ?: return null
+
+        val type = object : TypeToken<Task>() {
         }.type
 
         return gson.fromJson(json, type)

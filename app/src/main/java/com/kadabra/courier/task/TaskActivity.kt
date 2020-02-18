@@ -37,11 +37,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.kadabra.courier.base.BActivity
-import com.kadabra.courier.firebase.FirebaseHelper
+import com.kadabra.courier.callback.ILocationListener
+import com.kadabra.courier.firebase.FirebaseManager
 
 
-class TaskActivity : BActivity(), View.OnClickListener, IBottomSheetCallback {
+class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCallback,ILocationListener {
 
     //region Members
     private val durationTime = 60000L
@@ -56,6 +56,7 @@ class TaskActivity : BActivity(), View.OnClickListener, IBottomSheetCallback {
     private lateinit var listener: IBottomSheetCallback
     private var taskList = ArrayList<Task>()
     private var adapter: TaskAdapter? = null
+    private var lastLocation: Location? = null
 
 
     //endregion
@@ -171,7 +172,7 @@ class TaskActivity : BActivity(), View.OnClickListener, IBottomSheetCallback {
 
                 override fun onSuccess(response: ApiResponse<Courier>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
-                        FirebaseHelper.logOut()
+                        FirebaseManager.logOut()
                         UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
                         UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
                         startActivity(Intent(this@TaskActivity, LoginActivity::class.java))
@@ -275,22 +276,31 @@ class TaskActivity : BActivity(), View.OnClickListener, IBottomSheetCallback {
         setContentView(R.layout.activity_task)
         requestPermission()
         init()
-        FirebaseHelper.setUpFirebase()
+        FirebaseManager.setUpFirebase()
         getCurrentActiveTask()
 
     }
 
-    private fun getCurrentActiveTask() {
-        FirebaseHelper.getCurrentActiveTask(AppConstants.currentLoginCourier.CourierId.toString(),
-            object : FirebaseHelper.IFbOperation {
-                override fun onSuccess(code: Int) {
-                    // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                }
+    override fun locationResponse(locationResult: LocationResult) {
+        lastLocation=locationResult.lastLocation
+    }
 
-                override fun onFailure(message: String) {
-                    //   TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-                }
-            })
+    private fun getCurrentActiveTask() {
+//        FirebaseManager.getCurrentActiveTask(AppConstants.currentLoginCourier.CourierId.toString(),
+//            object : FirebaseManager.IFbOperation {
+//                override fun onSuccess(code: Int) {
+//
+//                    // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//                }
+//
+//                override fun onFailure(message: String) {
+//                    //   TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//                }
+//            })
+
+        var task=UserSessionManager.getInstance(this).getAcceptedTask()
+        if(  task!=null&&!task.TaskId.isNullOrEmpty())
+        AppConstants.CurrentAcceptedTask=task
     }
 
     override fun onResume() {

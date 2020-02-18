@@ -162,7 +162,8 @@
                         android:layout_marginBottom="100dp"
                         android:background="@drawable/rounded_button"
                         android:text="Add Location"
-                        android:textColor="@color/colorSecondary" />
+                        android:textColor="@color/colorSecondary"
+                        android:visibility="gone"/>
                     <Button
                         android:id="@+id/btnEndTask"
                         android:layout_width="match_parent"
@@ -170,6 +171,7 @@
                         android:layout_alignParentBottom="true"
                         android:layout_marginStart="24dp"
                         android:layout_marginEnd="24dp"
+                        android:layout_marginTop="20dp"
                         android:layout_marginBottom="20dp"
                         android:background="@drawable/rounded_button"
                         android:text="@string/accept_task"

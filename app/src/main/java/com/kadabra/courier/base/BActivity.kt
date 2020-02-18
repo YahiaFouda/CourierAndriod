@@ -11,7 +11,7 @@ import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.kadabra.courier.firebase.FirebaseHelper
+import com.kadabra.courier.firebase.FirebaseManager
 
 import com.kadabra.courier.utilities.AppConstants
 
@@ -23,7 +23,7 @@ abstract class BActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
         super.onCreate(savedInstanceState, persistentState)
-        FirebaseHelper.setUpFirebase()
+        FirebaseManager.setUpFirebase()
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager?
 
         try {

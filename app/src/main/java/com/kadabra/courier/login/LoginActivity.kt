@@ -1,6 +1,5 @@
 package com.kadabra.courier.login
 
-import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -16,7 +15,7 @@ import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
 import com.kadabra.courier.api.ApiResponse
 import com.kadabra.courier.api.ApiServices
-import com.kadabra.courier.firebase.FirebaseHelper
+import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.model.Courier
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.Alert
@@ -25,32 +24,115 @@ import kotlinx.android.synthetic.main.activity_login.*
 import android.location.Geocoder
 import android.view.View
 import android.view.WindowManager
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.kadabra.courier.base.BActivity
+import com.kadabra.courier.callback.ILocationListener
+import com.kadabra.courier.firebase.FirebaseAuthHelper
+import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.model.location
 import java.util.*
 
 
-class LoginActivity : BActivity(), View.OnClickListener {
+class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListener {
 
     //region Members
     private var courier: Courier = Courier()
-    private var fusedLocationClient: FusedLocationProviderClient? = null
     private var lastLocation: Location? = null
-    private var mAuth: FirebaseAuth? = null
     private var userCustomEmail = "@gmail.com"
-    private var firebaseAuthListener: FirebaseAuth.AuthStateListener? = null
-    private var firebaseUser: FirebaseUser? = null
-
+    private val TAG = this.javaClass.simpleName
     //endregion
 
     //region Constructor
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
-        private const val TAG = "LoginActivity"
     }
     //endregion
+
+    //region Events
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_login)
+
+//        try {
+//            FirebaseAuth.getInstance().signOut()
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//        }
+
+        requestPermission()
+        FirebaseManager.setUpFirebase()
+        init()
+
+    }
+
+
+    override fun onClick(view: View?) {
+
+        when (view!!.id) {
+            R.id.btnLogin -> {
+                if (validateData()) {
+                    var userName = etUsername.text.toString()
+                    userCustomEmail = userName + userCustomEmail
+                    var password = etPassword.text.toString()
+                    logIn(userName, password)
+                }
+            }
+        }
+    }
+
+    override fun locationResponse(locationResult: LocationResult) {
+        lastLocation=locationResult.lastLocation
+        Toast.makeText(this, locationResult.lastLocation.toString(), Toast.LENGTH_LONG).show()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finish()
+    }
+
+    override fun onStart() {
+        super.onStart()
+//        FirebaseManager.onstartAuthListener()
+
+
+        val currentUser = FirebaseManager.auth().currentUser
+//        if (currentUser != null) {
+//            Toast.makeText(this, "Current - User" + currentUser.displayName, Toast.LENGTH_LONG)
+//                .show()
+//        }
+
+    }
+
+    override fun onStop() {
+        super.onStop()
+//        FirebaseManager.stopAuthListener()
+
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
+        when (requestCode) {
+            LOCATION_PERMISSION_REQUEST_CODE -> {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+
+                }
+                return
+            }
+        }// other 'case' lines to check for other
+        // permissions this app might request.
+    }
+
+
+//endregion
 
     //region Helper Functions
     private fun init() {
@@ -60,7 +142,7 @@ class LoginActivity : BActivity(), View.OnClickListener {
     private fun validateData(): Boolean {
         var userName = etUsername.text.toString().trim()
         if (userName.isNullOrEmpty()) {
-            Alert.showMessage(this, getString(com.kadabra.courier.R.string.error_user_name))
+            Alert.showMessage(this, getString(R.string.error_user_name))
             return false
         }
 //        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(CourierName).matches()) {
@@ -68,18 +150,18 @@ class LoginActivity : BActivity(), View.OnClickListener {
 //            return false
 //        }
         if (etPassword.text.toString().trim().isNullOrEmpty()) {
-            Alert.showMessage(this, getString(com.kadabra.courier.R.string.error_password))
+            Alert.showMessage(this, getString(R.string.error_password))
             return false
         }
         return true
     }
 
-    private fun logIn(usreName: String, password: String): Courier {
+    private fun logIn(userName: String, password: String): Courier {
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
 
             var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.logIn(usreName, password)
+            var endPoint = request.logIn(userName, password)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
                 override fun onFailed(error: String) {
                     hideProgress()
@@ -92,67 +174,130 @@ class LoginActivity : BActivity(), View.OnClickListener {
                 override fun onSuccess(response: ApiResponse<Courier>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS && response.ResponseObj != null) {
                         Log.d(TAG, "logIn - API - Success.$response")
-                        hideProgress()
+
                         courier = response.ResponseObj!!
 
-                        if (FirebaseHelper.getCurrentUser() == null)// 1 create new courier on auth 2 login
+                        if (FirebaseManager.getCurrentUser() == null) //create new user
                         {
-                            Log.d(TAG, "AUTH- FB - user NOt Exist")
 
-                            FirebaseHelper.createAccount(
+                            FirebaseManager.logIn(
                                 userCustomEmail,
-                                password, object : FirebaseHelper.IFbOperation {
-                                    override fun onSuccess(code: Int) {
-                                        Log.d(TAG, "AUTH- SIGNUP - SUCCESS")
-                                        prepareCourierData()
-                                        FirebaseHelper.createCourier(courier)
-                                        Log.d(TAG, "FBDB - CREATE NEW USER - SUCCESS")
-                                        saveUserData(courier)
-                                        startActivity(
-                                            Intent(
-                                                this@LoginActivity,
-                                                TaskActivity::class.java
+                                password
+                            )
+                            { user, error ->
+                                if (user != null) {
+                                    Log.d(TAG, "AUTH- LOGIN - SUCCESS")
+                                    prepareCourierData()
+                                    FirebaseManager.updateCourier(courier) {
+
+                                            success ->
+                                        if (success) {
+                                            Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
+                                            saveUserData(courier)
+                                            hideProgress()
+                                            startActivity(
+                                                Intent(
+                                                    this@LoginActivity,
+                                                    TaskActivity::class.java
+                                                )
                                             )
-                                        )
-                                        finish()
+                                            finish()
+                                        } else {
+                                            Alert.showMessage(
+                                                this@LoginActivity,
+                                                error!!
+                                            )
+                                        }
                                     }
 
-                                    override fun onFailure(message: String) {
-                                        Alert.showMessage(
-                                            this@LoginActivity,
-                                            message
-                                        )
+                                } else //user is new
+                                {
+                                    FirebaseManager.createAccount(
+                                        userCustomEmail,
+                                        password
+                                    ) { user, error ->
+                                        if (user != null) {
+
+                                            Log.d(TAG, "AUTH- SIGNUP - SUCCESS")
+                                            prepareCourierData()
+                                            FirebaseManager.createCourier(courier) { success ->
+                                                if (success) {
+                                                    Log.d(TAG, "FBDB - CREATE NEW USER - SUCCESS")
+                                                    saveUserData(courier)
+                                                    hideProgress()
+                                                    startActivity(
+                                                        Intent(
+                                                            this@LoginActivity,
+                                                            TaskActivity::class.java
+                                                        )
+                                                    )
+                                                    finish()
+                                                } else {
+                                                    Alert.showMessage(
+                                                        this@LoginActivity,
+                                                        error!!
+                                                    )
+                                                    Log.d(
+                                                        TAG,
+                                                        "Failed to connect to server - Error Code 2"
+                                                    )
+                                                }
+                                            }
+
+                                        } else {
+                                            Alert.showMessage(
+                                                this@LoginActivity,
+                                                error!!
+                                            )
+                                        }
                                     }
                                 }
-                            )
 
-                        } else { //user signed in before
-                            FirebaseHelper.logIn(
+                            }
+
+
+
+                        }
+                        else  //login
+                        {
+                            FirebaseManager.logIn(
                                 userCustomEmail,
-                                password, object : FirebaseHelper.IFbOperation {
-                                    override fun onSuccess(code: Int) {
-                                        Log.d(TAG, "AUTH- LOGIN - SUCCESS")
-                                        prepareCourierData()
-                                        FirebaseHelper.updateCourier(courier)
-                                        Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
-                                        saveUserData(courier)
-                                        startActivity(
-                                            Intent(
-                                                this@LoginActivity,
-                                                TaskActivity::class.java
+                                password
+                            )
+                            { user, error ->
+                                if (user != null) {
+                                    Log.d(TAG, "AUTH- LOGIN - SUCCESS")
+                                    prepareCourierData()
+                                    FirebaseManager.updateCourier(courier) {
+
+                                            success ->
+                                        if (success) {
+                                            Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
+                                            saveUserData(courier)
+                                            startActivity(
+                                                Intent(
+                                                    this@LoginActivity,
+                                                    TaskActivity::class.java
+                                                )
                                             )
-                                        )
-                                        finish()
+                                            finish()
+                                        } else {
+                                            Alert.showMessage(
+                                                this@LoginActivity,
+                                                error!!
+                                            )
+                                        }
                                     }
 
-                                    override fun onFailure(message: String) {
-                                        Alert.showMessage(
-                                            this@LoginActivity,
-                                            message
-                                        )
-                                    }
+                                } else //user is null
+                                {
+                                    Alert.showMessage(
+                                        this@LoginActivity,
+                                        error!!
+                                    )
                                 }
-                            )
+
+                            }
                         }
 
 
@@ -180,16 +325,18 @@ class LoginActivity : BActivity(), View.OnClickListener {
             hideProgress()
             Alert.showMessage(this@LoginActivity, getString(R.string.no_internet))
         }
+
+        hideProgress()
         return courier
     }
 
     private fun prepareCourierData() {
         courier.name = courier.CourierName
-        courier.token = FirebaseHelper.getCurrentUser()!!.uid //token
+        courier.token = FirebaseManager.getCurrentUser()!!.uid //token
         courier.isActive = true
         courier.location = location(
-            lastLocation!!.latitude.toString(),
-            lastLocation!!.longitude.toString()
+           LocationHelper.shared.lastLocation!!.latitude.toString(),
+            LocationHelper.shared.lastLocation!!.longitude.toString()
         )
 
         courier.isActive = true
@@ -197,18 +344,23 @@ class LoginActivity : BActivity(), View.OnClickListener {
 
         val gcd = Geocoder(this@LoginActivity, Locale.getDefault())
         val addresses = gcd.getFromLocation(
-            lastLocation!!.latitude,
-            lastLocation!!.longitude,
+           LocationHelper.shared.lastLocation!!.latitude,
+            LocationHelper.shared.lastLocation!!.longitude,
             1
         )
-        if (addresses.size > 0 && !addresses[0].locality.trim().isNullOrEmpty()) {
-            courier.city = addresses[0].locality
+        if (addresses.size > 0 ) {
+            if(!addresses[0].subAdminArea.isNullOrEmpty())
+            courier.city = addresses[0].subAdminArea
+            else if(!addresses[0].adminArea.isNullOrEmpty())
+                courier.city = addresses[0].adminArea
         } else
-            courier.city = "default"
+            courier.city = addresses[0].featureName
     }
 
 
     private fun saveUserData(courier: Courier) {
+        UserSessionManager.getInstance(this@LoginActivity)
+            .setFirstTime(false)
         AppConstants.currentLoginCourier = courier
         UserSessionManager.getInstance(this).setUserData(courier)
         UserSessionManager.getInstance(this).setIsLogined(true)
@@ -230,33 +382,9 @@ class LoginActivity : BActivity(), View.OnClickListener {
         window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
     }
 
-    private fun requestPermission() {
-        if (NetworkManager().isNetworkAvailable(this)) {
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-            if (checkPermission(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            ) {
-                fusedLocationClient?.lastLocation?.addOnSuccessListener(
-                    this
-                ) { location: Location? ->
-                    // Got last known location. In some rare
-                    // situations this can be null.
-                    if (location == null) {
-                        //no data
 
-                    } else location.apply {
-                        // Handle location object
-                        Log.e("LOG", location.toString())
-                        lastLocation = location
-                        AppConstants.CurrentLocation = location
-                    }
-                }
-            }
-        } else {
-            Alert.showMessage(this@LoginActivity, getString(R.string.no_internet))
-        }
+    private fun requestPermission() {
+        LocationHelper.shared.initializeLocation(this)
     }
 
     private fun checkPermission(vararg perm: String): Boolean {
@@ -291,76 +419,4 @@ class LoginActivity : BActivity(), View.OnClickListener {
 
     //endregion
 
-    //region Events
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
-        requestPermission()
-        FirebaseHelper.setUpFirebase()
-        FirebaseHelper.checkCourierExist()
-        init()
-
-
-    }
-
-
-    override fun onClick(view: View?) {
-        when (view!!.id) {
-            R.id.btnLogin -> {
-                if (validateData()) {
-                    var userName = etUsername.text.toString()
-                    userCustomEmail = userName + userCustomEmail
-                    var password = etPassword.text.toString()
-                    logIn(userName, password)
-                }
-            }
-        }
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-
-        finish()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        FirebaseHelper.onstartAuthListener()
-//        FirebaseHelper.auth()!!.currentUser?.let {
-//            FirebaseHelper.setCurrentUser(it)
-//        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        FirebaseHelper.stopAuthListener()
-
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>, grantResults: IntArray
-    ) {
-        when (requestCode) {
-            LOCATION_PERMISSION_REQUEST_CODE -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-
-                }
-                return
-            }
-        }// other 'case' lines to check for other
-        // permissions this app might request.
-    }
-
-
-//endregion
-
-
 }
-//

@@ -21,4 +21,5 @@ abstract class BaseActivity : AppCompatActivity(){
         after()
         initToolbar()
     }
+
 }

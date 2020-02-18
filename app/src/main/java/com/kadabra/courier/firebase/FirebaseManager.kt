@@ -1,5 +1,6 @@
 package com.kadabra.courier.firebase
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
@@ -9,12 +10,14 @@ import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.model.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.iid.FirebaseInstanceId
+import com.kadabra.courier.utilities.AppConstants.token
 
 
-object FirebaseHelper {
+object FirebaseManager {
 
     //region Members
-    private var TAG = "FirebaseHelper"
+    private var TAG = "FirebaseManager"
     private lateinit var dbCourier: DatabaseReference
     private lateinit var dbCourierTaskHistory: DatabaseReference
 
@@ -26,6 +29,7 @@ object FirebaseHelper {
     private var dbNameTaskHistory = "taskHistory"
     private var courier = Courier()
     var exception = ""
+    var token = ""
 
 
     //endregion
@@ -38,12 +42,15 @@ object FirebaseHelper {
 
     fun setUpFirebase() {
 
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
+            token = instanceIdResult.token
+            Log.d("Token", token)
+        }
         auth = FirebaseAuth.getInstance()
         firebaseDatabase = FirebaseDatabase.getInstance()
         dbCourier = firebaseDatabase.getReference(dbNameCourier)
         dbCourierTaskHistory = firebaseDatabase.getReference(dbNameTaskHistory)
 
-//        checkCourierExist()
     }
 
     fun getCurrentUser(): FirebaseUser? {
@@ -60,44 +67,41 @@ object FirebaseHelper {
 
 
     //auth courier for deal with db or not
-    fun createAccount(userName: String, password: String, listener: IFbOperation): Boolean {
-        var done = false
+    fun createAccount(
+        userName: String,
+        password: String,
+        listener: (user: FirebaseUser?, error: String?) -> Unit
+    ) {
         auth.createUserWithEmailAndPassword(userName, password).addOnCompleteListener {
             if (it.isSuccessful) {// user created in auth and ready to insert to db
-                setCurrentUser(auth.currentUser!!)
-                listener.onSuccess(1)
-                done = true
+                // setCurrentUser(auth.currentUser!!)
+                listener(auth.currentUser, null)
+                //  listener.onSuccess(1)
             } else { //failed to auth user so it must be register and prevent deal with him
-                exception = it.exception!!.message!!
-                listener.onFailure(exception)
-                done = false
+                listener(null, it.exception!!.message)
+                // exception = it.exception!!.message!!
+
             }
         }
-        return done
     }
 
     fun logIn(
-        userName: String,
-        password: String, listener: IFbOperation
-    ): Boolean {
-        var done = false
+        userName: String, password: String, listener: (user: FirebaseUser?, error: String?) -> Unit
+    ) {
         auth.signInWithEmailAndPassword(userName, password).addOnCompleteListener {
             if (it.isSuccessful) {
                 fireBaseUser = auth.currentUser!!
-                listener.onSuccess(2)
-                done = true
+                listener(auth.currentUser, null)
             } else {
-                listener.onFailure(it.exception!!.message!!)
-                fireBaseUser = null
+                listener(null, it.exception!!.message!!)
             }
         }
-        return done
+
     }
 
     fun logOut(): Boolean {
         FirebaseAuth.getInstance().signOut()
-        var user = checkCourierExist()
-        return user == null
+        return true
     }
 
     fun checkCourierLogInStatus(): Boolean {
@@ -114,15 +118,23 @@ object FirebaseHelper {
     }
 
     fun createCourier(
-        courier: Courier
+        courier: Courier,
+        completion: (success: Boolean) -> Unit
     ) {
 
-        dbCourier.child(courier.CourierId.toString()).setValue(courier)
+        dbCourier.child(courier.CourierId.toString()).setValue(courier) { error, _ ->
+            print(error)
+            completion(error == null)
+
+
+        }
+        //.setValue(courier)
 
     }
 
     fun updateCourier(
-        courier: Courier
+        courier: Courier,
+        completion: (success: Boolean) -> Unit
     ) {
 
 
@@ -131,17 +143,19 @@ object FirebaseHelper {
             "name" to courier.name,
             "city" to courier.city,
             "location" to courier.location,
-            "isActive" to courier.isActive,
-
-            "" to "Geeks"
+            "isActive" to courier.isActive
         )
         dbCourier.child(courier.CourierId.toString()).updateChildren(map)
+        { error, _ ->
+            print(error)
+            completion(error == null)
+        }
 
     }
 
     fun createNewTask(task: Task) {
         dbCourierTaskHistory.child(task.TaskId).setValue(task)
-       updateTaskLocation(task)
+        updateTaskLocation(task)
     }
 
     fun updateTaskLocation(task: Task) {
@@ -173,8 +187,7 @@ object FirebaseHelper {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (currentTask in dataSnapshot.children) {
                     task = dataSnapshot.getValue(Task::class.java)!!
-                    if(task.isActive)
-                    {
+                    if (task.isActive) {
                         AppConstants.CurrentAcceptedTask = task
                         listener.onSuccess(1)
                     }
@@ -207,9 +220,10 @@ object FirebaseHelper {
 
     }
 
-    fun addUserChangeListener(): Courier {
+    fun listenOnTaskHistory(taskId: String): Courier {
         // User data change listener
-        dbCourier.child(dbNameCourier).addValueEventListener(object : ValueEventListener {
+
+        dbCourierTaskHistory.child(taskId).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 var updatedCourier = dataSnapshot.getValue(Courier::class.java)!!
 
@@ -247,18 +261,31 @@ object FirebaseHelper {
     }
 
     //check after logIn if the user is exit or not on auth
-    //if exist navigate tio main or logIn
-    fun checkCourierExist(): FirebaseUser? {
+    //if exist navigate to main or logIn
+    fun getCurrentUser(listener: (user: FirebaseUser?) -> Unit) {
+//        firebaseAuthListener = FirebaseAuth.AuthStateListener {
+//            fireBaseUser = FirebaseAuth.getInstance().currentUser
+//            listener(fireBaseUser)
+//        }
 
-        firebaseAuthListener = FirebaseAuth.AuthStateListener {
-        //    fireBaseUser = FirebaseAuth.getInstance().currentUser
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.let {
+            // Name, email address, and profile photo Url
+            val name = user.displayName
+            val email = user.email
+            val photoUrl = user.photoUrl
+
+            // Check if user's email is verified
+            val emailVerified = user.isEmailVerified
+
+            // The user's ID, unique to the Firebase project. Do NOT use this value to
+            // authenticate with your backend server, if you have one. Use
+            // FirebaseUser.getToken() instead.
+            val uid = user.uid
+
+            listener(user)
         }
-        if (fireBaseUser != null)
-            fireBaseUser = FirebaseAuth.getInstance().currentUser
-        else
-            fireBaseUser = null
 
-        return fireBaseUser
     }
 
     private fun checkAccountEmailExistInFirebase(email: String): Boolean {

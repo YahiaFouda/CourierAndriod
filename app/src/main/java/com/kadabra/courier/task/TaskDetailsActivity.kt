@@ -2,29 +2,32 @@ package com.kadabra.courier.task
 
 import android.content.Intent
 import android.graphics.Color
+import android.location.Location
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.gms.location.LocationResult
 import com.kadabra.Networking.INetworkCallBack
 import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
 import com.kadabra.courier.adapter.StopAdapter
 import com.kadabra.courier.api.ApiResponse
 import com.kadabra.courier.api.ApiServices
-import com.kadabra.courier.base.BActivity
-import com.kadabra.courier.firebase.FirebaseHelper
+import com.kadabra.courier.callback.ILocationListener
+import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.model.location
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
+import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task_details.*
 
 
-class TaskDetailsActivity : BActivity(), View.OnClickListener {
+class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocationListener {
 
 
     //region Members
@@ -32,12 +35,13 @@ class TaskDetailsActivity : BActivity(), View.OnClickListener {
     private var pickUpStops = ArrayList<Stop>()
     private var dropOffStops = ArrayList<Stop>()
     private var normalStops = ArrayList<Stop>()
+    private var lastLocation: Location? = null
 
     //endregion
     //region Helper Functions
     private fun init() {
 
-        FirebaseHelper.setUpFirebase()
+        FirebaseManager.setUpFirebase()
 
         tvFrom.setOnClickListener(this)
         tvTo.setOnClickListener(this)
@@ -226,7 +230,8 @@ class TaskDetailsActivity : BActivity(), View.OnClickListener {
                 override fun onSuccess(response: ApiResponse<Task>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
 
-                        FirebaseHelper.endTask(task)
+                        FirebaseManager.endTask(task)
+                        UserSessionManager.getInstance(this@TaskDetailsActivity).setAcceptedTask(null)
                         AppConstants.CurrentAcceptedTask = Task()
                         hideProgress()
                         AppConstants.endTask = true
@@ -258,8 +263,9 @@ class TaskDetailsActivity : BActivity(), View.OnClickListener {
     private fun acceptTask(task: Task) {
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
-            FirebaseHelper.createNewTask(task)
-            hideProgress()
+            FirebaseManager.createNewTask(task)
+            UserSessionManager.getInstance(this).setAcceptedTask(task)
+                hideProgress()
         } else {
             hideProgress()
             Alert.showMessage(
@@ -328,7 +334,7 @@ class TaskDetailsActivity : BActivity(), View.OnClickListener {
             R.id.btnLocation ->
             {
                 task.location= location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants!!.CurrentLocation!!.longitude.toString())
-                FirebaseHelper.updateTaskLocation(task)
+                FirebaseManager.updateTaskLocation(task)
             }
             R.id.ivBack -> {
                 finish()
@@ -336,6 +342,10 @@ class TaskDetailsActivity : BActivity(), View.OnClickListener {
 
 
         }
+    }
+
+    override fun locationResponse(locationResult: LocationResult) {
+        lastLocation=locationResult.lastLocation
     }
 
     override fun onBackPressed() {

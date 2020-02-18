@@ -7,12 +7,12 @@ import com.google.firebase.auth.*
 import com.google.firebase.auth.FirebaseAuth
 
 
-object FirebaseAuth {
+object FirebaseAuthHelper {
     private lateinit var auth: FirebaseAuth
     private var firebaseAuthListener: FirebaseAuth.AuthStateListener? = null
     private var fireBaseUser: FirebaseUser? = null
     private lateinit var context: Context
-    private var TAG = "FirebaseAuth"
+    private var TAG = "FirebaseAuthHelper"
 
     fun setUpAuth(context: Context) {
         this.context = context

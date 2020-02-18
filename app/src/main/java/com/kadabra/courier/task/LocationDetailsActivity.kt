@@ -28,11 +28,15 @@ import com.kadabra.courier.direction.TaskLoadedCallback
 import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_location_details.*
 import com.google.android.gms.maps.model.LatLngBounds
-
+import com.kadabra.courier.callback.ILocationListener
+import com.kadabra.courier.firebase.FirebaseManager
+import com.kadabra.courier.location.LocationHelper
+import com.kadabra.courier.model.Task
+import com.kadabra.courier.model.location
 
 
 class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener, RoutingListener, TaskLoadedCallback {
+    GoogleMap.OnMarkerClickListener, RoutingListener, TaskLoadedCallback, ILocationListener {
 
 
     //region Members
@@ -46,6 +50,7 @@ class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
     private var currentPolyline: Polyline? = null
     private var isFirstTime = true
     private lateinit var destination: LatLng
+    private var task = Task()
 
     private val COLORS: IntArray = intArrayOf(
         R.color.colorPrimary,
@@ -77,134 +82,133 @@ class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         //prepare for update the current location
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult) {
-                super.onLocationResult(p0)
-
-                lastLocation = p0.lastLocation
-                //todo move the marker position
-
-                if (isFirstTime) {
-                    if (AppConstants.currentSelectedStop != null) {
-                        var selectedStopLocation = LatLng(
-                            AppConstants.currentSelectedStop.Latitude!!,
-                            AppConstants.currentSelectedStop.Longitude!!
-                        )
-
-                        placeMarkerOnMap(
-                            selectedStopLocation,
-                            AppConstants.currentSelectedStop.StopName
-                        )
-
-                        try {
-                            if (lastLocation != null) {
-
-                                destination = LatLng(
-                                    AppConstants.currentSelectedStop.Latitude!!,
-                                    AppConstants.currentSelectedStop.Longitude!!
-                                )
-//                                drawRouteOnMap(
-//                                    LatLng(lastLocation!!.latitude, lastLocation!!.longitude),
-//                                    destination
-//                                )
-                                FetchURL(this@LocationDetailsActivity).execute(
-                                    getUrl(
-                                        LatLng(lastLocation!!.latitude, lastLocation!!.longitude),
-                                        destination,
-                                        "driving"
-                                    ), "driving"
-                                )
-                            }
-
-                        } catch (ex: ExceptionInInitializerError) {
-
-                        }
-
-                    }
-
-                    val builder = LatLngBounds.Builder()
-                    builder.include(LatLng(lastLocation!!.latitude, lastLocation!!.longitude))
-                    builder.include(LatLng(destination.latitude, destination.longitude))
-                    map.moveCamera(
-                        CameraUpdateFactory.newLatLngBounds(
-                            builder.build(), 25, 25, 0
-                        )
-                    )
-                    isFirstTime = false
-                    builder.include(LatLng(destination.latitude, destination.longitude))
-                    destination = LatLng(0.0, 0.0)
-                }
+        LocationHelper.shared.locationListener = this ///vip
+//        createLocationRequest()
 
 
-            }
-        }
-        createLocationRequest()
-
-
-        ivBack.setOnClickListener{
+        ivBack.setOnClickListener {
             finish()
         }
     }
 
+    override fun locationResponse(locationResult: LocationResult) {
+        lastLocation = locationResult.lastLocation
+        //todo move the marker position
+        map.clear()
+
+         task.location= location(lastLocation!!.latitude.toString(),lastLocation!!.longitude.toString())
+        FirebaseManager.updateTaskLocation(task)
+//        if (isFirstTime) {
+            if (AppConstants.currentSelectedStop != null) {
+                var selectedStopLocation = LatLng(
+                    AppConstants.currentSelectedStop.Latitude!!,
+                    AppConstants.currentSelectedStop.Longitude!!
+                )
+
+                placeMarkerOnMap(
+                    selectedStopLocation,
+                    AppConstants.currentSelectedStop.StopName
+                )
+
+                try {
+                    if (lastLocation != null) {
+
+                        destination = LatLng(
+                            AppConstants.currentSelectedStop.Latitude!!,
+                            AppConstants.currentSelectedStop.Longitude!!
+                        )
+
+                        FetchURL(this@LocationDetailsActivity).execute(
+                            getUrl(
+                                LatLng(lastLocation!!.latitude, lastLocation!!.longitude),
+                                destination,
+                                "driving"
+                            ), "driving"
+                        )
+                    }
+
+                } catch (ex: ExceptionInInitializerError) {
+
+                }
+
+            }
+
+            val builder = LatLngBounds.Builder()
+            builder.include(LatLng(lastLocation!!.latitude, lastLocation!!.longitude))
+            builder.include(LatLng(destination.latitude, destination.longitude))
+            map.moveCamera(
+                CameraUpdateFactory.newLatLngBounds(
+                    builder.build(), 25, 25, 0
+                )
+            )
+//            isFirstTime = false
+            builder.include(LatLng(destination.latitude, destination.longitude))
+            destination = LatLng(0.0, 0.0)
+//        }
+    }
+
     private fun setUpMap() {
 
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            )
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION
-                    ),
-                    LOCATION_PERMISSION_REQUEST_CODE
-                )
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION
-                    ),
-                    LOCATION_PERMISSION_REQUEST_CODE
-                )
-            }
-        } else {
-            // Permission has already been granted
-        }
-
-        map.isMyLocationEnabled = true
-        map.mapType = GoogleMap.MAP_TYPE_TERRAIN //more map details
-
-        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-
-
-            // Got last known location. In some rare situations this can be null.
-            if (location != null) {
-                lastLocation = location
-                val currentLatLng = LatLng(location.latitude, location.longitude)
-                placeMarkerOnMap(currentLatLng, "you ar here!")
-
-            }
-        }
-        return
+        // todo handel requets permission on LocationHelper
+//
+//        if (ActivityCompat.checkSelfPermission(
+//                this,
+//                android.Manifest.permission.ACCESS_FINE_LOCATION
+//            )
+//            != PackageManager.PERMISSION_GRANTED
+//        ) {
+//
+//            // Permission is not granted
+//            // Should we show an explanation?
+//            if (ActivityCompat.shouldShowRequestPermissionRationale(
+//                    this,
+//                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+//                )
+//            ) {
+//                ActivityCompat.requestPermissions(
+//                    this,
+//                    arrayOf(
+//                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+//                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+//                    ),
+//                    LOCATION_PERMISSION_REQUEST_CODE
+//                )
+//            } else {
+//                // No explanation needed; request the permission
+//                ActivityCompat.requestPermissions(
+//                    this,
+//                    arrayOf(
+//                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+//                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+//                    ),
+//                    LOCATION_PERMISSION_REQUEST_CODE
+//                )
+//            }
+//        } else {
+//            // Permission has already been granted
+//        }
+//
+//        map.isMyLocationEnabled = true
+//        map.mapType = GoogleMap.MAP_TYPE_TERRAIN //more map details
+//
+//        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+//
+//
+//            // Got last known location. In some rare situations this can be null.
+//            if (location != null) {
+//                lastLocation = location
+//                val currentLatLng = LatLng(location.latitude, location.longitude)
+//                placeMarkerOnMap(currentLatLng, "you ar here!")
+//
+//            }
+//        }
+//        return
 
     }
 
     private fun placeMarkerOnMap(location: LatLng, title: String) {
         // 1
+        map.clear()
         val markerOptions = MarkerOptions().position(location)
         //change marker icon
         markerOptions.icon(
@@ -326,6 +330,15 @@ class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
         map.setOnMarkerClickListener(this)
 
         setUpMap()
+
+        map.isMyLocationEnabled = true
+        map.mapType = GoogleMap.MAP_TYPE_TERRAIN //more map detailscreen
+        if (lastLocation != null) {
+
+            val currentLatLng = LatLng(lastLocation!!.latitude, lastLocation!!.longitude)
+            placeMarkerOnMap(currentLatLng, "you ar here!")
+
+        }
     }
 
     override fun onMarkerClick(p0: Marker?): Boolean {
@@ -387,9 +400,9 @@ class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
 
     public override fun onResume() {
         super.onResume()
-        if (!locationUpdateState) {
-            startLocationUpdates()
-        }
+//        if (!locationUpdateState) {
+//            startLocationUpdates()
+//        }
     }
 
     override fun onRoutingCancelled() {
