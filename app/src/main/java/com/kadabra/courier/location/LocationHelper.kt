@@ -9,18 +9,21 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
 import com.kadabra.courier.R
 import com.kadabra.courier.callback.ILocationListener
-import com.kadabra.courier.firebase.FirebaseAuthHelper
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.model.location
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
+import android.content.Context
+import android.location.LocationManager
+
+
 
 class LocationHelper : ILocationListener {
 
     var locationListener: ILocationListener? = null
     var lastLocation: Location? = null
     private val permissionFineLocation = android.Manifest.permission.ACCESS_FINE_LOCATION
-    private val permissionCoarseLocation = android.Manifest.permission.ACCESS_COARSE_LOCATION
+//    private val permissionCoarseLocation = android.Manifest.permission.ACCESS_COARSE_LOCATION
     private val REQUEST_CODE_LOCATION = 100
     private var fusedLocationClient: FusedLocationProviderClient? = null
     private var locationRequest: LocationRequest? = null
@@ -29,7 +32,6 @@ class LocationHelper : ILocationListener {
     companion object {
         var shared: LocationHelper = LocationHelper()
             private set
-
     }
 
     init {
@@ -39,15 +41,37 @@ class LocationHelper : ILocationListener {
             FusedLocationProviderClient(AppController.getContext().applicationContext)
 
         initializeLocationRequest()
+
         callbabck = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult?) {
                 super.onLocationResult(p0)
                 lastLocation = p0?.lastLocation
                 locationListener!!.locationResponse(p0!!)
 
-                if (AppConstants.CurrentAcceptedTask != null&&!AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) {
+                if (AppConstants.CurrentAcceptedTask != null && !AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) {
+                    AppConstants.CurrentAcceptedTask.location = location(
+                        lastLocation!!.latitude.toString(),
+                        lastLocation!!.longitude.toString(),
+                        isLocationEnabled()
+                    )
                     FirebaseManager.updateTaskLocation(AppConstants.CurrentAcceptedTask)
-                    FirebaseManager.updateCourierLocation(location(lastLocation!!.latitude.toString(),lastLocation!!.longitude.toString()))
+                    FirebaseManager.updateCourierLocation(
+                        AppConstants.CurrentAcceptedTask.courierId.toString(),
+                        location(
+                            lastLocation!!.latitude.toString(),
+                            lastLocation!!.longitude.toString(),
+                            isLocationEnabled()
+                        )
+                    )
+                } else if (AppConstants.currentLoginCourier != null && AppConstants.currentLoginCourier.CourierId > 0) {
+                    FirebaseManager.updateCourierLocation(
+                        AppConstants.currentLoginCourier.CourierId.toString(),
+                        location(
+                            lastLocation!!.latitude.toString(),
+                            lastLocation!!.longitude.toString(),
+                            isLocationEnabled()
+                        )
+                    )
                 }
 
             }
@@ -59,23 +83,28 @@ class LocationHelper : ILocationListener {
     }
 
     private fun initializeLocationRequest() {
+
         locationRequest = LocationRequest()
-        locationRequest?.interval = 50000
+
+        locationRequest?.interval = 10000   //5 minutes==300000
+//        locationRequest?.maxWaitTime = 100000
         locationRequest?.fastestInterval = 5000
-        locationRequest?.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+        locationRequest?.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
     }
+
 
     private fun validatePermissionsLocation(): Boolean {
         val fineLocationAvailable = ActivityCompat.checkSelfPermission(
             AppController.getContext(),
             permissionFineLocation
         ) == PackageManager.PERMISSION_GRANTED
-        val coarseLocationAvailable = ActivityCompat.checkSelfPermission(
-            AppController.getContext(),
-            permissionCoarseLocation
-        ) == PackageManager.PERMISSION_GRANTED
+//        val coarseLocationAvailable = ActivityCompat.checkSelfPermission(
+//            AppController.getContext(),
+//            permissionCoarseLocation
+//        ) == PackageManager.PERMISSION_GRANTED
 
-        return fineLocationAvailable && coarseLocationAvailable
+        return fineLocationAvailable //&& coarseLocationAvailable
     }
 
     private fun requestPermissions(activity: Activity) {
@@ -95,7 +124,7 @@ class LocationHelper : ILocationListener {
     private fun permissionRequest(activity: Activity) {
         ActivityCompat.requestPermissions(
             activity,
-            arrayOf(permissionFineLocation, permissionCoarseLocation),
+            arrayOf(permissionFineLocation/*, permissionCoarseLocation*/),
             REQUEST_CODE_LOCATION
         )
     }
@@ -137,5 +166,35 @@ class LocationHelper : ILocationListener {
     private fun getLocation() {
         validatePermissionsLocation()
         fusedLocationClient?.requestLocationUpdates(locationRequest, callbabck, null)
+    }
+
+
+    fun isLocationEnabled(): Boolean {
+
+        var gps_enabled = false
+        var network_enabled = false
+
+        val lm =
+            AppController.getContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager?
+
+        try {
+            gps_enabled = lm!!.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try {
+            network_enabled = lm!!.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+//
+//        if (!gps_enabled && !network_enabled) {
+//            gps_enabled = false
+//            network_enabled = false
+//        }
+        return gps_enabled
+
+
     }
 }

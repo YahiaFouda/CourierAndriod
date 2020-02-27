@@ -8,8 +8,10 @@ import androidx.appcompat.app.AppCompatActivity
 import com.reach.plus.admin.util.UserSessionManager
 import com.kadabra.courier.exception.CrashActivity
 import com.kadabra.courier.exception.CrashHandeller
+import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.main.MainActivity
+import com.kadabra.courier.model.Task
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_splash.*
@@ -58,26 +60,32 @@ class SplashActivity : AppCompatActivity() {
         Handler().postDelayed({
             runOnUiThread {
                 var first = UserSessionManager.getInstance(this).isFirstTime()
-                var user = UserSessionManager.getInstance(
+                var courier = UserSessionManager.getInstance(
                     this
                 ).getUserData()
-                AppConstants.currentLoginCourier=user!!
+
+                if(courier!=null&&courier.CourierId>0)
+                    AppConstants.currentLoginCourier=courier!!
+
                 if (!UserSessionManager.getInstance(this).isFirstTime() || UserSessionManager.getInstance(
                         this
                     ).getUserData() == null
                 ) {
                     startActivity(Intent(this@SplashActivity, LoginActivity::class.java))
+                    finish()
 
                 } else {
                     startActivity(Intent(this@SplashActivity, TaskActivity::class.java))
+                    finish()
                 }
-                finish()
+
             }
 
         }, startTime)
 
 
     }
+
 
 
     override fun onBackPressed() {

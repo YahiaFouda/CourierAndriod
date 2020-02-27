@@ -17,6 +17,7 @@ import com.kadabra.courier.api.ApiResponse
 import com.kadabra.courier.api.ApiServices
 import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
+import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.model.location
@@ -231,7 +232,7 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
 
                         FirebaseManager.endTask(task)
-                        UserSessionManager.getInstance(this@TaskDetailsActivity).setAcceptedTask(null)
+//                        UserSessionManager.getInstance(this@TaskDetailsActivity).setAcceptedTask(null)
                         AppConstants.CurrentAcceptedTask = Task()
                         hideProgress()
                         AppConstants.endTask = true
@@ -264,7 +265,7 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
             FirebaseManager.createNewTask(task)
-            UserSessionManager.getInstance(this).setAcceptedTask(task)
+//            UserSessionManager.getInstance(this).setAcceptedTask(task)
                 hideProgress()
         } else {
             hideProgress()
@@ -315,8 +316,9 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
                     AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
                     AppConstants.CurrentAcceptedTask.isActive=true
                     AppConstants.CurrentAcceptedTask.courierId=AppConstants.currentLoginCourier.CourierId
+                    var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
                     AppConstants.CurrentAcceptedTask.location=
-                        location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants.CurrentLocation!!.longitude.toString())
+                        location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants.CurrentLocation!!.longitude.toString(),isGpsEnabled)
                     acceptTask(AppConstants.CurrentAcceptedTask!!)
                     btnEndTask.text = getString(R.string.end_task)
                 } else {
@@ -333,8 +335,9 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
             }
             R.id.btnLocation ->
             {
-                task.location= location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants!!.CurrentLocation!!.longitude.toString())
-                FirebaseManager.updateTaskLocation(task)
+//                var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
+//                task.location= location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants!!.CurrentLocation!!.longitude.toString(),isGpsEnabled)
+//                FirebaseManager.updateTaskLocation(task)
             }
             R.id.ivBack -> {
                 finish()

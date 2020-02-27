@@ -33,17 +33,21 @@ import kotlinx.android.synthetic.main.activity_task.*
 import com.kadabra.courier.R
 import android.media.MediaPlayer
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
+import com.kadabra.courier.location.LocationHelper
 
 
-class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCallback,ILocationListener {
+class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCallback,
+    ILocationListener {
 
     //region Members
+
     private val durationTime = 60000L
     private var vibrator: Vibrator? = null
     private var mediaPlayer: MediaPlayer? = null
@@ -63,10 +67,11 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
     //region Constructor
     companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         const val REQUEST_CHECK_SETTINGS = 2
         private const val PLACE_PICKER_REQUEST = 3
+
     }
     //endregion
 
@@ -79,7 +84,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         tvTimer.visibility = View.INVISIBLE
 
         loadTasks()
-
 
         refresh.setOnRefreshListener {
             loadTasks()
@@ -180,6 +184,9 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
                             countDownTimer!!.cancel()
                         cancelVibrate()
                         stopSound()
+
+                        //remove location update
+                        LocationHelper.shared.stopUpdateLocation()
                         finish()
                         hideProgress()
 
@@ -215,7 +222,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         if (mediaPlayer != null)
             mediaPlayer!!.stop()
     }
-
 
     private fun processTask() {
         if (!UserSessionManager.getInstance(this@TaskActivity).isAccepted()) {
@@ -267,103 +273,42 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             vibrator!!.cancel()
     }
 
-    //endregion
-
-    //region Events
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-//        window.addFlags(WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY)
-        setContentView(R.layout.activity_task)
-        requestPermission()
-        init()
-        FirebaseManager.setUpFirebase()
-        getCurrentActiveTask()
-
-    }
-
-    override fun locationResponse(locationResult: LocationResult) {
-        lastLocation=locationResult.lastLocation
-    }
-
     private fun getCurrentActiveTask() {
-//        FirebaseManager.getCurrentActiveTask(AppConstants.currentLoginCourier.CourierId.toString(),
-//            object : FirebaseManager.IFbOperation {
-//                override fun onSuccess(code: Int) {
-//
-//                    // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-//                }
-//
-//                override fun onFailure(message: String) {
-//                    //   TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-//                }
-//            })
+        if (NetworkManager().isNetworkAvailable(this)) {
+            FirebaseManager.getCurrentActiveTask(AppConstants.currentLoginCourier.CourierId.toString(),
+                object : FirebaseManager.IFbOperation {
+                    override fun onSuccess(code: Int) {
 
-        var task=UserSessionManager.getInstance(this).getAcceptedTask()
-        if(  task!=null&&!task.TaskId.isNullOrEmpty())
-        AppConstants.CurrentAcceptedTask=task
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (AppConstants.endTask) {
-            loadTasks()
-            AppConstants.endTask = false
-
-        }
-    }
-
-
-    override fun onClick(view: View?) {
-        when (view!!.id) {
-            R.id.ivSettings -> {
-                AlertDialog.Builder(this)
-                    .setTitle(AppConstants.WARNING)
-                    .setMessage(getString(R.string.exit))
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setPositiveButton(AppConstants.OK) { dialog, which ->
-                        logOut()
                     }
-                    .setNegativeButton(AppConstants.CANCEL) { dialog, which -> }
-                    .show()
-            }
-            R.id.ivMenu -> {
-                Alert.showMessage(this, "Menu is clicked.")
-            }
-            R.id.ivAccept -> {
-                if (taskList.size > 0) {
-                    accept()
-                } else
-                    Alert.showMessage(
-                        this,
-                        getString(R.string.no_tasks_available)
-                    )
 
-            }
-
+                    override fun onFailure(message: String) {
+                        AppConstants.CurrentAcceptedTask = Task()
+                    }
+                })
         }
+
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-        finish()
-    }
+    private fun getCurrentCourierLocation() {
+        if (NetworkManager().isNetworkAvailable(this)) {
+            FirebaseManager.getCurrentCourierLocation(AppConstants.currentLoginCourier.CourierId.toString(),
+                object : FirebaseManager.IFbOperation {
+                    override fun onSuccess(code: Int) {
+//                        Toast.makeText(
+//                            this@TaskActivity,
+//                            AppConstants.CurrentCourierLocation.lat + AppConstants.CurrentCourierLocation.long,
+//                            Toast.LENGTH_SHORT
+//                        ).show()
 
-    override fun onBottomSheetClosed(isClosed: Boolean) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+                    }
 
-    override fun onBottomSheetSelectedItem(index: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+                    override fun onFailure(message: String) {
 
-    public override fun onSaveInstanceState(savedInstanceState: Bundle) {
-        super.onSaveInstanceState(savedInstanceState)
-        // Save UI state changes to the savedInstanceState.
-        // This bundle will be passed to onCreate if the process is
-        // killed and restarted.
-        // etc.
-    }
+                    }
+                })
+        }
 
+    }
 
     private fun blink() {
         val hander = Handler()
@@ -451,7 +396,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
     }
 
-
     private fun showProgress() {
         tvEmptyData.visibility = View.INVISIBLE
         avi.smoothToShow()
@@ -461,7 +405,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         avi.smoothToHide()
         tvEmptyData.visibility = View.INVISIBLE
     }
-
 
     private fun createLocationRequest() {
         // 1
@@ -518,12 +461,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             )
             return
         }
-        //2
-//        fusedLocationClient.requestLocationUpdates(
-//            locationRequest,
-//            locationCallback,
-//            null /* Looper */
-//        )
+
     }
 
     private fun requestPermission() {
@@ -560,10 +498,8 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
                     PackageManager.PERMISSION_GRANTED
         }
         if (!havePermissions) {
-            if (perm.toList().any {
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, it)
-                }
-            ) {
+            if (perm.toList().any {ActivityCompat.shouldShowRequestPermissionRationale(this, it) })
+            {
 
                 val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
                     .setTitle(getString(R.string.Permission))
@@ -588,6 +524,97 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         return true
     }
 
+    //endregion
+
+    //region Events
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+//        window.addFlags(WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY)
+        setContentView(R.layout.activity_task)
+
+        LocationHelper.shared.initializeLocation(this)
+        requestPermission()
+        init()
+        FirebaseManager.setUpFirebase()
+        getCurrentActiveTask()
+        getCurrentCourierLocation()
+
+    }
+
+    override fun locationResponse(locationResult: LocationResult) {
+        lastLocation = locationResult.lastLocation
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        if (AppConstants.endTask) {
+            loadTasks()
+            AppConstants.endTask = false
+
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+    }
+
+    override fun onClick(view: View?) {
+        when (view!!.id) {
+            R.id.ivSettings -> {
+                AlertDialog.Builder(this)
+                    .setTitle(AppConstants.WARNING)
+                    .setMessage(getString(R.string.exit))
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setPositiveButton(AppConstants.OK) { dialog, which ->
+                        logOut()
+                    }
+                    .setNegativeButton(AppConstants.CANCEL) { dialog, which -> }
+                    .show()
+            }
+            R.id.ivMenu -> {
+                Alert.showMessage(this, "Menu is clicked.")
+            }
+            R.id.ivAccept -> {
+                if (taskList.size > 0) {
+                    accept()
+                } else
+                    Alert.showMessage(
+                        this,
+                        getString(R.string.no_tasks_available)
+                    )
+
+            }
+
+        }
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finish()
+    }
+
+    override fun onBottomSheetClosed(isClosed: Boolean) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onBottomSheetSelectedItem(index: Int) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    public override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        // Save UI state changes to the savedInstanceState.
+        // This bundle will be passed to onCreate if the process is
+        // killed and restarted.
+        // etc.
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>, grantResults: IntArray
@@ -598,6 +625,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
+
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -610,12 +638,5 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
     }
     //endregion
 
-    override fun onStart() {
-        super.onStart()
-    }
 
-    override fun onStop() {
-        super.onStop()
-
-    }
 }

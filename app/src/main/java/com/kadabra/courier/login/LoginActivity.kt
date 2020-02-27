@@ -24,11 +24,8 @@ import kotlinx.android.synthetic.main.activity_login.*
 import android.location.Geocoder
 import android.view.View
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
 import com.kadabra.courier.callback.ILocationListener
-import com.kadabra.courier.firebase.FirebaseAuthHelper
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.model.location
 import java.util.*
@@ -45,7 +42,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
 
     //region Constructor
     companion object {
-        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 100
     }
     //endregion
 
@@ -54,18 +51,12 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-//        try {
-//            FirebaseAuth.getInstance().signOut()
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//        }
 
         requestPermission()
         FirebaseManager.setUpFirebase()
         init()
 
     }
-
 
     override fun onClick(view: View?) {
 
@@ -76,6 +67,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                     userCustomEmail = userName + userCustomEmail
                     var password = etPassword.text.toString()
                     logIn(userName, password)
+                    LocationHelper.shared.stopUpdateLocation()
                 }
             }
         }
@@ -83,7 +75,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
 
     override fun locationResponse(locationResult: LocationResult) {
         lastLocation=locationResult.lastLocation
-        Toast.makeText(this, locationResult.lastLocation.toString(), Toast.LENGTH_LONG).show()
+//        Toast.makeText(this, locationResult.lastLocation.toString(), Toast.LENGTH_LONG).show()
     }
 
     override fun onBackPressed() {
@@ -120,9 +112,11 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
+                    requestPermission()
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
+
 
                 }
                 return
@@ -176,7 +170,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                         Log.d(TAG, "logIn - API - Success.$response")
 
                         courier = response.ResponseObj!!
-
+                        AppConstants.currentLoginCourier=courier
                         if (FirebaseManager.getCurrentUser() == null) //create new user
                         {
 
@@ -194,7 +188,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                                         if (success) {
                                             Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
                                             saveUserData(courier)
-                                            hideProgress()
+
                                             startActivity(
                                                 Intent(
                                                     this@LoginActivity,
@@ -202,11 +196,13 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                                                 )
                                             )
                                             finish()
+                                            hideProgress()
                                         } else {
                                             Alert.showMessage(
                                                 this@LoginActivity,
                                                 error!!
                                             )
+                                            hideProgress()
                                         }
                                     }
 
@@ -224,7 +220,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                                                 if (success) {
                                                     Log.d(TAG, "FBDB - CREATE NEW USER - SUCCESS")
                                                     saveUserData(courier)
-                                                    hideProgress()
+
                                                     startActivity(
                                                         Intent(
                                                             this@LoginActivity,
@@ -232,11 +228,13 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                                                         )
                                                     )
                                                     finish()
+                                                    hideProgress()
                                                 } else {
                                                     Alert.showMessage(
                                                         this@LoginActivity,
                                                         error!!
                                                     )
+                                                    hideProgress()
                                                     Log.d(
                                                         TAG,
                                                         "Failed to connect to server - Error Code 2"
@@ -249,6 +247,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                                                 this@LoginActivity,
                                                 error!!
                                             )
+                                            hideProgress()
                                         }
                                     }
                                 }
@@ -281,11 +280,13 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                                                 )
                                             )
                                             finish()
+                                            hideProgress()
                                         } else {
                                             Alert.showMessage(
                                                 this@LoginActivity,
                                                 error!!
                                             )
+                                            hideProgress()
                                         }
                                     }
 
@@ -295,6 +296,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
                                         this@LoginActivity,
                                         error!!
                                     )
+                                    hideProgress()
                                 }
 
                             }
@@ -334,9 +336,10 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListen
         courier.name = courier.CourierName
         courier.token = FirebaseManager.getCurrentUser()!!.uid //token
         courier.isActive = true
+        var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
         courier.location = location(
            LocationHelper.shared.lastLocation!!.latitude.toString(),
-            LocationHelper.shared.lastLocation!!.longitude.toString()
+            LocationHelper.shared.lastLocation!!.longitude.toString(),isGpsEnabled
         )
 
         courier.isActive = true

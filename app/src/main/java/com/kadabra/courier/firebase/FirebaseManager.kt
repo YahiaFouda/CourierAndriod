@@ -11,7 +11,10 @@ import com.kadabra.courier.model.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.iid.FirebaseInstanceId
+import com.kadabra.courier.location.LocationHelper
+import com.kadabra.courier.model.TaskInfo
 import com.kadabra.courier.utilities.AppConstants.token
+import com.kadabra.courier.utilities.AppController
 
 
 object FirebaseManager {
@@ -25,8 +28,8 @@ object FirebaseManager {
     private lateinit var auth: FirebaseAuth
     private var firebaseAuthListener: FirebaseAuth.AuthStateListener? = null
     private var fireBaseUser: FirebaseUser? = null
-    private var dbNameCourier = "courierTest"
-    private var dbNameTaskHistory = "taskHistory"
+    private var dbNameCourier = "courier"
+    private var dbNameTaskHistory = "task_history"
     private var courier = Courier()
     var exception = ""
     var token = ""
@@ -64,7 +67,6 @@ object FirebaseManager {
     fun setCurrentUser(fUser: FirebaseUser) {
         fireBaseUser = fUser
     }
-
 
     //auth courier for deal with db or not
     fun createAccount(
@@ -159,6 +161,7 @@ object FirebaseManager {
     }
 
     fun updateTaskLocation(task: Task) {
+        task.location.isGpsEnabled = LocationHelper.shared.isLocationEnabled()
         dbCourierTaskHistory.child(task.TaskId).child("locations").push().setValue(task.location)
 
     }
@@ -168,38 +171,61 @@ object FirebaseManager {
             .setValue(false)
     }
 
-    fun getActiveTask(task: Task): Task {
-        dbCourierTaskHistory.child(task.courierId.toString())
-            .limitToFirst(1)
-        return Task()
-    }
 
     fun getCurrentActiveTask(courieId: String, listener: IFbOperation) {
-        // active =true and courierid=current
         var task = Task()
-        val query = dbCourierTaskHistory.orderByChild("courieId").equalTo(courieId)
-
-        query.addValueEventListener(object : ValueEventListener {
+        val query = dbCourierTaskHistory
+        dbCourierTaskHistory.keepSynced(true)
+        var valueEventListener = query.addValueEventListener(object : ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 listener.onFailure(p0.message)
             }
 
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (currentTask in dataSnapshot.children) {
-                    task = dataSnapshot.getValue(Task::class.java)!!
-                    if (task.isActive) {
+                    task = currentTask.getValue(Task::class.java)!!
+                    if (task.isActive && task.courierId == courieId.toInt()) {
+                        task.TaskId = currentTask.key!!
                         AppConstants.CurrentAcceptedTask = task
                         listener.onSuccess(1)
                     }
-
-
                 }
             }
 
         })
 
+        dbCourierTaskHistory.addListenerForSingleValueEvent(valueEventListener)
+
     }
 
+    fun getCurrentCourierLocation(courieId: String, listener: IFbOperation) {
+
+        val query = dbCourier.child(courieId).child("location")
+        dbCourier.keepSynced(true)
+
+        var valueListener = query.addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+                listener.onFailure(p0.message)
+            }
+
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                for (currentTask in dataSnapshot.children) {
+                    try {
+                        var location = dataSnapshot.getValue(location::class.java)!!
+                        if (!location.lat.isNullOrEmpty() && !location.long.isNullOrEmpty()) {
+                            AppConstants.CurrentCourierLocation = location!!
+                            listener.onSuccess(1)
+                        }
+                    } catch (ex: Exception) {
+                        Log.d("FIreBase Manager", ex.message)
+                    }
+                }
+            }
+
+        })
+
+        dbCourier.addListenerForSingleValueEvent(valueListener)
+    }
 
     fun updateCourierCity(courierId: Int, value: Any) {
         dbCourier.child(courierId.toString()).child(AppConstants.FIREBASE_CITY)
@@ -207,12 +233,17 @@ object FirebaseManager {
 
     }
 
-    fun updateCourierLocation(location: location) {
-        dbCourier.child(courier.CourierId.toString())
-            .child(AppConstants.FIREBASE_LOCATION).setValue(location)
-
+    fun updateCourierLocation(courierId: String, location: location) {
+        dbCourier.child(courierId)
+            .child("location").setValue(location)
+            .addOnFailureListener {
+                Log.d("Location", it.toString())
+            }
 
     }
+
+    //setValue(location)
+
 
     fun updateCourierActive(courierId: Int, value: Object) {
         dbCourier.child(courierId.toString()).child(AppConstants.FIREBASE_IS_ACTIVE)
@@ -261,7 +292,7 @@ object FirebaseManager {
     }
 
     //check after logIn if the user is exit or not on auth
-    //if exist navigate to main or logIn
+//if exist navigate to main or logIn
     fun getCurrentUser(listener: (user: FirebaseUser?) -> Unit) {
 //        firebaseAuthListener = FirebaseAuth.AuthStateListener {
 //            fireBaseUser = FirebaseAuth.getInstance().currentUser
@@ -298,7 +329,7 @@ object FirebaseManager {
         return isExist
     }
 
-    //endregion
+//endregion
 
 
 }

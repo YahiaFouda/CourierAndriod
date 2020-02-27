@@ -5,11 +5,13 @@ class location {
 
     var lat = ""
     var long = ""
+    var isGpsEnabled=false
 
     constructor()
 
-    constructor(lat: String, long: String) {
+    constructor(lat: String, long: String,isGpsEnabled:Boolean) {
         this.lat = lat
         this.long = long
+        this.isGpsEnabled=isGpsEnabled
     }
 }

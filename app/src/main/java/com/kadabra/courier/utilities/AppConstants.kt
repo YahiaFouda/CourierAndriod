@@ -72,6 +72,7 @@ object AppConstants {
     var currentLoginCourier: Courier = Courier()
     var CurrentSelectedTask: Task = Task()
     var CurrentAcceptedTask: Task = Task()
+    var CurrentCourierLocation: location = location()
     var currentSelectedStop: Stop = Stop()
     var CurrentLocation: Location? = null
     //endregion

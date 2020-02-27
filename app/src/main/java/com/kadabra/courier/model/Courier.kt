@@ -9,7 +9,7 @@ import com.google.firebase.database.Exclude
  * Created by Mokhtar on 1/5/2020.
  */
 class Courier {
-    @Exclude @set:Exclude @get:Exclude
+
     var CourierId: Int = 0
     @Exclude @set:Exclude @get:Exclude
     var ResponseStatus: Int = 0

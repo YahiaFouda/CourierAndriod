@@ -99,6 +99,8 @@ dependencies {
     implementation 'com.github.jd-alexander:library:1.1.0'
 //permisssion
     implementation 'com.karumi:dexter:5.0.0'
+    //geo fire
+    implementation 'com.firebase:geofire-android:2.3.1'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
