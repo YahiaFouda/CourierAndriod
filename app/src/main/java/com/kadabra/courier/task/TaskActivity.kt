@@ -2,10 +2,8 @@ package com.kadabra.courier.task
 
 import android.Manifest
 import android.app.AlertDialog
+import android.content.*
 
-import android.content.Context
-import android.content.Intent
-import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.PorterDuff
 import android.location.Location
@@ -32,15 +30,23 @@ import com.kadabra.courier.utilities.AppController
 import kotlinx.android.synthetic.main.activity_task.*
 import com.kadabra.courier.R
 import android.media.MediaPlayer
+import android.net.Uri
+import android.preference.PreferenceManager
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.auth.User
+import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.location.LocationHelper
+import com.kadabra.services.LocationUpdatesService
 
 
 class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCallback,
@@ -63,17 +69,39 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
     private var lastLocation: Location? = null
 
 
+    private var myReceiver: MyReceiver? = null
+    // A reference to the service used to get location updates.
+    private var mService: LocationUpdatesService? = null
+    // Tracks the bound state of the service.
+    private var mBound = false
+
     //endregion
 
     //region Constructor
     companion object {
-
+        private val TAG = TaskActivity::class.java.simpleName
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
         const val REQUEST_CHECK_SETTINGS = 2
         private const val PLACE_PICKER_REQUEST = 3
 
     }
-    //endregion
+
+
+    // Monitors the state of the connection to the service.
+    private val mServiceConnection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            val binder = service as LocationUpdatesService.LocalBinder
+            mService = binder.service
+            mBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            mService = null
+            mBound = false
+        }
+    }
+    //endregiono
 
     //region Helper Functions
     private fun init() {
@@ -498,8 +526,12 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
                     PackageManager.PERMISSION_GRANTED
         }
         if (!havePermissions) {
-            if (perm.toList().any {ActivityCompat.shouldShowRequestPermissionRationale(this, it) })
-            {
+            if (perm.toList().any {
+                    ActivityCompat.shouldShowRequestPermissionRationale(
+                        this,
+                        it
+                    )
+                }) {
 
                 val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
                     .setTitle(getString(R.string.Permission))
@@ -531,9 +563,22 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         super.onCreate(savedInstanceState)
 //        window.addFlags(WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY)
         setContentView(R.layout.activity_task)
+        myReceiver = MyReceiver()
 
-        LocationHelper.shared.initializeLocation(this)
-        requestPermission()
+//        LocationHelper.shared.initializeLocation(this)
+//        requestPermission()
+        // Check that the user hasn't revoked permissions by going to Settings.
+        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+            if (!checkPermissions()) {
+                requestPermissions()
+            } else {
+                if (mService != null)
+                    mService!!.requestLocationUpdates()
+
+            }
+        }
+
+
         init()
         FirebaseManager.setUpFirebase()
         getCurrentActiveTask()
@@ -553,16 +598,53 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             AppConstants.endTask = false
 
         }
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            myReceiver!!,
+            IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
+        )
     }
 
     override fun onStart() {
         super.onStart()
+        // Bind to the service. If the service is in foreground mode, this signals to the service
+        // that since this activity is in the foreground, the service can exit foreground mode.
+        bindService(
+            Intent(this, LocationUpdatesService::class.java), mServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
+
+        if (!checkPermissions()) {
+            requestPermissions()
+        } else {
+            if (mService != null)
+                mService!!.requestLocationUpdates()
+
+        }
+
+        bindService(
+            Intent(this, LocationUpdatesService::class.java), mServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
+    }
+
+
+    override fun onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(myReceiver!!)
+        super.onPause()
     }
 
     override fun onStop() {
-        super.onStop()
+        if (mBound) {
+            // Unbind from the service. This signals to the service that this activity is no longer
+            // in the foreground, and the service can respond by promoting itself to a foreground
+            // service.
+            unbindService(mServiceConnection)
+            mBound = false
+        }
 
+        super.onStop()
     }
+
 
     override fun onClick(view: View?) {
         when (view!!.id) {
@@ -594,6 +676,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         }
     }
 
+
     override fun onBackPressed() {
         super.onBackPressed()
         finish()
@@ -619,22 +702,101 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         requestCode: Int,
         permissions: Array<String>, grantResults: IntArray
     ) {
-        when (requestCode) {
-            LOCATION_PERMISSION_REQUEST_CODE -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-
-                }
-                return
+        Log.i(TAG, "onRequestPermissionResult")
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.size <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.")
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission was granted.
+                mService!!.requestLocationUpdates()
+            } else {
+                // Permission denied.
+//                setButtonsState(false)
+                Snackbar.make(
+                    findViewById(R.id.rlParent),
+                    R.string.permission_denied_explanation,
+                    Snackbar.LENGTH_INDEFINITE
+                )
+                    .setAction(R.string.settings) {
+                        // Build intent that displays the App settings screen.
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        val uri = Uri.fromParts(
+                            "package",
+                            BuildConfig.APPLICATION_ID, null
+                        )
+                        intent.data = uri
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
+                    }
+                    .show()
             }
-        }// other 'case' lines to check for other
-        // permissions this app might request.
+        }
+    }
+    //endregion
+
+    // Returns the current state of the permissions needed
+    private fun checkPermissions(): Boolean {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
+
+    private fun requestPermissions() {
+        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.")
+            Snackbar.make(
+                findViewById(R.id.rlParent),
+                R.string.permission_rationale,
+                Snackbar.LENGTH_INDEFINITE
+            )
+                .setAction(R.string.ok) {
+                    // Request permission
+                    ActivityCompat.requestPermissions(
+                        this@TaskActivity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        LOCATION_PERMISSION_REQUEST_CODE
+                    )
+                }
+                .show()
+        } else {
+            Log.i(TAG, "Requesting permission")
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(
+                this@TaskActivity,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+
+    //region Helper Classes
+
+    /**
+     * Receiver for broadcasts sent by [LocationUpdatesService].
+     */
+    private inner class MyReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val location =
+                intent.getParcelableExtra<Location>(LocationUpdatesService.EXTRA_LOCATION)
+//            if (location != null) {
+//                Toast.makeText(this@TaskActivity, "(" + location.latitude + ", " + location.longitude + ")",
+//                    Toast.LENGTH_SHORT).show()
+//            }
+        }
     }
     //endregion
 

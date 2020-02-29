@@ -13,6 +13,7 @@ class UserSessionManager(val context: Context) {
     private val editor: SharedPreferences.Editor
     private val sharedPreferences: SharedPreferences
     private val sharedPrefName = UserSessionManager::class.java.name + "_shared_preferences"
+    val KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates"
 
     init {
         sharedPreferences = context.getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
@@ -53,11 +54,18 @@ class UserSessionManager(val context: Context) {
     }
 
     fun getLanguage(): String {
-        return sharedPreferences.getString(AppConstants.LANGUAGE, AppConstants.ENGLISH)
+        return sharedPreferences.getString(AppConstants.LANGUAGE, AppConstants.ENGLISH)!!
     }
 
     fun setLanguage(language: String) {
         editor.putString(AppConstants.LANGUAGE, language).commit()
+    }
+ fun requestingLocationUpdates(): Boolean {
+        return sharedPreferences.getBoolean(KEY_REQUESTING_LOCATION_UPDATES, false)
+    }
+
+    fun setRequestingLocationUpdates(requestingLocationUpdates: Boolean) {
+        editor.putBoolean(KEY_REQUESTING_LOCATION_UPDATES, requestingLocationUpdates).commit()
     }
 
 

@@ -48,9 +48,15 @@
     <string name="le">LE</string>
     <string name="task_details">Task Details</string>
     <string name="Permission">Permission</string>
-
+    <string name="launch_activity">Launch activity</string>
+    <string name="location_updated">Location Updated: %1$s</string>
+    <string name="remove_location_updates">Remove location updates</string>
     <string name="error_location_permission_required">Location Permission is required to obtain location.</string>
     <string name="error_no_location_permission_gived">You did not give permissions to get location</string>
+    <string name="permission_rationale">Location permission is needed for core functionality</string>
+    <string name="permission_denied_explanation">Permission was denied, but is needed for core
+        functionality.</string>
     <string name="ok">ok</string>
     <string name="no">No</string>
+    <string name="settings">Settings</string>
 </resources>

@@ -43,7 +43,7 @@ class FirebasePushNotificatinService : FirebaseMessagingService() {
 
         // Check if message contains a notification payload.
         if (remoteMessage.notification != null) {
-            val i = Intent(this, TaskActivity::class.java).putExtra("request", remoteMessage.toIntent().extras.get("gcm.notification.requestId").toString())
+            val i = Intent(this, TaskActivity::class.java).putExtra("request", remoteMessage.toIntent().extras!!.get("gcm.notification.requestId").toString())
             sendNotification(
                     remoteMessage.notification!!.title,
                     remoteMessage.notification!!.body, i
