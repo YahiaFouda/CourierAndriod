@@ -6,6 +6,7 @@ import android.content.*
 
 import android.content.pm.PackageManager
 import android.graphics.PorterDuff
+import android.location.Geocoder
 import android.location.Location
 import android.os.*
 import android.view.MotionEvent
@@ -31,22 +32,22 @@ import kotlinx.android.synthetic.main.activity_task.*
 import com.kadabra.courier.R
 import android.media.MediaPlayer
 import android.net.Uri
-import android.preference.PreferenceManager
 import android.provider.Settings
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.firestore.auth.User
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.location.LocationHelper
+import com.kadabra.courier.model.location
 import com.kadabra.services.LocationUpdatesService
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCallback,
@@ -67,7 +68,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
     private var taskList = ArrayList<Task>()
     private var adapter: TaskAdapter? = null
     private var lastLocation: Location? = null
-
+    private var courier: Courier = Courier()
 
     private var myReceiver: MyReceiver? = null
     // A reference to the service used to get location updates.
@@ -192,7 +193,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.logOut(AppConstants.currentLoginCourier.CourierId)
+            var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
                 override fun onFailed(error: String) {
                     hideProgress()
@@ -204,6 +205,8 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
                 override fun onSuccess(response: ApiResponse<Courier>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
+                        //stop  tracking service
+                        stopTracking()
                         FirebaseManager.logOut()
                         UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
                         UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
@@ -303,7 +306,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
     private fun getCurrentActiveTask() {
         if (NetworkManager().isNetworkAvailable(this)) {
-            FirebaseManager.getCurrentActiveTask(AppConstants.currentLoginCourier.CourierId.toString(),
+            FirebaseManager.getCurrentActiveTask(AppConstants.CurrentLoginCourier.CourierId.toString(),
                 object : FirebaseManager.IFbOperation {
                     override fun onSuccess(code: Int) {
 
@@ -319,7 +322,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
     private fun getCurrentCourierLocation() {
         if (NetworkManager().isNetworkAvailable(this)) {
-            FirebaseManager.getCurrentCourierLocation(AppConstants.currentLoginCourier.CourierId.toString(),
+            FirebaseManager.getCurrentCourierLocation(AppConstants.CurrentLoginCourier.CourierId.toString(),
                 object : FirebaseManager.IFbOperation {
                     override fun onSuccess(code: Int) {
 //                        Toast.makeText(
@@ -365,7 +368,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         if (NetworkManager().isNetworkAvailable(this)) {
             ivNoInternet.visibility = View.INVISIBLE
             var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.getAvaliableTasks(AppConstants.currentLoginCourier.CourierId)
+            var endPoint = request.getAvaliableTasks(AppConstants.CurrentLoginCourier.CourierId)
             NetworkManager().request(
                 endPoint,
                 object : INetworkCallBack<ApiResponse<ArrayList<Task>>> {
@@ -568,15 +571,14 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 //        LocationHelper.shared.initializeLocation(this)
 //        requestPermission()
         // Check that the user hasn't revoked permissions by going to Settings.
-        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+        if (UserSessionManager.getInstance(this).requestingLocationUpdates())
+        {
             if (!checkPermissions()) {
                 requestPermissions()
-            } else {
-                if (mService != null)
-                    mService!!.requestLocationUpdates()
-
             }
+
         }
+
 
 
         init()
@@ -735,7 +737,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             }
         }
     }
-    //endregion
 
     // Returns the current state of the permissions needed
     private fun checkPermissions(): Boolean {
@@ -781,6 +782,49 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             )
         }
     }
+
+    private fun stopTracking() {
+        if (mService != null)
+            mService!!.removeLocationUpdates()
+    }
+
+    private fun prepareCourierData() {
+        courier.name = courier.CourierName
+        courier.token = FirebaseManager.getCurrentUser()!!.uid //token
+        courier.isActive = true
+        var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
+        courier.location = location(
+            LocationHelper.shared.lastLocation!!.latitude.toString(),
+            LocationHelper.shared.lastLocation!!.longitude.toString(), isGpsEnabled
+        )
+
+        courier.isActive = true
+
+
+        val gcd = Geocoder(this@TaskActivity, Locale.getDefault())
+        val addresses = gcd.getFromLocation(
+            LocationHelper.shared.lastLocation!!.latitude,
+            LocationHelper.shared.lastLocation!!.longitude,
+            1
+        )
+        if (addresses.size > 0) {
+            if (!addresses[0].subAdminArea.isNullOrEmpty())
+                courier.city = addresses[0].subAdminArea
+            else if (!addresses[0].adminArea.isNullOrEmpty())
+                courier.city = addresses[0].adminArea
+        } else
+            courier.city = addresses[0].featureName
+
+        if(FirebaseManager.getCurrentUser()!=null)
+        {
+            //update courier data on db
+        }
+        else
+        {
+            //create new courier on real db
+        }
+    }
+    //endregion
 
 
     //region Helper Classes

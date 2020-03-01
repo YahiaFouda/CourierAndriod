@@ -1,19 +1,3 @@
-/**
- * Copyright 2017 Google Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.kadabra.services
 
 import android.app.ActivityManager
@@ -25,6 +9,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.os.Binder
@@ -44,12 +29,14 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.kadabra.courier.R
 import com.kadabra.courier.firebase.FirebaseManager
-import com.kadabra.courier.main.MainActivity
+import com.kadabra.courier.location.LocationHelper
+import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.location
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import com.reach.plus.admin.util.UserSessionManager
+import java.util.*
 
 /**
  * A bound and started service that is promoted to a foreground service when location updates have
@@ -79,7 +66,7 @@ class LocationUpdatesService : Service() {
     private var mNotificationManager: NotificationManager? = null
 
     /**
-     * Contains parameters used by [com.google.android.gms.location.FusedLocationProviderApi].
+     * Contains parameters used by [com.kadabra.services].
      */
     private var mLocationRequest: LocationRequest? = null
 
@@ -290,14 +277,7 @@ class LocationUpdatesService : Service() {
         Log.i(TAG, "New location: $newLocation")
 
         mLocation = newLocation
-//            FirebaseManager.updateCourierLocation(
-//               "2",
-//                location(
-//                        mLocation!!.latitude.toString(),
-//                        mLocation!!.longitude.toString(),
-//                        isLocationEnabled()
-//                )
-//        )
+
         updateCourierLocation(mLocation!!)
 
         // Notify anyone listening for broadcasts about the new location.
@@ -415,6 +395,7 @@ class LocationUpdatesService : Service() {
     }
 
     private fun updateCourierLocation(lastLocation: Location) {
+        // COURIER HAVE TASK
         if (AppConstants.CurrentAcceptedTask != null && !AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) {
             AppConstants.CurrentAcceptedTask.location = location(
                 lastLocation!!.latitude.toString(),
@@ -430,15 +411,57 @@ class LocationUpdatesService : Service() {
                     isLocationEnabled()
                 )
             )
-        } else if (AppConstants.currentLoginCourier != null && AppConstants.currentLoginCourier.CourierId > 0) {
+
+            if (getAddress(AppConstants.CurrentLoginCourier, lastLocation))
+                FirebaseManager.updateCourierCity(
+                    AppConstants.CurrentLoginCourier.CourierId!!,
+                    AppConstants.CurrentLoginCourier.city
+                )
+
+        }
+        // COURIER DOSEN'T HAVE TASK
+        else if (AppConstants.CurrentLoginCourier != null && AppConstants.CurrentLoginCourier.CourierId > 0) {
             FirebaseManager.updateCourierLocation(
-                AppConstants.currentLoginCourier.CourierId.toString(),
+                AppConstants.CurrentLoginCourier.CourierId.toString(),
                 location(
                     lastLocation!!.latitude.toString(),
                     lastLocation!!.longitude.toString(),
                     isLocationEnabled()
                 )
             )
+            if (getAddress(AppConstants.CurrentLoginCourier, lastLocation))
+                FirebaseManager.updateCourierCity(
+                    AppConstants.CurrentLoginCourier.CourierId!!,
+                    AppConstants.CurrentLoginCourier.city
+                )
+
         }
+    }
+
+    private fun getAddress(courier: Courier, location: Location): Boolean {
+        var city = ""
+        val gcd = Geocoder(AppController.getContext(), Locale.getDefault())
+        val addresses = gcd.getFromLocation(
+            location.latitude,
+            location.longitude,
+            1
+        )
+        if (addresses.size > 0) {
+            if (!addresses[0].subAdminArea.isNullOrEmpty())
+                city = addresses[0].subAdminArea
+            else if (!addresses[0].adminArea.isNullOrEmpty())
+                city = addresses[0].adminArea
+
+            AppConstants.CurrentLoginCourier.city = city
+
+        } else {
+            city = addresses[0].featureName
+            AppConstants.CurrentLoginCourier.city = city
+        }
+        if (!courier.city.trim().isNullOrEmpty() && !city.trim().isNullOrEmpty() ) {
+            return true
+        }
+        return false
+
     }
 }

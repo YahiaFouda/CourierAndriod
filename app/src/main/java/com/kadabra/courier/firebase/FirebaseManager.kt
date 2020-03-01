@@ -240,6 +240,7 @@ object FirebaseManager {
                 Log.d("Location", it.toString())
             }
 
+
     }
 
     //setValue(location)

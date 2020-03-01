@@ -63,9 +63,9 @@ class LocationHelper : ILocationListener {
                             isLocationEnabled()
                         )
                     )
-                } else if (AppConstants.currentLoginCourier != null && AppConstants.currentLoginCourier.CourierId > 0) {
+                } else if (AppConstants.CurrentLoginCourier != null && AppConstants.CurrentLoginCourier.CourierId > 0) {
                     FirebaseManager.updateCourierLocation(
-                        AppConstants.currentLoginCourier.CourierId.toString(),
+                        AppConstants.CurrentLoginCourier.CourierId.toString(),
                         location(
                             lastLocation!!.latitude.toString(),
                             lastLocation!!.longitude.toString(),

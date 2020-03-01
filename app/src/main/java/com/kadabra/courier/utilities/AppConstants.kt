@@ -69,7 +69,7 @@ object AppConstants {
     const val IS_ACCEPTED = "accepted"
     var endTask = false
 
-    var currentLoginCourier: Courier = Courier()
+    var CurrentLoginCourier: Courier = Courier()
     var CurrentSelectedTask: Task = Task()
     var CurrentAcceptedTask: Task = Task()
     var CurrentCourierLocation: location = location()

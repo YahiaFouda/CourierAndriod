@@ -11,34 +11,55 @@ import com.google.firebase.database.Exclude
 class Courier {
 
     var CourierId: Int = 0
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var ResponseStatus: Int = 0
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var CourierName: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var Mobile: String = ""
     var name: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var email: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var password: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var phone: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var birthdate: String = ""
     var token: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var rating: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var created_at: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var updated_at: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var fullImagePath: String? = null
-    lateinit var location: location
+    var location: location? = null
     var isActive: Boolean = false
     var city = ""
-
 
 
     constructor()
@@ -62,7 +83,7 @@ class Courier {
 
 
     constructor(
-        id:Int,
+        id: Int,
         token: String,
         name: String,
         city: String,
@@ -76,7 +97,6 @@ class Courier {
         this.location = location
         this.isActive = isActive
     }
-
 
 
 }

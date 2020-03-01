@@ -24,7 +24,6 @@ import com.kadabra.courier.model.location
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
-import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task_details.*
 
 
@@ -315,7 +314,7 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
                 {
                     AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
                     AppConstants.CurrentAcceptedTask.isActive=true
-                    AppConstants.CurrentAcceptedTask.courierId=AppConstants.currentLoginCourier.CourierId
+                    AppConstants.CurrentAcceptedTask.courierId=AppConstants.CurrentLoginCourier.CourierId
                     var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
                     AppConstants.CurrentAcceptedTask.location=
                         location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants.CurrentLocation!!.longitude.toString(),isGpsEnabled)

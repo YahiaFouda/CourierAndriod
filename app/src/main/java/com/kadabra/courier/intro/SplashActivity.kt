@@ -8,10 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.reach.plus.admin.util.UserSessionManager
 import com.kadabra.courier.exception.CrashActivity
 import com.kadabra.courier.exception.CrashHandeller
-import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.login.LoginActivity
-import com.kadabra.courier.main.MainActivity
-import com.kadabra.courier.model.Task
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_splash.*
@@ -65,7 +62,7 @@ class SplashActivity : AppCompatActivity() {
                 ).getUserData()
 
                 if(courier!=null&&courier.CourierId>0)
-                    AppConstants.currentLoginCourier=courier!!
+                    AppConstants.CurrentLoginCourier=courier!!
 
                 if (!UserSessionManager.getInstance(this).isFirstTime() || UserSessionManager.getInstance(
                         this
