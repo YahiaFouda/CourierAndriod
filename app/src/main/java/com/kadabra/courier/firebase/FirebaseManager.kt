@@ -156,14 +156,19 @@ object FirebaseManager {
     }
 
     fun createNewTask(task: Task) {
-        dbCourierTaskHistory.child(task.TaskId).setValue(task)
-        updateTaskLocation(task)
+       if(AppConstants.CurrentLocation!=null)
+       {
+           dbCourierTaskHistory.child(task.TaskId).setValue(task)
+           updateTaskLocation(task)
+       }
     }
 
     fun updateTaskLocation(task: Task) {
-        task.location.isGpsEnabled = LocationHelper.shared.isLocationEnabled()
-        dbCourierTaskHistory.child(task.TaskId).child("locations").push().setValue(task.location)
-
+        if(AppConstants.CurrentLocation!=null) {
+            task.location.isGpsEnabled = LocationHelper.shared.isLocationEnabled()
+            dbCourierTaskHistory.child(task.TaskId).child("locations").push()
+                .setValue(task.location)
+        }
     }
 
     fun endTask(task: Task) {

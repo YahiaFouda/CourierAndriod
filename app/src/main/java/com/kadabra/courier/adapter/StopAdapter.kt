@@ -8,10 +8,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.github.vipulasri.timelineview.TimelineView
+import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
 import com.kadabra.courier.callback.IBottomSheetCallback
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.task.LocationDetailsActivity
+import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.VectorDrawableUtils
 import java.util.*
@@ -107,10 +109,18 @@ class StopAdapter(private val context: Context, private val stopList: ArrayList<
 
 
             itemView.setOnClickListener {
-                val pos = adapterPosition
-                stop = stopList[pos]
+                if(NetworkManager().isNetworkAvailable(context))
+                {
+                    val pos = adapterPosition
+                    stop = stopList[pos]
                     AppConstants.currentSelectedStop = stop
-                context.startActivity(Intent(context, LocationDetailsActivity::class.java))
+                    context.startActivity(Intent(context, LocationDetailsActivity::class.java))
+                }
+                else
+                    Alert.showMessage(
+                        context,
+                        context.getString(R.string.no_internet)
+                    )
 
             }
 

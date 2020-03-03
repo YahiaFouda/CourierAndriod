@@ -49,8 +49,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-class TaskActivity : AppCompatActivity(), View.OnClickListener
-     {
+class TaskActivity : AppCompatActivity(), View.OnClickListener {
 
     //region Members
 
@@ -181,14 +180,24 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener
     private fun accept() {
         cancelVibrate()
         stopSound()
-        UserSessionManager.getInstance(this).setIsAccepted(true)
+
         if (countDownTimer != null)
             countDownTimer!!.cancel()
         tvTimer.visibility = View.INVISIBLE
 
+
+        if (NetworkManager().isNetworkAvailable(this))
+            UserSessionManager.getInstance(this).setIsAccepted(true)
+        else
+            Alert.showMessage(
+                this@TaskActivity,
+                getString(R.string.no_internet)
+            )
     }
 
     private fun logOut() {
+//        if(AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty())
+//        {
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(ApiServices::class.java)
@@ -239,6 +248,13 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener
             )
         }
 
+//        }
+//        else{
+//            Alert.showMessage(
+//                this@TaskActivity,
+//                getString(R.string.no_internet)
+//            )
+//        }
 
     }
 
@@ -427,16 +443,14 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener
             }
         }
 
-
-        init()
         FirebaseManager.setUpFirebase()
         getCurrentActiveTask()
+        init()
         getCurrentCourierLocation()
         forceUpdate()
 
 
     }
-
 
 
     override fun onResume() {

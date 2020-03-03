@@ -6,6 +6,7 @@ import android.location.Location
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.gms.location.LocationResult
@@ -25,6 +26,9 @@ import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import kotlinx.android.synthetic.main.activity_task_details.*
+
+
+
 
 
 class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocationListener {
@@ -262,7 +266,9 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
             FirebaseManager.createNewTask(task)
+            btnEndTask.text = getString(R.string.end_task)
             hideProgress()
+
         } else {
             hideProgress()
             Alert.showMessage(
@@ -322,11 +328,15 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
                                 isGpsEnabled
                             )
                     acceptTask(AppConstants.CurrentAcceptedTask!!)
-                    btnEndTask.text = getString(R.string.end_task)
+
                 } else {
                     if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions
                         btnEndTask.isEnabled = false
-                        btnEndTask.setBackgroundColor(Color.GRAY)
+//                        val d = btnEndTask.background
+                        btnEndTask.setBackgroundResource(R.drawable.rounded_button_gray)
+
+//                        btnEndTask.setBackgroundDrawable(d)
+                        Toast.makeText(this,getString(R.string.end_first),Toast.LENGTH_SHORT).show()
                     } else {//the same task end task
                         btnEndTask.isEnabled = true
                         btnEndTask.text = getString(R.string.end_task)

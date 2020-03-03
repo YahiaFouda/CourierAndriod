@@ -69,6 +69,7 @@
     <string name="login">Login</string>
     <string name="stops">Stops</string>
     <string name="stop_name">Stop Name</string>
+    <string name="end_first">You must end the opened task first.</string>
 
 
 </resources>

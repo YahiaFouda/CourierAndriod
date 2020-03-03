@@ -27,6 +27,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.location.LocationHelper
@@ -81,7 +82,7 @@ class LocationUpdatesService : Service() {
     private var mLocationCallback: LocationCallback? = null
 
     private var mServiceHandler: Handler? = null
-    private var  text=""
+    private var text = ""
 
     /**
      * The current location.
@@ -100,7 +101,7 @@ class LocationUpdatesService : Service() {
         get() {
             val intent = Intent(this, LocationUpdatesService::class.java)
 //            if (mLocation != null)
-             text = "(" + mLocation!!.latitude + ", " + mLocation!!.longitude + ")"
+            text = "(" + mLocation!!.latitude + ", " + mLocation!!.longitude + ")"
 
             intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true)
             val servicePendingIntent = PendingIntent.getService(
@@ -139,7 +140,10 @@ class LocationUpdatesService : Service() {
         mLocationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 super.onLocationResult(locationResult)
-                onNewLocation(locationResult!!.lastLocation)
+                if (NetworkManager().isNetworkAvailable(applicationContext))
+                    onNewLocation(locationResult!!.lastLocation)
+                else
+                    AppConstants.CurrentLocation = null
             }
         }
 
@@ -252,9 +256,7 @@ class LocationUpdatesService : Service() {
             mFusedLocationClient!!.removeLocationUpdates(mLocationCallback!!)
             UserSessionManager.getInstance(this).setRequestingLocationUpdates(false)
             stopSelf()
-        }
-        catch (unlikely: SecurityException)
-        {
+        } catch (unlikely: SecurityException) {
             UserSessionManager.getInstance(this).setRequestingLocationUpdates(true)
             Log.e(TAG, "Lost location permission. Could not remove updates. $unlikely")
         }
@@ -281,7 +283,9 @@ class LocationUpdatesService : Service() {
         Log.i(TAG, "New location: $newLocation")
 
         mLocation = newLocation
-        AppConstants.CurrentLocation=mLocation
+        AppConstants.CurrentLocation = mLocation
+
+
         updateCourierLocation(mLocation!!)
 
         // Notify anyone listening for broadcasts about the new location.
@@ -384,7 +388,7 @@ class LocationUpdatesService : Service() {
         /**
          * The desired interval for location updates. Inexact. Updates may be more or less frequent.
          */
-        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 10000
+        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
 //        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
 
         /**
@@ -400,6 +404,7 @@ class LocationUpdatesService : Service() {
     }
 
     private fun updateCourierLocation(lastLocation: Location) {
+
         // COURIER HAVE TASK
         if (AppConstants.CurrentAcceptedTask != null && !AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) {
             AppConstants.CurrentAcceptedTask.location = location(
@@ -442,6 +447,7 @@ class LocationUpdatesService : Service() {
 
         }
     }
+
 
     private fun getAddress(courier: Courier, location: Location): Boolean {
         var city = ""

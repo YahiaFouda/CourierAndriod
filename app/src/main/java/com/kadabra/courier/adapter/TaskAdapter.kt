@@ -7,11 +7,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.task.TaskDetailsActivity
+import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
+
+
+
 
 
 /**
@@ -30,8 +35,8 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskAdapter.MyViewHolder {
 
-        val view = inflater.inflate(R.layout.task_layout, parent, false)
-
+//        val view = inflater.inflate(R.layout.task_layout, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return MyViewHolder(view)
 
     }
@@ -51,12 +56,12 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
                 1 -> { //pickup
                     task.stopPickUp = it
                     holder.tvPickupLocation.text =
-                        context.getString(R.string.from) + " " + it.StopName
+                        context.getString(com.kadabra.courier.R.string.from) + " " + it.StopName
                 }
                 2 -> { //dropOff
                     task.stopDropOff = it
                     holder.tvDropOffLocation.text =
-                        context.getString(R.string.to) + " " + it.StopName
+                        context.getString(com.kadabra.courier.R.string.to) + " " + it.StopName
                 }
                 3 -> {
                     task.defaultStops.add(it)
@@ -81,9 +86,9 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
         if (task.Amount!! > 0)
             holder.tvTaskAmount.text =
-                task.Amount.toString() + " " + context.getString(R.string.le)
+                task.Amount.toString() + " " + context.getString(com.kadabra.courier.R.string.le)
         else
-            holder.tvTaskAmount.text = "0 " + context.getString(R.string.le)
+            holder.tvTaskAmount.text = "0 " + context.getString(com.kadabra.courier.R.string.le)
 
 
     }
@@ -98,7 +103,12 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
 
     override fun getItemViewType(position: Int): Int {
-        return position
+//        return position
+        return if(AppConstants.CurrentAcceptedTask.TaskId==tasksList[position].TaskId) {
+            R.layout.task_layout_accepted
+        } else
+            R.layout.task_layout
+
     }
 
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -113,13 +123,18 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
 
             itemView.setOnClickListener {
-                val pos = adapterPosition
-                task = tasksList[pos]
+//                if (NetworkManager().isNetworkAvailable(context)) {
+                    val pos = adapterPosition
+                    task = tasksList[pos]
 //                var stops = prepareTaskStops(task.stopsmodel)
 //                task.stopsmodel = stops
-                AppConstants.CurrentSelectedTask = task
-                context.startActivity(Intent(context, TaskDetailsActivity::class.java))
-
+                    AppConstants.CurrentSelectedTask = task
+                    context.startActivity(Intent(context, TaskDetailsActivity::class.java))
+//                } else
+//                    Alert.showMessage(
+//                        context,
+//                        context.getString(R.string.no_internet)
+//                    )
             }
 
 
