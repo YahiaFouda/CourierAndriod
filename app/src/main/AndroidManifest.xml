@@ -31,7 +31,8 @@
             android:launchMode="singleTop" />
         <activity
             android:name="com.kadabra.courier.task.TaskActivity"
-            android:launchMode="singleTop"></activity>
+            android:launchMode="singleTop"
+            ></activity>
         <activity
             android:name="com.kadabra.courier.task.LocationDetailsActivity"
             android:label="@string/title_activity_maps"

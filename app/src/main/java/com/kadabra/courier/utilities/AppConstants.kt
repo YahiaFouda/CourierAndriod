@@ -57,6 +57,7 @@ object AppConstants {
     const val URL_GET_AVALIABLE_TAKS = "GetAvailableTask"
     const val URL_END_TAKS = "UpdateEndTask"
     const val URL_GET_TAKS_DETAILS = "GetTaskByID"
+    const val URL_GET_VERSION_CODE = "GetVersionCode"
 
 
     //endregion

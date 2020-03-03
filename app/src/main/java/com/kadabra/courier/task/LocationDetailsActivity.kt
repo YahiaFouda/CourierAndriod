@@ -11,10 +11,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.directions.route.*
-import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.location.places.ui.PlacePicker.IntentBuilder
@@ -94,6 +92,7 @@ class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
                 //todo move the marker position
 
                 if (isFirstTime) {
+
                     if (AppConstants.currentSelectedStop != null) {
                         var selectedStopLocation = LatLng(
                             AppConstants.currentSelectedStop.Latitude!!,
@@ -203,7 +202,7 @@ class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
             if (location != null) {
                 lastLocation = location
                 val currentLatLng = LatLng(location.latitude, location.longitude)
-                placeMarkerOnMap(currentLatLng, "you ar here!")
+                placeMarkerOnMap(currentLatLng, getString(R.string.you_are_here))
 
             }
         }

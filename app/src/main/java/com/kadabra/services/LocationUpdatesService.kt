@@ -81,6 +81,7 @@ class LocationUpdatesService : Service() {
     private var mLocationCallback: LocationCallback? = null
 
     private var mServiceHandler: Handler? = null
+    private var  text=""
 
     /**
      * The current location.
@@ -98,8 +99,9 @@ class LocationUpdatesService : Service() {
     val notification: Notification
         get() {
             val intent = Intent(this, LocationUpdatesService::class.java)
+//            if (mLocation != null)
+             text = "(" + mLocation!!.latitude + ", " + mLocation!!.longitude + ")"
 
-            val text = "(" + mLocation!!.latitude + ", " + mLocation!!.longitude + ")"
             intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true)
             val servicePendingIntent = PendingIntent.getService(
                 this, 0, intent,
@@ -250,7 +252,9 @@ class LocationUpdatesService : Service() {
             mFusedLocationClient!!.removeLocationUpdates(mLocationCallback!!)
             UserSessionManager.getInstance(this).setRequestingLocationUpdates(false)
             stopSelf()
-        } catch (unlikely: SecurityException) {
+        }
+        catch (unlikely: SecurityException)
+        {
             UserSessionManager.getInstance(this).setRequestingLocationUpdates(true)
             Log.e(TAG, "Lost location permission. Could not remove updates. $unlikely")
         }
@@ -277,7 +281,7 @@ class LocationUpdatesService : Service() {
         Log.i(TAG, "New location: $newLocation")
 
         mLocation = newLocation
-
+        AppConstants.CurrentLocation=mLocation
         updateCourierLocation(mLocation!!)
 
         // Notify anyone listening for broadcasts about the new location.
@@ -381,6 +385,7 @@ class LocationUpdatesService : Service() {
          * The desired interval for location updates. Inexact. Updates may be more or less frequent.
          */
         private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 10000
+//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
 
         /**
          * The fastest rate for active location updates. Updates will never be more frequent
@@ -458,7 +463,7 @@ class LocationUpdatesService : Service() {
             city = addresses[0].featureName
             AppConstants.CurrentLoginCourier.city = city
         }
-        if (!courier.city.trim().isNullOrEmpty() && !city.trim().isNullOrEmpty() ) {
+        if (!courier.city.trim().isNullOrEmpty() && !city.trim().isNullOrEmpty()) {
             return true
         }
         return false

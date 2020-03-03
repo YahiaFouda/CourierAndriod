@@ -36,6 +36,9 @@ interface ApiServices {
     fun getTaskDetails(@Query("taskId") taskID: String)
             : Call<ApiResponse<Task>>
 
+    @GET(AppConstants.URL_GET_VERSION_CODE)
+    fun forceUpdate(): Call<ApiResponse<String>>
+
 
 }
 

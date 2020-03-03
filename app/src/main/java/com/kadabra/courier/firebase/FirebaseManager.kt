@@ -238,6 +238,9 @@ object FirebaseManager {
             .child("location").setValue(location)
             .addOnFailureListener {
                 Log.d("Location", it.toString())
+            }.addOnSuccessListener {
+                var t = 120
+                var s = t
             }
 
 
@@ -330,6 +333,9 @@ object FirebaseManager {
         return isExist
     }
 
+    private fun clearDb() {
+        var applesQuery = dbCourierTaskHistory.setValue(null)
+    }
 //endregion
 
 

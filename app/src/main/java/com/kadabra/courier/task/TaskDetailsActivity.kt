@@ -89,7 +89,6 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
                 GridLayoutManager.VERTICAL,
                 false
             )
-//        rvStops.layoutManager = LinearLayoutManager(AppController.getContext(), LinearLayoutManager.VERTICAL, false)
         adapter.notifyDataSetChanged()
 
 
@@ -231,7 +230,6 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
 
                         FirebaseManager.endTask(task)
-//                        UserSessionManager.getInstance(this@TaskDetailsActivity).setAcceptedTask(null)
                         AppConstants.CurrentAcceptedTask = Task()
                         hideProgress()
                         AppConstants.endTask = true
@@ -264,8 +262,7 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
             FirebaseManager.createNewTask(task)
-//            UserSessionManager.getInstance(this).setAcceptedTask(task)
-                hideProgress()
+            hideProgress()
         } else {
             hideProgress()
             Alert.showMessage(
@@ -313,11 +310,17 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
                 if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) // create new task on fb
                 {
                     AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
-                    AppConstants.CurrentAcceptedTask.isActive=true
-                    AppConstants.CurrentAcceptedTask.courierId=AppConstants.CurrentLoginCourier.CourierId
+                    AppConstants.CurrentAcceptedTask.isActive = true
+                    AppConstants.CurrentAcceptedTask.courierId =
+                        AppConstants.CurrentLoginCourier.CourierId
                     var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
-                    AppConstants.CurrentAcceptedTask.location=
-                        location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants.CurrentLocation!!.longitude.toString(),isGpsEnabled)
+                    if (AppConstants.CurrentLocation != null)
+                        AppConstants.CurrentAcceptedTask.location =
+                            location(
+                                AppConstants.CurrentLocation!!.latitude.toString(),
+                                AppConstants.CurrentLocation!!.longitude.toString(),
+                                isGpsEnabled
+                            )
                     acceptTask(AppConstants.CurrentAcceptedTask!!)
                     btnEndTask.text = getString(R.string.end_task)
                 } else {
@@ -332,8 +335,7 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
                 }
 
             }
-            R.id.btnLocation ->
-            {
+            R.id.btnLocation -> {
 //                var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
 //                task.location= location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants!!.CurrentLocation!!.longitude.toString(),isGpsEnabled)
 //                FirebaseManager.updateTaskLocation(task)
@@ -347,7 +349,7 @@ class TaskDetailsActivity : AppCompatActivity(), View.OnClickListener, ILocation
     }
 
     override fun locationResponse(locationResult: LocationResult) {
-        lastLocation=locationResult.lastLocation
+        lastLocation = locationResult.lastLocation
     }
 
     override fun onBackPressed() {

@@ -3,7 +3,6 @@ package com.kadabra.courier.task
 import android.Manifest
 import android.app.AlertDialog
 import android.content.*
-
 import android.content.pm.PackageManager
 import android.graphics.PorterDuff
 import android.location.Geocoder
@@ -50,8 +49,8 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCallback,
-    ILocationListener {
+class TaskActivity : AppCompatActivity(), View.OnClickListener
+     {
 
     //region Members
 
@@ -59,22 +58,20 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
     private var vibrator: Vibrator? = null
     private var mediaPlayer: MediaPlayer? = null
     private var countDownTimer: CountDownTimer? = null
-    private var locationCallback: LocationCallback? = null
     private var locationRequest: LocationRequest? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var locationUpdateState = false
     private var task = Task()
-    private lateinit var listener: IBottomSheetCallback
     private var taskList = ArrayList<Task>()
     private var adapter: TaskAdapter? = null
     private var lastLocation: Location? = null
     private var courier: Courier = Courier()
-
     private var myReceiver: MyReceiver? = null
     // A reference to the service used to get location updates.
     private var mService: LocationUpdatesService? = null
     // Tracks the bound state of the service.
     private var mBound = false
+    private var lastVerion = 0
 
     //endregion
 
@@ -95,6 +92,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             val binder = service as LocationUpdatesService.LocalBinder
             mService = binder.service
             mBound = true
+            mService!!.requestLocationUpdates()
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
@@ -102,7 +100,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             mBound = false
         }
     }
-    //endregiono
+    //endregion
 
     //region Helper Functions
     private fun init() {
@@ -131,7 +129,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     val view = v as ImageView
                     //clear the overlay
-                    view.getDrawable().clearColorFilter()
+                    view.drawable.clearColorFilter()
                     view.invalidate()
                 }
             }
@@ -176,6 +174,8 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
             false
         })
+
+
     }
 
     private fun accept() {
@@ -184,7 +184,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         UserSessionManager.getInstance(this).setIsAccepted(true)
         if (countDownTimer != null)
             countDownTimer!!.cancel()
-//        tvTimer.text = "00:00"
         tvTimer.visibility = View.INVISIBLE
 
     }
@@ -217,7 +216,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
                         stopSound()
 
                         //remove location update
-                        LocationHelper.shared.stopUpdateLocation()
+//                        LocationHelper.shared.stopUpdateLocation()
                         finish()
                         hideProgress()
 
@@ -286,14 +285,9 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         vibrator = this.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator!!.vibrate(
-//                VibrationEffect.createWaveform(
-//                    pattern,
-//                  0
-//                )
                 pattern,
                 0
             )
-//            vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE));
         } else {
             vibrator!!.vibrate(60000)
         }
@@ -325,11 +319,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             FirebaseManager.getCurrentCourierLocation(AppConstants.CurrentLoginCourier.CourierId.toString(),
                 object : FirebaseManager.IFbOperation {
                     override fun onSuccess(code: Int) {
-//                        Toast.makeText(
-//                            this@TaskActivity,
-//                            AppConstants.CurrentCourierLocation.lat + AppConstants.CurrentCourierLocation.long,
-//                            Toast.LENGTH_SHORT
-//                        ).show()
 
                     }
 
@@ -341,26 +330,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
     }
 
-    private fun blink() {
-        val hander = Handler()
-        Thread(Runnable {
-            try {
-                Thread.sleep(550)
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-            }
-
-            hander.post {
-
-                if (tvTimer.visibility == View.VISIBLE) {
-                    tvTimer.visibility = View.INVISIBLE
-                } else {
-                    tvTimer.visibility = View.VISIBLE
-                }
-                blink()
-            }
-        }).start()
-    }
 
     private fun loadTasks() {
         ivNoInternet.visibility = View.INVISIBLE
@@ -437,164 +406,42 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         tvEmptyData.visibility = View.INVISIBLE
     }
 
-    private fun createLocationRequest() {
-        // 1
-        locationRequest = LocationRequest()
-        // 2
-        locationRequest!!.interval = 1000
-        // 3
-        locationRequest!!.fastestInterval = 5000
-        locationRequest!!.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-
-        val builder = LocationSettingsRequest.Builder()
-            .addLocationRequest(locationRequest!!)
-
-        // 4
-        val client = LocationServices.getSettingsClient(this)
-        val task = client.checkLocationSettings(builder.build())
-
-        // 5
-        task.addOnSuccessListener {
-            locationUpdateState = true
-            startLocationUpdates()
-        }
-        task.addOnFailureListener { e ->
-            // 6
-            if (e is ResolvableApiException) {
-                // Location settings are not satisfied, but this can be fixed
-                // by showing the user a dialog.
-                try {
-                    // Show the dialog by calling startResolutionForResult(),
-                    // and check the result in onActivityResult().
-                    e.startResolutionForResult(
-                        this,
-                        TaskActivity.REQUEST_CHECK_SETTINGS
-                    )
-                } catch (sendEx: IntentSender.SendIntentException) {
-                    // Ignore the error.
-                }
-            }
-        }
-    }
-
-    //update the current location
-    private fun startLocationUpdates() {
-        //1
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
-            )
-            return
-        }
-
-    }
-
-    private fun requestPermission() {
-        if (NetworkManager().isNetworkAvailable(this)) {
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-            if (checkPermission(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            ) {
-                fusedLocationClient?.lastLocation?.addOnSuccessListener(
-                    this
-                ) { location: Location? ->
-                    // Got last known location. In some rare
-                    // situations this can be null.
-                    if (location == null) {
-                        //no data
-
-                    } else location.apply {
-                        // Handle location object
-                        Log.e("LOG", location.toString())
-                        AppConstants.CurrentLocation = location
-                    }
-                }
-            }
-        } else {
-            Alert.showMessage(this@TaskActivity, getString(R.string.no_internet))
-        }
-    }
-
-    private fun checkPermission(vararg perm: String): Boolean {
-        val havePermissions = perm.toList().all {
-            ContextCompat.checkSelfPermission(this, it) ==
-                    PackageManager.PERMISSION_GRANTED
-        }
-        if (!havePermissions) {
-            if (perm.toList().any {
-                    ActivityCompat.shouldShowRequestPermissionRationale(
-                        this,
-                        it
-                    )
-                }) {
-
-                val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.Permission))
-                    .setMessage(getString(R.string.error_location_permission_required))
-                    .setPositiveButton(getString(R.string.ok)) { id, v ->
-                        ActivityCompat.requestPermissions(
-                            this, perm, LOCATION_PERMISSION_REQUEST_CODE
-                        )
-                    }
-                    .setNegativeButton(getString(R.string.no)) { _, _ -> }
-                    .create()
-                dialog.show()
-            } else {
-                ActivityCompat.requestPermissions(
-                    this, perm,
-                    LOCATION_PERMISSION_REQUEST_CODE
-                )
-
-            }
-            return false
-        }
-        return true
-    }
 
     //endregion
 
     //region Events
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        window.addFlags(WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY)
         setContentView(R.layout.activity_task)
+
         myReceiver = MyReceiver()
 
-//        LocationHelper.shared.initializeLocation(this)
-//        requestPermission()
         // Check that the user hasn't revoked permissions by going to Settings.
-        if (UserSessionManager.getInstance(this).requestingLocationUpdates())
-        {
+        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
             if (!checkPermissions()) {
                 requestPermissions()
             }
-
+        } else {
+            if (!checkPermissions()) {
+                requestPermissions()
+            }
         }
-
 
 
         init()
         FirebaseManager.setUpFirebase()
         getCurrentActiveTask()
         getCurrentCourierLocation()
+        forceUpdate()
+
 
     }
 
-    override fun locationResponse(locationResult: LocationResult) {
-        lastLocation = locationResult.lastLocation
-    }
 
 
     override fun onResume() {
         super.onResume()
+
         if (AppConstants.endTask) {
             loadTasks()
             AppConstants.endTask = false
@@ -615,18 +462,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             Context.BIND_AUTO_CREATE
         )
 
-        if (!checkPermissions()) {
-            requestPermissions()
-        } else {
-            if (mService != null)
-                mService!!.requestLocationUpdates()
 
-        }
-
-        bindService(
-            Intent(this, LocationUpdatesService::class.java), mServiceConnection,
-            Context.BIND_AUTO_CREATE
-        )
     }
 
 
@@ -650,6 +486,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
 
     override fun onClick(view: View?) {
         when (view!!.id) {
+
             R.id.ivSettings -> {
                 AlertDialog.Builder(this)
                     .setTitle(AppConstants.WARNING)
@@ -684,13 +521,6 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         finish()
     }
 
-    override fun onBottomSheetClosed(isClosed: Boolean) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onBottomSheetSelectedItem(index: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     public override fun onSaveInstanceState(savedInstanceState: Bundle) {
         super.onSaveInstanceState(savedInstanceState)
@@ -788,40 +618,80 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
             mService!!.removeLocationUpdates()
     }
 
-    private fun prepareCourierData() {
-        courier.name = courier.CourierName
-        courier.token = FirebaseManager.getCurrentUser()!!.uid //token
-        courier.isActive = true
-        var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
-        courier.location = location(
-            LocationHelper.shared.lastLocation!!.latitude.toString(),
-            LocationHelper.shared.lastLocation!!.longitude.toString(), isGpsEnabled
-        )
 
-        courier.isActive = true
+    private fun forceUpdate() {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.forceUpdate()
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<String>> {
+                override fun onFailed(error: String) {
+                    hideProgress()
+                    Alert.showMessage(
+                        this@TaskActivity,
+                        getString(R.string.no_internet)
+                    )
+                }
 
+                override fun onSuccess(response: ApiResponse<String>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+                        //stop  tracking service
+                        lastVerion = response.ResponseObj!!.toInt()
+                        if (lastVerion > BuildConfig.VERSION_CODE)
+                            showDilogUpdate()
 
-        val gcd = Geocoder(this@TaskActivity, Locale.getDefault())
-        val addresses = gcd.getFromLocation(
-            LocationHelper.shared.lastLocation!!.latitude,
-            LocationHelper.shared.lastLocation!!.longitude,
-            1
-        )
-        if (addresses.size > 0) {
-            if (!addresses[0].subAdminArea.isNullOrEmpty())
-                courier.city = addresses[0].subAdminArea
-            else if (!addresses[0].adminArea.isNullOrEmpty())
-                courier.city = addresses[0].adminArea
-        } else
-            courier.city = addresses[0].featureName
+                        hideProgress()
 
-        if(FirebaseManager.getCurrentUser()!=null)
-        {
-            //update courier data on db
+                    } else {
+                        hideProgress()
+                        Alert.showMessage(
+                            this@TaskActivity,
+                            getString(R.string.error_network)
+                        )
+                    }
+
+                }
+            })
+
+        } else {
+            hideProgress()
+            Alert.showMessage(
+                this@TaskActivity,
+                getString(R.string.no_internet)
+            )
         }
-        else
-        {
-            //create new courier on real db
+
+
+    }
+
+
+    private fun showDilogUpdate() {
+        val builder = AlertDialog.Builder(this@TaskActivity)
+        builder.setTitle(getString(R.string.update))
+        builder.setMessage(getString(R.string.please_update))
+        builder.setPositiveButton(getString(R.string.update_now)) { dialogInterface, i ->
+            val uri = Uri.parse("market://details?id=com.kadabra.courier")
+            val goToMarket = Intent(Intent.ACTION_VIEW, uri)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                goToMarket.addFlags(
+                    Intent.FLAG_ACTIVITY_NO_HISTORY or
+                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
+                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                )
+                startActivity(goToMarket)
+            } else {
+                startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://play.google.com/store/apps/details?id=com.kadabra.courier")
+                    )
+                )
+            }
+        }
+        val alertDialog = builder.create()
+        alertDialog.setCancelable(false)
+        if (!this@TaskActivity.isFinishing) {
+            alertDialog.show()
         }
     }
     //endregion
@@ -836,12 +706,11 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener, IBottomSheetCall
         override fun onReceive(context: Context, intent: Intent) {
             val location =
                 intent.getParcelableExtra<Location>(LocationUpdatesService.EXTRA_LOCATION)
-//            if (location != null) {
-//                Toast.makeText(this@TaskActivity, "(" + location.latitude + ", " + location.longitude + ")",
-//                    Toast.LENGTH_SHORT).show()
-//            }
+
         }
     }
+
+
     //endregion
 
 
