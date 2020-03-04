@@ -10,6 +10,7 @@ import com.kadabra.courier.utilities.AppConstants
 
 
 class UserSessionManager(val context: Context) {
+    val LANGUAGE = "lang"
     private val editor: SharedPreferences.Editor
     private val sharedPreferences: SharedPreferences
     private val sharedPrefName = UserSessionManager::class.java.name + "_shared_preferences"

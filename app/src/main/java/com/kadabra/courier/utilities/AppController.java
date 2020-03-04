@@ -2,6 +2,9 @@ package com.kadabra.courier.utilities;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.res.Configuration;
+
+import androidx.annotation.NonNull;
 
 import com.reach.plus.admin.util.UserSessionManager;
 import com.kadabra.courier.R;
@@ -29,6 +32,11 @@ public class AppController extends Application {
         );
     }
 
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        LocaleManager.setLocale(this);
+    }
 
     public static synchronized AppController getInstance() {
         return mContext;

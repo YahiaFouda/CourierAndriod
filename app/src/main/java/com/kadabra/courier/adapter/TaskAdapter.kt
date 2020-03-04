@@ -14,9 +14,10 @@ import com.kadabra.courier.model.Task
 import com.kadabra.courier.task.TaskDetailsActivity
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
-
-
-
+import android.view.animation.AnimationUtils.loadAnimation
+import android.view.animation.Animation
+import android.widget.FrameLayout
+import android.view.animation.AnimationUtils
 
 
 /**
@@ -36,10 +37,26 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskAdapter.MyViewHolder {
 
 //        val view = inflater.inflate(R.layout.task_layout, parent, false)
-        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-        return MyViewHolder(view)
 
+//        if (viewType == R.layout.task_layout)
+//            view = LayoutInflater.from(parent.context).inflate(R.layout.task_layout, parent, false)
+//        else if(viewType == R.layout.task_layout_accepted)
+//            view = LayoutInflater.from(parent.context).inflate(R.layout.task_layout_accepted, parent, false)
+
+        if (viewType == 1)//default layout
+        {
+            val view =
+                LayoutInflater.from(parent.context).inflate(com.kadabra.courier.R.layout.task_layout, parent, false)
+            return MyViewHolder(view)
+        }
+        else
+        {
+            val view1 =
+                LayoutInflater.from(parent.context).inflate(com.kadabra.courier.R.layout.task_layout_accepted, parent, false)
+            return MyViewHolder(view1)
+        }
     }
+
 
     override fun onBindViewHolder(holder: TaskAdapter.MyViewHolder, position: Int) {
         task = tasksList[position]
@@ -70,18 +87,7 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
 //
         }
-//
-//            task.stopsmodel.clear()
-//
-//            if (pickUpStops.count() > 0)
-//                task.stopsmodel.addAll(pickUpStops)
-//            if (normalStops.count() > 0)
-//                task.stopsmodel.addAll(normalStops)
-//            if (dropOffStops.count() > 0)
-//                task.stopsmodel.addAll(dropOffStops)
-//
-//
-//        }
+
 
 
         if (task.Amount!! > 0)
@@ -105,18 +111,18 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
     override fun getItemViewType(position: Int): Int {
 //        return position
         return if(AppConstants.CurrentAcceptedTask.TaskId==tasksList[position].TaskId) {
-            R.layout.task_layout_accepted
+          2 // R.layout.task_layout_accepted
         } else
-            R.layout.task_layout
+            1//R.layout.task_layout
 
     }
 
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        var tvTaskName: TextView = itemView.findViewById(R.id.tvTaskName)
-        var tvTaskAmount: TextView = itemView.findViewById(R.id.tvTaskAmount)
-        var tvPickupLocation: TextView = itemView.findViewById(R.id.tvPickupLocation)
-        var tvDropOffLocation: TextView = itemView.findViewById(R.id.tvDropOffLocation)
+        var tvTaskName: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvTaskName)
+        var tvTaskAmount: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvTaskAmount)
+        var tvPickupLocation: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvPickupLocation)
+        var tvDropOffLocation: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvDropOffLocation)
 
 
         init {
@@ -181,5 +187,10 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
         return stops
 
+    }
+
+    private fun setAnimation(container: FrameLayout, position: Int) {
+        val animation = AnimationUtils.loadAnimation(context, android.R.anim.slide_in_left)
+        container.startAnimation(animation)
     }
 }

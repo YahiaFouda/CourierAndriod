@@ -1,5 +1,6 @@
 package com.kadabra.courier.adapter
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.view.LayoutInflater
@@ -17,9 +18,8 @@ import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.VectorDrawableUtils
 import java.util.*
-
-
-
+import android.net.Uri
+import android.util.Log
 
 
 /**
@@ -38,12 +38,12 @@ class StopAdapter(private val context: Context, private val stopList: ArrayList<
 
 //        val view = inflater.inflate(R.layout.stop_layout, parent, false)
 //        return MyViewHolder(view, viewType)
-        if(!::mLayoutInflater.isInitialized) {
+        if (!::mLayoutInflater.isInitialized) {
             mLayoutInflater = LayoutInflater.from(parent.context)
         }
 
 
-        val view=mLayoutInflater.inflate(R.layout.stop_layout, parent, false)
+        val view = mLayoutInflater.inflate(R.layout.stop_layout, parent, false)
 
         return MyViewHolder(view, viewType)
 
@@ -56,9 +56,10 @@ class StopAdapter(private val context: Context, private val stopList: ArrayList<
 
         when {
             stop.StopTypeID == 1 -> { //pick up
-                holder.timeline.marker= VectorDrawableUtils.getDrawable(
+                holder.timeline.marker = VectorDrawableUtils.getDrawable(
                     holder.itemView.context,
-                    R.drawable.ic_marker_active)
+                    R.drawable.ic_marker_active
+                )
             }
             stop.StopTypeID == 3 -> { //default stop
                 holder.timeline.marker = VectorDrawableUtils.getDrawable(
@@ -66,7 +67,7 @@ class StopAdapter(private val context: Context, private val stopList: ArrayList<
                     R.drawable.ic_marker_inactive
                 )
             }
-            stop.StopTypeID == 2 ->  {  //drop off
+            stop.StopTypeID == 2 -> {  //drop off
                 holder.timeline.marker = VectorDrawableUtils.getDrawable(
                     holder.itemView.context,
                     R.drawable.ic_marker
@@ -102,21 +103,19 @@ class StopAdapter(private val context: Context, private val stopList: ArrayList<
     inner class MyViewHolder(itemView: View, viewType: Int) : RecyclerView.ViewHolder(itemView) {
 
         var tvStopName: TextView = itemView.findViewById(R.id.tvStopName)
-        val timeline :TimelineView =itemView.findViewById(R.id.timeline)
+        val timeline: TimelineView = itemView.findViewById(R.id.timeline)
 
         init {
             timeline.initLine(viewType)
 
 
             itemView.setOnClickListener {
-                if(NetworkManager().isNetworkAvailable(context))
-                {
+                if (NetworkManager().isNetworkAvailable(context)) {
                     val pos = adapterPosition
                     stop = stopList[pos]
                     AppConstants.currentSelectedStop = stop
-                    context.startActivity(Intent(context, LocationDetailsActivity::class.java))
-                }
-                else
+                    showMapAlternatives(stop.Latitude.toString(), stop.Longitude.toString())
+                } else
                     Alert.showMessage(
                         context,
                         context.getString(R.string.no_internet)
@@ -125,5 +124,33 @@ class StopAdapter(private val context: Context, private val stopList: ArrayList<
             }
 
         }
+    }
+
+    private fun showMapAlternatives(latitude: String, longitude: String) {
+        AlertDialog.Builder(context)
+            .setTitle(context.getString(R.string.map_option))
+            .setMessage(context.getString(R.string.map_title))
+            .setIcon(android.R.drawable.ic_dialog_map)
+            .setPositiveButton(context.getString(R.string.app_name)) { dialog, which ->
+                context.startActivity(Intent(context, LocationDetailsActivity::class.java))
+            }
+            .setNegativeButton(context.getString(R.string.google_map)) { dialog, which ->
+
+                val builder = Uri.Builder()
+                builder.scheme("https")
+                    .authority("www.google.com")
+                    .appendPath("maps")
+                    .appendPath("dir")
+                    .appendPath("")
+                    .appendQueryParameter("api", "1")
+                    .appendQueryParameter("destination", "$latitude,$longitude")
+                val url = builder.build().toString()
+                Log.d("Directions", url)
+                val i = Intent(Intent.ACTION_VIEW)
+                i.data = Uri.parse(url)
+                context.startActivity(i)
+
+            }
+            .show()
     }
 }

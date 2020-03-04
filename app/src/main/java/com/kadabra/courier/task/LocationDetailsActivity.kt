@@ -28,11 +28,12 @@ import com.kadabra.courier.direction.TaskLoadedCallback
 import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_location_details.*
 import com.google.android.gms.maps.model.LatLngBounds
+import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.location.LatLngInterpolator
 import com.kadabra.courier.location.MarkerAnimation
 
 
-class LocationDetailsActivity : AppCompatActivity(), OnMapReadyCallback,
+class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
     GoogleMap.OnMarkerClickListener, RoutingListener, TaskLoadedCallback, LocationListener {
 
 

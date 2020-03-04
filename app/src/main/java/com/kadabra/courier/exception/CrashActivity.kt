@@ -4,10 +4,11 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.kadabra.courier.R
+import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.intro.SplashActivity
 import kotlinx.android.synthetic.main.activity_crash.*
 
-class CrashActivity : AppCompatActivity() {
+class CrashActivity : BaseNewActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

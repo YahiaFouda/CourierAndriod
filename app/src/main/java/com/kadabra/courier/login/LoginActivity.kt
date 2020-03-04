@@ -25,11 +25,12 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
+import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
 
 
 
-class LoginActivity : AppCompatActivity(), View.OnClickListener, ILocationListener {
+class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
 
     //region Members
     private var courier: Courier = Courier()

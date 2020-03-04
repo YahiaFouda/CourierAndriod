@@ -101,17 +101,21 @@ class LocationUpdatesService : Service() {
         get() {
             val intent = Intent(this, LocationUpdatesService::class.java)
 //            if (mLocation != null)
+            var s=AppConstants.CurrentLocation
             text = "(" + mLocation!!.latitude + ", " + mLocation!!.longitude + ")"
 
             intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true)
+
+
             val servicePendingIntent = PendingIntent.getService(
                 this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
             val activityPendingIntent = PendingIntent.getActivity(
                 this, 0,
-                Intent(this, TaskActivity::class.java), 0
+                Intent(this, TaskActivity::class.java), PendingIntent.FLAG_CANCEL_CURRENT
             )
+
 
             val builder = NotificationCompat.Builder(this)
                 .addAction(
@@ -121,7 +125,7 @@ class LocationUpdatesService : Service() {
 //                    .addAction(R.mipmap.ic_launcher, getString(R.string.remove_location_updates),
 //                            servicePendingIntent)
                 .setContentText(text)
-                .setContentTitle("Courier")
+                .setContentTitle(getString(R.string.app_name))
                 .setOngoing(true)
                 .setPriority(Notification.PRIORITY_HIGH)
                 .setSmallIcon(R.mipmap.ic_launcher)

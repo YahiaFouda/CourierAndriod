@@ -33,6 +33,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import android.widget.PopupMenu
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -40,6 +41,7 @@ import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
+import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.location.LocationHelper
@@ -49,7 +51,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-class TaskActivity : AppCompatActivity(), View.OnClickListener {
+class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
     //region Members
 
@@ -71,6 +73,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
     // Tracks the bound state of the service.
     private var mBound = false
     private var lastVerion = 0
+    private lateinit var languageMenu: PopupMenu
 
     //endregion
 
@@ -104,56 +107,20 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
     //region Helper Functions
     private fun init() {
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
+
+
         ivSettings.setOnClickListener(this)
         ivMenu.setOnClickListener(this)
         ivAccept.setOnClickListener(this)
         tvTimer.visibility = View.INVISIBLE
 
         loadTasks()
-
         refresh.setOnRefreshListener {
             loadTasks()
         }
 
 
 
-        ivSettings.setOnTouchListener(OnTouchListener { v, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    val view = v as ImageView
-                    //overlay is black with transparency of 0x77 (119)
-                    view.drawable.setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP)
-                    view.invalidate()
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val view = v as ImageView
-                    //clear the overlay
-                    view.drawable.clearColorFilter()
-                    view.invalidate()
-                }
-            }
-
-            false
-        })
-
-        ivMenu.setOnTouchListener(OnTouchListener { v, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    val view = v as ImageView
-                    //overlay is black with transparency of 0x77 (119)
-                    view.drawable.setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP)
-                    view.invalidate()
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val view = v as ImageView
-                    //clear the overlay
-                    view.drawable.clearColorFilter()
-                    view.invalidate()
-                }
-            }
-
-            false
-        })
 
         ivAccept.setOnTouchListener(OnTouchListener { v, event ->
             when (event.action) {
@@ -200,46 +167,57 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
 //        {
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
-            var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
-            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
-                override fun onFailed(error: String) {
-                    hideProgress()
-                    Alert.showMessage(
-                        this@TaskActivity,
-                        getString(R.string.no_internet)
-                    )
-                }
+         if(AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //no accepted task
+         {
+             var request = NetworkManager().create(ApiServices::class.java)
+             var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
+             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
+                 override fun onFailed(error: String) {
+                     hideProgress()
+                     Alert.showMessage(
+                         this@TaskActivity,
+                         getString(R.string.no_internet)
+                     )
+                 }
 
-                override fun onSuccess(response: ApiResponse<Courier>) {
-                    if (response.Status == AppConstants.STATUS_SUCCESS) {
-                        //stop  tracking service
-                        stopTracking()
-                        FirebaseManager.logOut()
-                        UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
-                        UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
-                        startActivity(Intent(this@TaskActivity, LoginActivity::class.java))
-                        if (countDownTimer != null)
-                            countDownTimer!!.cancel()
-                        cancelVibrate()
-                        stopSound()
+                 override fun onSuccess(response: ApiResponse<Courier>) {
+                     if (response.Status == AppConstants.STATUS_SUCCESS) {
+                         //stop  tracking service
+                         stopTracking()
+                         FirebaseManager.logOut()
+                         UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
+                         UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
+                         startActivity(Intent(this@TaskActivity, LoginActivity::class.java))
+                         if (countDownTimer != null)
+                             countDownTimer!!.cancel()
+                         cancelVibrate()
+                         stopSound()
 
-                        //remove location update
+                         //remove location update
 //                        LocationHelper.shared.stopUpdateLocation()
-                        finish()
-                        hideProgress()
+                         finish()
+                         hideProgress()
 
-                    } else {
-                        hideProgress()
-                        Alert.showMessage(
-                            this@TaskActivity,
-                            getString(R.string.error_network)
-                        )
-                    }
+                     } else {
+                         hideProgress()
+                         Alert.showMessage(
+                             this@TaskActivity,
+                             getString(R.string.error_network)
+                         )
+                     }
 
-                }
-            })
+                 }
+             })
+         }
 
+            else //accepted task prevent logout
+         {
+             hideProgress()
+             Alert.showMessage(
+                 this@TaskActivity,
+                 getString(R.string.end_first)
+             )
+         }
         } else {
             hideProgress()
             Alert.showMessage(
@@ -430,6 +408,7 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_task)
 
+
         myReceiver = MyReceiver()
 
         // Check that the user hasn't revoked permissions by going to Settings.
@@ -503,17 +482,49 @@ class TaskActivity : AppCompatActivity(), View.OnClickListener {
 
             R.id.ivSettings -> {
                 AlertDialog.Builder(this)
-                    .setTitle(AppConstants.WARNING)
+                    .setTitle(getString(R.string.warning))
                     .setMessage(getString(R.string.exit))
                     .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setPositiveButton(AppConstants.OK) { dialog, which ->
+                    .setPositiveButton(getString(R.string.ok)) { dialog, which ->
                         logOut()
                     }
-                    .setNegativeButton(AppConstants.CANCEL) { dialog, which -> }
+                    .setNegativeButton(getString(R.string.cancel)) { dialog, which -> }
                     .show()
             }
             R.id.ivMenu -> {
-                Alert.showMessage(this, "Menu is clicked.")
+                var currentLanguage = UserSessionManager.getInstance(this).getLanguage()
+                languageMenu = PopupMenu(this, ivMenu)
+                languageMenu.menuInflater.inflate(R.menu.menu_language, languageMenu.menu)
+                languageMenu.setOnMenuItemClickListener {
+                    if (it.itemId == R.id.arabic) {
+                        if (currentLanguage != AppConstants.ARABIC) {
+                            UserSessionManager.getInstance(this).setLanguage(AppConstants.ARABIC)
+//                        setNewLocale(this, AppConstants.ARABIC)
+//
+                            val intent = baseContext.packageManager.getLaunchIntentForPackage(
+                                baseContext.packageName
+                            )
+                            intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            startActivity(intent)
+                        }
+
+
+                    } else if (it.itemId == R.id.english) {
+                        if (currentLanguage != AppConstants.ENGLISH) {
+                            UserSessionManager.getInstance(this).setLanguage(AppConstants.ENGLISH)
+//                        setNewLocale(this, AppConstants.ENGLISH)
+                            val intent = baseContext.packageManager.getLaunchIntentForPackage(
+                                baseContext.packageName
+                            )
+                            intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            startActivity(intent)
+                        }
+
+
+                    }
+                    true
+                }
+                languageMenu.show()
             }
             R.id.ivAccept -> {
                 if (taskList.size > 0) {
