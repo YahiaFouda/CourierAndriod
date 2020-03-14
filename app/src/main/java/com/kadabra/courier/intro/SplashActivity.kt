@@ -12,6 +12,9 @@ import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_splash.*
+import com.kadabra.services.ExitAppService
+
+
 
 
 class SplashActivity : AppCompatActivity() {
@@ -26,8 +29,9 @@ class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(com.kadabra.courier.R.layout.activity_splash)
-
+        startService(Intent(baseContext, ExitAppService::class.java))
         init()
+
     }
 
 

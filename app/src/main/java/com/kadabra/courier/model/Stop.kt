@@ -5,6 +5,7 @@ class Stop {
     var StopName: String = ""
     var Latitude: Double? = null
     var Longitude: Double? = null
+    var StopID:String=""
     var StopTypeID: Int = 0 //1 pickup 2 dropoff 3 stop "default"
     var StopType = ""
     var CreationDate = ""

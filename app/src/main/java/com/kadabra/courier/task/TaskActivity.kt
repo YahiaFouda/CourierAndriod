@@ -69,11 +69,12 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private var courier: Courier = Courier()
     private var myReceiver: MyReceiver? = null
     // A reference to the service used to get location updates.
-    private var mService: LocationUpdatesService? = null
+//    private var mService: LocationUpdatesService? = null
     // Tracks the bound state of the service.
     private var mBound = false
     private var lastVerion = 0
     private lateinit var languageMenu: PopupMenu
+    private var isFirst=true
 
     //endregion
 
@@ -92,13 +93,14 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             val binder = service as LocationUpdatesService.LocalBinder
-            mService = binder.service
+            LocationUpdatesService.shared = binder.service
             mBound = true
-            mService!!.requestLocationUpdates()
+            LocationUpdatesService.shared!!.requestLocationUpdates()
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            mService = null
+//            mService = null
+            LocationUpdatesService.shared= LocationUpdatesService()
             mBound = false
         }
     }
@@ -248,7 +250,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     }
 
     private fun processTask() {
-        if (!UserSessionManager.getInstance(this@TaskActivity).isAccepted()) {
+        if (!UserSessionManager.getInstance(this@TaskActivity).isAccepted()&&isFirst) {
+            isFirst=false
             tvTimer.visibility = View.VISIBLE
             vibrate()
             playSound()
@@ -416,7 +419,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             if (!checkPermissions()) {
                 requestPermissions()
             }
-        } else {
+        }
+        else {
             if (!checkPermissions()) {
                 requestPermissions()
             }
@@ -435,11 +439,12 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     override fun onResume() {
         super.onResume()
 
-        if (AppConstants.endTask) {
+//        if (AppConstants.endTask) {
             loadTasks()
-            AppConstants.endTask = false
+//            AppConstants.endTask = false
+//
+//        }
 
-        }
         LocalBroadcastManager.getInstance(this).registerReceiver(
             myReceiver!!,
             IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
@@ -498,7 +503,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                 languageMenu.setOnMenuItemClickListener {
                     if (it.itemId == R.id.arabic) {
                         if (currentLanguage != AppConstants.ARABIC) {
-                            UserSessionManager.getInstance(this).setLanguage(AppConstants.ARABIC)
+                            UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ARABIC)
 //                        setNewLocale(this, AppConstants.ARABIC)
 //
                             val intent = baseContext.packageManager.getLaunchIntentForPackage(
@@ -511,7 +516,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
                     } else if (it.itemId == R.id.english) {
                         if (currentLanguage != AppConstants.ENGLISH) {
-                            UserSessionManager.getInstance(this).setLanguage(AppConstants.ENGLISH)
+                            UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ENGLISH)
 //                        setNewLocale(this, AppConstants.ENGLISH)
                             val intent = baseContext.packageManager.getLaunchIntentForPackage(
                                 baseContext.packageName
@@ -567,7 +572,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                 Log.i(TAG, "User interaction was cancelled.")
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission was granted.
-                mService!!.requestLocationUpdates()
+                LocationUpdatesService.shared!!.requestLocationUpdates()
             } else {
                 // Permission denied.
 //                setButtonsState(false)
@@ -639,8 +644,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     }
 
     private fun stopTracking() {
-        if (mService != null)
-            mService!!.removeLocationUpdates()
+        if (LocationUpdatesService.shared != null)
+            LocationUpdatesService.shared!!.removeLocationUpdates()
     }
 
 

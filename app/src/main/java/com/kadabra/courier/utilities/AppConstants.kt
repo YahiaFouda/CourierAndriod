@@ -13,6 +13,8 @@ import com.kadabra.courier.model.location
 object AppConstants {
 
 
+
+
     const val BASE_URL = "https://courier.kadabraservices.com/api/Account/"
 
     const val APP_DATABASE_NAME = "courier"
@@ -33,6 +35,7 @@ object AppConstants {
     val CODE_444 = 444
     //endregion
     //region languages
+    val TOKEN="token"
     val LANGUAGE = "lang"
     val ARABIC = "ar"
     val ENGLISH = "en"
@@ -44,7 +47,7 @@ object AppConstants {
     val CANCEL = "cancel"
     val IS_FIRST = "is_first"
     val IS_LOGIN = "logIn"
-
+    val ADMIN_CHANNEL_ID = "123456"
 
     //endregion
     //region TOKEN
@@ -54,6 +57,8 @@ object AppConstants {
 
     const val URL_LOGIN = "Login"
     const val URL_LOG_OUT = "Logout"
+    const val URL_SET_USER_TOKEN = "SetCourierToken"
+
     const val URL_GET_AVALIABLE_TAKS = "GetAvailableTask"
     const val URL_END_TAKS = "UpdateEndTask"
     const val URL_GET_TAKS_DETAILS = "GetTaskByID"
@@ -69,6 +74,7 @@ object AppConstants {
     const val FALSE = "false"
     const val IS_ACCEPTED = "accepted"
     var endTask = false
+    var CURRENT_DEVICE_TOKEN=""
 
     var CurrentLoginCourier: Courier = Courier()
     var CurrentSelectedTask: Task = Task()

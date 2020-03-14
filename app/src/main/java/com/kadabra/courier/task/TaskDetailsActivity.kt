@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.gms.location.LocationResult
 import com.kadabra.Networking.INetworkCallBack
@@ -27,9 +26,6 @@ import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import kotlinx.android.synthetic.main.activity_task_details.*
-
-
-
 
 
 class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
@@ -102,8 +98,9 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     }
 
     private fun loadTaskDetails(task: Task) {
-        if (!task.Task.isNullOrEmpty())
-            tvTask.text = task.Task
+//        if (!task.TaskName.isNullOrEmpty())
+        tvTask.text = task.TaskName
+        tvTaskDescription.text = task.TaskDescription
 
         if (task.Amount!! > 0)
             tvTaskAmount.text =
@@ -316,32 +313,39 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             }
             R.id.btnEndTask -> {
 
-                if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) // create new task on fb
-                {
-                    AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
-                    AppConstants.CurrentAcceptedTask.isActive = true
-                    AppConstants.CurrentAcceptedTask.courierId =
-                        AppConstants.CurrentLoginCourier.CourierId
-                    var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
-                    if (AppConstants.CurrentLocation != null)
-                        AppConstants.CurrentAcceptedTask.location =
-                            location(
-                                AppConstants.CurrentLocation!!.latitude.toString(),
-                                AppConstants.CurrentLocation!!.longitude.toString(),
-                                isGpsEnabled
-                            )
-                    acceptTask(AppConstants.CurrentAcceptedTask!!)
+                if (NetworkManager().isNetworkAvailable(this)) {
+                    if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) // create new task on fb
+                    {
+                        AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
+                        AppConstants.CurrentAcceptedTask.isActive = true
+                        AppConstants.CurrentAcceptedTask.CourierID =
+                            AppConstants.CurrentLoginCourier.CourierId
+                        var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
+                        if (AppConstants.CurrentLocation != null)
+                            AppConstants.CurrentAcceptedTask.location =
+                                location(
+                                    AppConstants.CurrentLocation!!.latitude.toString(),
+                                    AppConstants.CurrentLocation!!.longitude.toString(),
+                                    isGpsEnabled
+                                )
+                        acceptTask(AppConstants.CurrentAcceptedTask!!)
+
+                    } else {
+                        if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions
+                            Toast.makeText(this, getString(R.string.end_first), Toast.LENGTH_SHORT)
+                                .show()
+                        } else {//the same task end task
+                            btnEndTask.text = getString(R.string.end_task)
+                            endTask(task.TaskId)
+                        }
+                    }
 
                 } else {
-                    if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions
-//                        btnEndTask.setBackgroundDrawable(d)
-                        Toast.makeText(this,getString(R.string.end_first),Toast.LENGTH_SHORT).show()
-                    } else {//the same task end task
-                        btnEndTask.text = getString(R.string.end_task)
-                        endTask(task.TaskId)
-                    }
+                    Alert.showMessage(
+                        this@TaskDetailsActivity,
+                        getString(R.string.no_internet)
+                    )
                 }
-
             }
             R.id.btnLocation -> {
 //                var isGpsEnabled = LocationHelper.shared.isLocationEnabled()

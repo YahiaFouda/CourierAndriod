@@ -20,10 +20,10 @@ public class AppController extends Application {
     public void onCreate() {
         super.onCreate();
         mContext = this;
-        if (UserSessionManager.Companion.getInstance(this).getLanguage() == AppConstants.INSTANCE.getENGLISH())
-            LanguageUtil.changeLanguageType(mContext, new Locale(AppConstants.INSTANCE.getENGLISH()));
-        else
-            LanguageUtil.changeLanguageType(mContext, new Locale(AppConstants.INSTANCE.getARABIC()));
+//        if (UserSessionManager.Companion.getInstance(this).getLanguage() == AppConstants.INSTANCE.getENGLISH())
+//            LanguageUtil.changeLanguageType(mContext, new Locale(AppConstants.INSTANCE.getENGLISH()));
+//        else
+//            LanguageUtil.changeLanguageType(mContext, new Locale(AppConstants.INSTANCE.getARABIC()));
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                 .setDefaultFontPath("fonts/Montserrat-Regular.otf")

@@ -56,7 +56,7 @@ class LocationHelper : ILocationListener {
                     )
                     FirebaseManager.updateTaskLocation(AppConstants.CurrentAcceptedTask)
                     FirebaseManager.updateCourierLocation(
-                        AppConstants.CurrentAcceptedTask.courierId.toString(),
+                        AppConstants.CurrentAcceptedTask.CourierID.toString(),
                         location(
                             lastLocation!!.latitude.toString(),
                             lastLocation!!.longitude.toString(),

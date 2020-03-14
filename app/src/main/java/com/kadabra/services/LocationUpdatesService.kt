@@ -30,7 +30,6 @@ import com.google.android.gms.location.LocationServices
 import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
 import com.kadabra.courier.firebase.FirebaseManager
-import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.location
 import com.kadabra.courier.task.TaskActivity
@@ -54,6 +53,7 @@ import java.util.*
  * notification assocaited with that service is removed.
  */
 class LocationUpdatesService : Service() {
+
 
     private val mBinder = LocalBinder()
 
@@ -100,10 +100,10 @@ class LocationUpdatesService : Service() {
     val notification: Notification
         get() {
             val intent = Intent(this, LocationUpdatesService::class.java)
-//            if (mLocation != null)
-            var s=AppConstants.CurrentLocation
-            text = "(" + mLocation!!.latitude + ", " + mLocation!!.longitude + ")"
-
+            if (mLocation != null) {
+                var s = AppConstants.CurrentLocation
+                text = "(" + mLocation!!.latitude + ", " + mLocation!!.longitude + ")"
+            }
             intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true)
 
 
@@ -136,6 +136,9 @@ class LocationUpdatesService : Service() {
             }
 
             return builder.build()
+//            } else
+//                return Notification()
+
         }
 
     override fun onCreate() {
@@ -220,8 +223,8 @@ class LocationUpdatesService : Service() {
         // do nothing. Otherwise, we make this service a foreground service.
         if (!mChangingConfiguration && UserSessionManager.getInstance(this).requestingLocationUpdates()) {
             Log.i(TAG, "Starting foreground service")
-
-            startForeground(NOTIFICATION_ID, notification)
+            if (notification != null)
+                startForeground(NOTIFICATION_ID, notification)
         }
         return true // Ensures onRebind() is called when a client re-binds.
     }
@@ -237,7 +240,7 @@ class LocationUpdatesService : Service() {
     fun requestLocationUpdates() {
         Log.i(TAG, "Requesting location updates")
         UserSessionManager.getInstance(this).setRequestingLocationUpdates(true)
-        startService(Intent(applicationContext, LocationUpdatesService::class.java))
+        startService(Intent(this, LocationUpdatesService::class.java))
         try {
             mFusedLocationClient!!.requestLocationUpdates(
                 mLocationRequest,
@@ -392,8 +395,8 @@ class LocationUpdatesService : Service() {
         /**
          * The desired interval for location updates. Inexact. Updates may be more or less frequent.
          */
-        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
-//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
+//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
+        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
 
         /**
          * The fastest rate for active location updates. Updates will never be more frequent
@@ -405,6 +408,12 @@ class LocationUpdatesService : Service() {
          * The identifier for the notification displayed for the foreground service.
          */
         private val NOTIFICATION_ID = 12345678
+
+        /**
+         * SINGLE TONE CLASS.
+         */
+        var shared = LocationUpdatesService()
+            internal set
     }
 
     private fun updateCourierLocation(lastLocation: Location) {
@@ -418,7 +427,7 @@ class LocationUpdatesService : Service() {
             )
             FirebaseManager.updateTaskLocation(AppConstants.CurrentAcceptedTask)
             FirebaseManager.updateCourierLocation(
-                AppConstants.CurrentAcceptedTask.courierId.toString(),
+                AppConstants.CurrentAcceptedTask.CourierID.toString(),
                 location(
                     lastLocation!!.latitude.toString(),
                     lastLocation!!.longitude.toString(),
@@ -454,29 +463,38 @@ class LocationUpdatesService : Service() {
 
 
     private fun getAddress(courier: Courier, location: Location): Boolean {
-        var city = ""
-        val gcd = Geocoder(AppController.getContext(), Locale.getDefault())
-        val addresses = gcd.getFromLocation(
-            location.latitude,
-            location.longitude,
-            1
-        )
-        if (addresses.size > 0) {
-            if (!addresses[0].subAdminArea.isNullOrEmpty())
-                city = addresses[0].subAdminArea
-            else if (!addresses[0].adminArea.isNullOrEmpty())
-                city = addresses[0].adminArea
+        var detected = false
+        try {
+            var city = ""
+            val gcd = Geocoder(AppController.getContext(), Locale.getDefault())
+            val addresses = gcd.getFromLocation(
+                location.latitude,
+                location.longitude,
+                1
+            )
+            if (addresses.size > 0) {
+                if (!addresses[0].subAdminArea.isNullOrEmpty())
+                    city = addresses[0].subAdminArea
+                else if (!addresses[0].adminArea.isNullOrEmpty())
+                    city = addresses[0].adminArea
 
-            AppConstants.CurrentLoginCourier.city = city
+                AppConstants.CurrentLoginCourier.city = city
 
-        } else {
-            city = addresses[0].featureName
-            AppConstants.CurrentLoginCourier.city = city
+            } else {
+                city = addresses[0].featureName
+                AppConstants.CurrentLoginCourier.city = city
+            }
+            if (!courier.city.trim().isNullOrEmpty() && !city.trim().isNullOrEmpty()) {
+                detected = true
+            }
+
+
+        } catch (ex: Exception) {
+            detected = false
         }
-        if (!courier.city.trim().isNullOrEmpty() && !city.trim().isNullOrEmpty()) {
-            return true
-        }
-        return false
+        return detected
 
     }
+
+
 }

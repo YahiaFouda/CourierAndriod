@@ -24,8 +24,13 @@ interface ApiServices {
     fun logOut(@Query("ID") id: Int)
             : Call<ApiResponse<Courier>>
 
+    @POST(AppConstants.URL_SET_USER_TOKEN)
+    fun setCourierToken(@Query("CourierId") CourierId:Int,@Query("Token") token:String)
+            : Call<ApiResponse<Boolean>>
+
+
     @GET(AppConstants.URL_GET_AVALIABLE_TAKS)
-    fun getAvaliableTasks(@Query("courierId") courierId: Int)
+    fun getAvaliableTasks(@Query("CourierID") courierId: Int)
             : Call<ApiResponse<ArrayList<Task>>>
 
     @POST(AppConstants.URL_END_TAKS)

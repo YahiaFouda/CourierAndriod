@@ -55,11 +55,19 @@ class UserSessionManager(val context: Context) {
     }
 
     fun getLanguage(): String {
-        return sharedPreferences.getString(AppConstants.LANGUAGE, AppConstants.ENGLISH)!!
+        return sharedPreferences.getString(AppConstants.LANGUAGE,"")!!
     }
 
     fun setLanguage(language: String) {
         editor.putString(AppConstants.LANGUAGE, language).commit()
+    }
+
+    fun getToken(): String {
+        return sharedPreferences.getString(AppConstants.TOKEN, "")!!
+    }
+
+    fun setToken(token: String) {
+        editor.putString(AppConstants.TOKEN, token).commit()
     }
  fun requestingLocationUpdates(): Boolean {
         return sharedPreferences.getBoolean(KEY_REQUESTING_LOCATION_UPDATES, false)

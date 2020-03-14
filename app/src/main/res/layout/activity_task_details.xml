@@ -62,25 +62,42 @@
 
                     <TextView
                         android:id="@+id/tvTask"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerHorizontal="true"
                         android:layout_marginTop="30dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
                         android:gravity="center"
                         android:text="@string/kadabra"
                         android:textColor="@color/colorPrimary"
                         android:textSize="30sp" />
 
                     <TextView
-                        android:id="@+id/tvTaskAmount"
-                        android:layout_width="match_parent"
+                        android:id="@+id/tvTaskDescription"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/tvTask"
                         android:layout_centerHorizontal="true"
                         android:layout_marginTop="30dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:gravity="center"
+                        android:text="Task Details"
+                        android:textColor="@color/textColor"
+                        android:textSize="25sp" />
+
+                    <TextView
+                        android:id="@+id/tvTaskAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/tvTaskDescription"
+                        android:layout_centerHorizontal="true"
+                        android:layout_marginTop="30dp"
+                        android:layout_marginStart="5dp"
                         android:gravity="center"
                         android:text="@string/amount"
-                        android:textColor="@color/black"
+                        android:textColor="@color/link"
                         android:textSize="20sp" />
 
                     <TextView
@@ -138,7 +155,7 @@
                         android:layout_marginTop="20dp"
                         android:gravity="center"
                         android:text="@string/stops"
-                        android:textColor="@color/link"
+                        android:textColor="@color/textColor"
                         android:textSize="20sp" />
 
                     <androidx.recyclerview.widget.RecyclerView
@@ -147,7 +164,7 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/tvStops"
                         android:layout_marginStart="24dp"
-                        android:layout_marginTop="20dp"
+                        android:layout_marginTop="10dp"
                         android:layout_marginRight="24dp"
                         android:layout_marginBottom="60dp"
                         android:orientation="vertical" />

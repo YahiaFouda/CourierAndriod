@@ -12,9 +12,6 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.iid.FirebaseInstanceId
 import com.kadabra.courier.location.LocationHelper
-import com.kadabra.courier.model.TaskInfo
-import com.kadabra.courier.utilities.AppConstants.token
-import com.kadabra.courier.utilities.AppController
 
 
 object FirebaseManager {
@@ -189,7 +186,7 @@ object FirebaseManager {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (currentTask in dataSnapshot.children) {
                     task = currentTask.getValue(Task::class.java)!!
-                    if (task.isActive && task.courierId == courieId.toInt()) {
+                    if (task.isActive && task.CourierID == courieId.toInt()) {
                         task.TaskId = currentTask.key!!
                         AppConstants.CurrentAcceptedTask = task
                         listener.onSuccess(1)

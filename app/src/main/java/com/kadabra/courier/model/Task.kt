@@ -8,10 +8,10 @@ class Task {
     @Exclude @set:Exclude @get:Exclude
     var TicketId: String = ""
     @Exclude @set:Exclude @get:Exclude
-    var Task: String = ""
+    var TaskName: String = ""
     @Exclude @set:Exclude @get:Exclude
     var TaskDescription: String = ""
-    var courierId: Int ? = null
+    var CourierID: Int ? = null
     @Exclude @set:Exclude @get:Exclude
     var CourierName: String = ""
     @Exclude @set:Exclude @get:Exclude

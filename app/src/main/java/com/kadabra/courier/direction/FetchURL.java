@@ -33,7 +33,7 @@ public class FetchURL extends AsyncTask<String, Void, String> {
             data = downloadUrl(strings[0]);
             Log.d("mylog", "Background task data " + data.toString());
         } catch (Exception e) {
-            Log.d("Background Task", e.toString());
+            Log.d("Background TaskName", e.toString());
         }
         return data;
     }

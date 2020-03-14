@@ -7,15 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.kadabra.Networking.NetworkManager
-import com.kadabra.courier.R
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.task.TaskDetailsActivity
-import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
-import android.view.animation.AnimationUtils.loadAnimation
-import android.view.animation.Animation
 import android.widget.FrameLayout
 import android.view.animation.AnimationUtils
 
@@ -61,8 +56,8 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
     override fun onBindViewHolder(holder: TaskAdapter.MyViewHolder, position: Int) {
         task = tasksList[position]
 
-        if (!task.Task.isNullOrEmpty())
-            holder.tvTaskName.text = task.Task
+        if (!task.TaskName.isNullOrEmpty())
+            holder.tvTaskName.text = task.TaskName
 
 //        if (task.stopsmodel.size > 0) {
 //            task.stopsmodel.sortBy { it.StopTypeID }

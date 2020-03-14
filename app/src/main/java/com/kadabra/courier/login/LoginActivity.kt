@@ -27,7 +27,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
-
+import com.kadabra.courier.utilities.AppController
 
 
 class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
@@ -51,10 +51,6 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-
-//        requestPermission()
-//        if (!checkPermissions())
-//            requestPermissions()
 
         FirebaseManager.setUpFirebase()
         init()
@@ -188,6 +184,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                                 if (user != null) {
                                     Log.d(TAG, "AUTH- LOGIN - SUCCESS")
                                     prepareCourierData()
+                                    sendUserToken(courier.CourierId,FirebaseManager.token)
                                     FirebaseManager.updateCourier(courier) {
 
                                             success ->
@@ -222,6 +219,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
                                             Log.d(TAG, "AUTH- SIGNUP - SUCCESS")
                                             prepareCourierData()
+                                            sendUserToken(courier.CourierId,FirebaseManager.token)
                                             FirebaseManager.createCourier(courier) { success ->
                                                 if (success) {
                                                     Log.d(
@@ -368,6 +366,33 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         avi.smoothToHide()
         window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
     }
+
+    private fun sendUserToken(id: Int, token: String) {
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.setCourierToken(id, token)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Boolean>> {
+                override fun onSuccess(response: ApiResponse<Boolean>) {
+                    Log.d(TAG, "SEND TOKEN - API - SUCCESSFULLY.")
+                }
+
+                override fun onFailed(error: String) {
+                    Log.d(TAG, "SEND TOKEN - API - FAILED.")
+                    Alert.showMessage(
+                        this@LoginActivity,
+                        getString(R.string.error_login_server_error)
+                    )
+                }
+            })
+
+
+        } else {
+            Log.d(TAG, "SEND TOKEN - API - NO INTERNET.")
+            Alert.showMessage(this@LoginActivity, getString(R.string.no_internet))
+        }
+
+    }
+
 
     //endregion
 

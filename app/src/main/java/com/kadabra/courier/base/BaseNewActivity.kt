@@ -10,27 +10,45 @@ import androidx.appcompat.app.AppCompatActivity
 import com.kadabra.courier.utilities.LocaleManager
 
 import android.content.pm.PackageManager.GET_META_DATA
+import android.content.res.Resources
+import android.os.Build
 import com.kadabra.courier.utilities.AppConstants
+import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.utilities.MyContextWrapper
 import com.reach.plus.admin.util.UserSessionManager
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper
 import java.util.*
 
 open class BaseNewActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        resetTitles()
+        resetTitles()
     }
 
     override fun attachBaseContext(base: Context) {
-        var lang: String
+        var lang = ""
         try {
-            if (UserSessionManager.getInstance(this).getLanguage() != AppConstants.ARABIC) {
-                UserSessionManager.getInstance(this).setLanguage(AppConstants.ENGLISH)
-                lang = AppConstants.ENGLISH
-            } else {
-                lang = AppConstants.ARABIC
+//            var sss=UserSessionManager.getInstance(AppController.getContext()).getLanguage()
+//
+//            if (UserSessionManager.getInstance(AppController.getContext()).getLanguage() != AppConstants.ARABIC) {
+//                UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ENGLISH)
+//                lang = AppConstants.ENGLISH
+//            } else {
+//                lang = AppConstants.ARABIC
+//            }
+
+            var currentLanguage =
+                UserSessionManager.getInstance(AppController.getContext()).getLanguage()
+            when {
+                currentLanguage.isNullOrEmpty() -> {
+                    var locale = getLocale(this.resources)
+                    lang = locale.language
+                }
+                currentLanguage == AppConstants.ARABIC -> lang = AppConstants.ARABIC
+                currentLanguage == AppConstants.ENGLISH -> lang = AppConstants.ENGLISH
             }
+
         } catch (e: Exception) {
             lang = AppConstants.ENGLISH
         }
@@ -56,5 +74,10 @@ open class BaseNewActivity : AppCompatActivity() {
         val intent = mContext.intent
         mContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
 
+    }
+
+    fun getLocale(res: Resources): Locale {
+        val config = res.configuration
+        return if (Build.VERSION.SDK_INT >= 24) config.locales.get(0) else config.locale
     }
 }
