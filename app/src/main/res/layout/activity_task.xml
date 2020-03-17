@@ -43,7 +43,8 @@
                 android:text="00:00:00"
                 android:textSize="40sp"
                 android:textStyle="bold"
-                app:fontFamily="@font/orbitron" />
+                app:fontFamily="@font/orbitron"
+                android:visibility="invisible"/>
 
             <TextView
                 android:id="@+id/tvEmptyData"

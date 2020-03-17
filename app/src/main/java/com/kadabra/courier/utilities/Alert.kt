@@ -37,7 +37,7 @@ object Alert {
         AlertDialog.Builder(context)
                 .setTitle(title)
                 .setMessage(message)
-                .setIcon(R.drawable.ic_launcher_background)
+                .setIcon(R.mipmap.ic_launcher)
                 .setPositiveButton("ok", null)
                 .show()
 

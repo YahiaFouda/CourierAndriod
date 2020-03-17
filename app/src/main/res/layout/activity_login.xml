@@ -5,7 +5,9 @@
         android:id="@+id/rlParent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:focusableInTouchMode="true">
+        android:clickable="true"
+        android:focusableInTouchMode="true"
+        >
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -69,7 +71,7 @@
                         android:layout_marginTop="20dp"
                         android:layout_marginEnd="24dp"
                         android:selectAllOnFocus="true"
-                        android:imeOptions="actionNext"/>
+                        android:imeOptions="actionDone"/>
 
                     <Button
                         android:id="@+id/btnLogin"

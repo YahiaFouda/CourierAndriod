@@ -1,5 +1,6 @@
 package com.kadabra.courier.login
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -22,12 +23,12 @@ import android.net.Uri
 import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
-import androidx.appcompat.app.AppCompatActivity
+import android.view.inputmethod.InputMethodManager
+
 import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
-import com.kadabra.courier.utilities.AppController
 
 
 class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
@@ -62,6 +63,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         when (view!!.id) {
             R.id.btnLogin -> {
                 if (validateData()) {
+                    hideKeyboard(btnLogin)
                     var userName = etUsername.text.toString()
                     userCustomEmail = ""
                     userCustomEmail = "$userName@gmail.com"
@@ -392,6 +394,13 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         }
 
     }
+
+    fun hideKeyboard(view: View) {
+        val inputMethodManager =
+            getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager!!.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
 
 
     //endregion

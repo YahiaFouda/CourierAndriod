@@ -78,8 +78,10 @@
     <string name="map_title">Select option to open map with.</string>
     <string name="cancel">Cancel</string>
     <string name="google_map">Google Map</string>
-    <string name="login_another_device">Your Account is Logging from a new Device</string>
+    <string name="login_another_device">Your Account is Logging from a new Device.</string>
     <string name="channel_id">123456</string>
+    <string name="error_google_ervice">You can\'t make map request,Please first download google services.</string>
+    <string name="error_gps_required">This application requires GPS to work properly, do you want to enable it?</string>
 
 
 </resources>

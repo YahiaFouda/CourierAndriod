@@ -1,16 +1,23 @@
 package com.kadabra.courier.task
 
 import android.app.Activity
+import android.app.ActivityManager
+import android.app.AlertDialog
+import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.location.Location
+import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.directions.route.*
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
@@ -31,13 +38,17 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.location.LatLngInterpolator
 import com.kadabra.courier.location.MarkerAnimation
+import com.kadabra.services.LocationService
 
 
 class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener, RoutingListener, TaskLoadedCallback, LocationListener {
+    GoogleMap.OnMarkerClickListener, RoutingListener, TaskLoadedCallback {
 
 
     //region Members
+
+    private var TAG=LocationDetailsActivity.javaClass.simpleName
+    private var mLocationPermissionGranted = false
 
     private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -73,15 +84,22 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
     //region Helper Function
     private fun init() {
 
-        polylines = ArrayList()
+        ivBack.setOnClickListener {
+            finish()
+        }
 
         fab.setOnClickListener {
             loadPlacePicker()
         }
+
+        polylines = ArrayList()
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         //prepare for update the current location
@@ -91,10 +109,10 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                 lastLocation = p0.lastLocation
                 //todo move the marker position
-
+//                moveCamera(lastLocation!!)
                 if (isFirstTime) {
 
-                    if (AppConstants.currentSelectedStop != null) {
+                    if (AppConstants.currentSelectedStop != null) { // destination stop
                         var selectedStopLocation = LatLng(
                             AppConstants.currentSelectedStop.Latitude!!,
                             AppConstants.currentSelectedStop.Longitude!!
@@ -149,9 +167,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         createLocationRequest()
 
 
-        ivBack.setOnClickListener {
-            finish()
-        }
+
     }
 
     private fun setUpMap() {
@@ -160,8 +176,8 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
                 this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION
             )
-            != PackageManager.PERMISSION_GRANTED)
-        {
+            != PackageManager.PERMISSION_GRANTED
+        ) {
 
             // Permission is not granted
             // Should we show an explanation?
@@ -193,8 +209,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
             // Permission has already been granted
         }
 
-        map.isMyLocationEnabled = true
-        map.mapType = GoogleMap.MAP_TYPE_TERRAIN //more map details
+
 
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
 
@@ -329,7 +344,8 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
-
+        map.isMyLocationEnabled = true
+        map.mapType = GoogleMap.MAP_TYPE_TERRAIN //more map details
         map.uiSettings.isZoomControlsEnabled = true
         map.setOnMarkerClickListener(this)
 
@@ -524,8 +540,85 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
             )
     }
 
+    fun isServicesOK(): Boolean {
+        Log.d(TAG, "isServicesOK: checking google services version")
 
-    override fun onLocationChanged(p0: Location?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val available =
+            GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
+
+        if (available == ConnectionResult.SUCCESS) {
+            //everything is fine and the user can make map requests
+            Log.d(TAG, "isServicesOK: Google Play Services is working")
+            return true
+        } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
+            //an error occured but we can resolve it
+            Log.d(TAG, "isServicesOK: an error occured but we can fix it")
+            val dialog = GoogleApiAvailability.getInstance()
+                .getErrorDialog(this, available,AppConstants.ERROR_DIALOG_REQUEST)
+            dialog.show()
+        } else {
+            Toast.makeText(this, "You can't make map requests", Toast.LENGTH_SHORT).show()
+        }
+        return false
     }
+
+    fun isMapsEnabled(): Boolean {
+        val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps()
+            return false
+        }
+        return true
+    }
+
+    private fun buildAlertMessageNoGps() {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage("This application requires GPS to work properly, do you want to enable it?")
+            .setCancelable(false)
+            .setPositiveButton("Yes") { dialog, id ->
+                val enableGpsIntent =
+                    Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivityForResult(enableGpsIntent, AppConstants.PERMISSIONS_REQUEST_ENABLE_GPS)
+            }
+        val alert = builder.create()
+        alert.show()
+    }
+
+
+    private fun startLocationService() {
+        if (!isLocationServiceRunning()) {
+            val serviceIntent = Intent(this, LocationService::class.java)
+            //        this.startService(serviceIntent);
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+
+                this.startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        }
+    }
+
+    private fun isLocationServiceRunning(): Boolean {
+        val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
+            if ("com.kadabra.courier.services.LocationService" == service.service.className) {
+                Log.d(TAG, "isLocationServiceRunning: location service is already running.")
+                return true
+            }
+        }
+        Log.d(TAG, "isLocationServiceRunning: location service is not running.")
+        return false
+    }
+
+    private fun checkMapServices(): Boolean {
+        if (isServicesOK()) {
+            if (isMapsEnabled()) {
+                return true
+            }
+        }
+        return false
+    }
+
 }

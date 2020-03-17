@@ -15,15 +15,18 @@ import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import android.content.Context
 import android.location.LocationManager
+import android.os.Build
 
 
 
 class LocationHelper : ILocationListener {
 
+    var TAG = "LocationHelper"
+
     var locationListener: ILocationListener? = null
     var lastLocation: Location? = null
     private val permissionFineLocation = android.Manifest.permission.ACCESS_FINE_LOCATION
-//    private val permissionCoarseLocation = android.Manifest.permission.ACCESS_COARSE_LOCATION
+    //    private val permissionCoarseLocation = android.Manifest.permission.ACCESS_COARSE_LOCATION
     private val REQUEST_CODE_LOCATION = 100
     private var fusedLocationClient: FusedLocationProviderClient? = null
     private var locationRequest: LocationRequest? = null
@@ -197,4 +200,7 @@ class LocationHelper : ILocationListener {
 
 
     }
+
+
+
 }

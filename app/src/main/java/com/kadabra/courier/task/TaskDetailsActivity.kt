@@ -1,16 +1,24 @@
 package com.kadabra.courier.task
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.gms.location.LocationResult
+import com.google.android.material.snackbar.Snackbar
 import com.kadabra.Networking.INetworkCallBack
 import com.kadabra.Networking.NetworkManager
+import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.R
 import com.kadabra.courier.adapter.StopAdapter
 import com.kadabra.courier.api.ApiResponse
@@ -18,13 +26,18 @@ import com.kadabra.courier.api.ApiServices
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
+import com.kadabra.courier.firebase.FirebaseManager.logOut
 import com.kadabra.courier.location.LocationHelper
+import com.kadabra.courier.login.LoginActivity
+import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.model.location
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
+import com.kadabra.services.LocationUpdatesService
+import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task_details.*
 
 
@@ -32,6 +45,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
 
     //region Members
+    private var TAG = this.javaClass.simpleName
     private var task = Task()
     private var pickUpStops = ArrayList<Stop>()
     private var dropOffStops = ArrayList<Stop>()
@@ -303,6 +317,15 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         init()
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+            if (!checkPermissions()) {
+                requestPermissions()
+            }
+        }
+    }
+
     override fun onClick(view: View?) {
         when (view!!.id) {
             R.id.tvFrom -> {
@@ -316,20 +339,23 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 if (NetworkManager().isNetworkAvailable(this)) {
                     if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) // create new task on fb
                     {
-                        AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
-                        AppConstants.CurrentAcceptedTask.isActive = true
-                        AppConstants.CurrentAcceptedTask.CourierID =
-                            AppConstants.CurrentLoginCourier.CourierId
-                        var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
-                        if (AppConstants.CurrentLocation != null)
-                            AppConstants.CurrentAcceptedTask.location =
-                                location(
-                                    AppConstants.CurrentLocation!!.latitude.toString(),
-                                    AppConstants.CurrentLocation!!.longitude.toString(),
-                                    isGpsEnabled
-                                )
-                        acceptTask(AppConstants.CurrentAcceptedTask!!)
-
+                        if (!checkPermissions()) {
+                            requestPermissions()
+                        } else {
+                            AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
+                            AppConstants.CurrentAcceptedTask.isActive = true
+                            AppConstants.CurrentAcceptedTask.CourierID =
+                                AppConstants.CurrentLoginCourier.CourierId
+                            var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
+                            if (AppConstants.CurrentLocation != null)
+                                AppConstants.CurrentAcceptedTask.location =
+                                    location(
+                                        AppConstants.CurrentLocation!!.latitude.toString(),
+                                        AppConstants.CurrentLocation!!.longitude.toString(),
+                                        isGpsEnabled
+                                    )
+                            acceptTask(AppConstants.CurrentAcceptedTask!!)
+                        }
                     } else {
                         if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions
                             Toast.makeText(this, getString(R.string.end_first), Toast.LENGTH_SHORT)
@@ -369,7 +395,159 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         finish()
     }
 
+    private fun checkPermissions(): Boolean {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
 
+    private fun requestPermissions() {
+        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.")
+            Snackbar.make(
+                findViewById(R.id.rlParent),
+                R.string.permission_rationale,
+                Snackbar.LENGTH_INDEFINITE
+            )
+                .setAction(R.string.ok) {
+                    // Request permission
+                    ActivityCompat.requestPermissions(
+                        this@TaskDetailsActivity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+                    )
+                }
+                .show()
+        } else {
+            Log.i(TAG, "Requesting permission")
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(
+                this@TaskDetailsActivity,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
+        Log.i(TAG, "onRequestPermissionResult")
+        if (requestCode == AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (grantResults.size <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.")
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission was granted.
+                LocationUpdatesService.shared!!.requestLocationUpdates()
+            } else {
+                // Permission denied.
+//                setButtonsState(false)
+                Snackbar.make(
+                    findViewById(R.id.rlParent),
+                    R.string.permission_denied_explanation,
+                    Snackbar.LENGTH_INDEFINITE
+                )
+                    .setAction(R.string.settings) {
+                        // Build intent that displays the App settings screen.
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        val uri = Uri.fromParts(
+                            "package",
+                            BuildConfig.APPLICATION_ID, null
+                        )
+                        intent.data = uri
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
+                    }
+                    .show()
+            }
+        }
+    }
+
+    private fun logOut() {
+//        if(AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty())
+//        {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+            if(AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //no accepted task
+            {
+                var request = NetworkManager().create(ApiServices::class.java)
+                var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
+                NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
+                    override fun onFailed(error: String) {
+                        hideProgress()
+                        Alert.showMessage(
+                            this@TaskDetailsActivity,
+                            getString(R.string.no_internet)
+                        )
+                    }
+
+                    override fun onSuccess(response: ApiResponse<Courier>) {
+                        if (response.Status == AppConstants.STATUS_SUCCESS) {
+                            //stop  tracking service
+                            stopTracking()
+                            FirebaseManager.logOut()
+                            UserSessionManager.getInstance(this@TaskDetailsActivity).setUserData(null)
+                            UserSessionManager.getInstance(this@TaskDetailsActivity).setIsLogined(false)
+                            UserSessionManager.getInstance(this@TaskDetailsActivity).setFirstTime(false)
+
+                            startActivity(Intent(this@TaskDetailsActivity, LoginActivity::class.java))
+
+
+                            //remove location update
+//                        LocationHelper.shared.stopUpdateLocation()
+                            finish()
+                            hideProgress()
+
+                        } else {
+                            hideProgress()
+                            Alert.showMessage(
+                                this@TaskDetailsActivity,
+                                getString(R.string.error_network)
+                            )
+                        }
+
+                    }
+                })
+            }
+
+            else //accepted task prevent logout
+            {
+                hideProgress()
+                Alert.showMessage(
+                    this@TaskDetailsActivity,
+                    getString(R.string.end_first)
+                )
+            }
+        } else {
+            hideProgress()
+            Alert.showMessage(
+                this@TaskDetailsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+
+
+
+    }
+
+    private fun stopTracking() {
+        if (LocationUpdatesService.shared != null)
+            LocationUpdatesService.shared!!.removeLocationUpdates()
+    }
     //endregion
 
 

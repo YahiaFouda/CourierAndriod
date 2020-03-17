@@ -5,31 +5,31 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/colorSecondary"
     tools:context=".intro.SplashActivity">
-    <com.skyfishjy.library.RippleBackground
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/rippleBackground"
-        app:rb_color="#05000000"
-        app:rb_radius="82dp"
-        app:rb_rippleAmount="4"
-        app:rb_scale="6">
-        <ImageView
-            android:id="@+id/imgLogo"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_centerInParent="true"
-            android:src="@drawable/placeholder" />
-    </com.skyfishjy.library.RippleBackground>
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        android:gravity="center_horizontal"
-        android:layout_alignParentBottom="true"
-        android:text="@string/courier_power_by_kadabra" />
+  <com.skyfishjy.library.RippleBackground
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:id="@+id/rippleBackground"
+      app:rb_color="#05000000"
+      app:rb_radius="82dp"
+      app:rb_rippleAmount="4"
+      app:rb_scale="6">
+    <ImageView
+        android:id="@+id/imgLogo"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true"
+        android:src="@drawable/placeholder" />
+  </com.skyfishjy.library.RippleBackground>
+  <TextView
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="10dp"
+      android:textSize="18sp"
+      android:textColor="@color/black"
+      android:gravity="center_horizontal"
+      android:layout_alignParentBottom="true"
+      android:text="@string/courier_power_by_kadabra" />
 
 </RelativeLayout>

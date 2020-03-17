@@ -27,12 +27,19 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.kadabra.Networking.INetworkCallBack
 import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
+import com.kadabra.courier.api.ApiResponse
+import com.kadabra.courier.api.ApiServices
 import com.kadabra.courier.firebase.FirebaseManager
+import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.location
 import com.kadabra.courier.task.TaskActivity
+import com.kadabra.courier.utilities.Alert
+import com.kadabra.courier.utilities.Alert.hideProgress
+import com.kadabra.courier.utilities.Alert.showProgress
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import com.reach.plus.admin.util.UserSessionManager
@@ -56,6 +63,7 @@ class LocationUpdatesService : Service() {
 
 
     private val mBinder = LocalBinder()
+    var isMockLocationEnabled = false
 
     /**
      * Used to check whether the bound activity has really gone away and not unbound as part of an
@@ -147,9 +155,14 @@ class LocationUpdatesService : Service() {
         mLocationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult?) {
                 super.onLocationResult(locationResult)
-                if (NetworkManager().isNetworkAvailable(applicationContext))
+                if (NetworkManager().isNetworkAvailable(applicationContext)) {
                     onNewLocation(locationResult!!.lastLocation)
-                else
+                    isMockLocationEnabled = checkMockLocations(locationResult!!.lastLocation)
+                    if (isMockLocationEnabled) {
+                        Alert.showMessage(AppController.getContext(),"Please stop Mock Location App first to use COURIER.")
+                        logOut()
+                    }
+                } else
                     AppConstants.CurrentLocation = null
             }
         }
@@ -496,5 +509,83 @@ class LocationUpdatesService : Service() {
 
     }
 
+    fun checkMockLocations(location: Location): Boolean {
+        var mockLocationsEnabled = false
+        // Starting with API level >= 18 we can (partially) rely on .isFromMockProvider()
+        // (http://developer.android.com/reference/android/location/Location.html#isFromMockProvider%28%29)
+        // For API level < 18 we have to check the Settings.Secure flag
+        if (Build.VERSION.SDK_INT < 18 && android.provider.Settings.Secure.getString(
+                AppController.getContext().contentResolver, android.provider.Settings
+                    .Secure.ALLOW_MOCK_LOCATION
+            ) != "0"
+        ) {
+            mockLocationsEnabled = true
+
+        } else if (Build.VERSION.SDK_INT > 18) {
+            mockLocationsEnabled = location.isFromMockProvider
+        } else
+            mockLocationsEnabled = false
+
+        return mockLocationsEnabled
+    }
+
+    private fun logOut() {
+
+        if (NetworkManager().isNetworkAvailable(this)) {
+            if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //no accepted task
+            {
+                var request = NetworkManager().create(ApiServices::class.java)
+                var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
+                NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
+                    override fun onFailed(error: String) {
+                        Alert.showMessage(
+                            AppController.getContext(),
+                            getString(R.string.no_internet)
+                        )
+                    }
+
+                    override fun onSuccess(response: ApiResponse<Courier>) {
+                        if (response.Status == AppConstants.STATUS_SUCCESS) {
+
+                            //stop  tracking service
+                            removeLocationUpdates()
+                            FirebaseManager.logOut()
+                            UserSessionManager.getInstance(AppController.getContext())
+                                .setUserData(null)
+                            UserSessionManager.getInstance(AppController.getContext())
+                                .setIsLogined(false)
+                            UserSessionManager.getInstance(AppController.getContext())
+                                .setFirstTime(false)
+
+
+                            startActivity(
+                                Intent(
+                                    AppController.getContext(),
+                                    LoginActivity::class.java
+                                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                            )
+
+
+                        }
+
+                    }
+                })
+            } else //accepted task prevent logout
+            {
+
+                Alert.showMessage(
+                    AppController.getContext(),
+                    getString(R.string.end_first)
+                )
+            }
+        } else {
+            Alert.showMessage(
+                AppController.getContext(),
+                getString(R.string.no_internet)
+            )
+        }
+
+
+    }
 
 }
