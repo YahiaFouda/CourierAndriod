@@ -18,6 +18,10 @@ import com.kadabra.courier.utilities.MyContextWrapper
 import com.reach.plus.admin.util.UserSessionManager
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper
 import java.util.*
+import android.content.ComponentName
+import android.app.ActivityManager
+
+
 
 open class BaseNewActivity : AppCompatActivity() {
 
@@ -79,5 +83,17 @@ open class BaseNewActivity : AppCompatActivity() {
     fun getLocale(res: Resources): Locale {
         val config = res.configuration
         return if (Build.VERSION.SDK_INT >= 24) config.locales.get(0) else config.locale
+    }
+
+    private fun isApplicationBroughtToBackground(): Boolean {
+        val am = this.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val tasks = am.getRunningTasks(1)
+        if (!tasks.isEmpty()) {
+            val topActivity = tasks[0].topActivity
+            if (topActivity!!.packageName != this.packageName) {
+                return true
+            }
+        }
+        return false
     }
 }

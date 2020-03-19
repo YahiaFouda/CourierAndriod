@@ -1,18 +1,20 @@
 package com.kadabra.courier.task
 
 import android.Manifest
-import android.content.Intent
+import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.gms.location.LocationResult
 import com.google.android.material.snackbar.Snackbar
@@ -51,6 +53,25 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private var dropOffStops = ArrayList<Stop>()
     private var normalStops = ArrayList<Stop>()
     private var lastLocation: Location? = null
+    private var mBound = false
+    private var myReceiver: MyReceiver? = null
+
+    private val mServiceConnection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            val binder = service as LocationUpdatesService.LocalBinder
+            LocationUpdatesService.shared = binder.service
+            mBound = true
+            LocationUpdatesService.shared!!.requestLocationUpdates()
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+//            mService = null
+            LocationUpdatesService.shared = LocationUpdatesService()
+            mBound = false
+        }
+    }
+
 
     //endregion
     //region Helper Functions
@@ -314,6 +335,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_task_details)
+         myReceiver = MyReceiver()
         init()
     }
 
@@ -324,8 +346,38 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 requestPermissions()
             }
         }
+
+        bindService(
+            Intent(this, LocationUpdatesService::class.java), mServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
     }
 
+    override fun onResume() {
+        super.onResume()
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            myReceiver!!,
+            IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
+        )
+    }
+
+
+    override fun onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(myReceiver!!)
+        super.onPause()
+    }
+
+    override fun onStop() {
+        if (mBound) {
+            // Unbind from the service. This signals to the service that this activity is no longer
+            // in the foreground, and the service can respond by promoting itself to a foreground
+            // service.
+            unbindService(mServiceConnection)
+            mBound = false
+        }
+
+        super.onStop()
+    }
     override fun onClick(view: View?) {
         when (view!!.id) {
             R.id.tvFrom -> {
@@ -548,7 +600,15 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         if (LocationUpdatesService.shared != null)
             LocationUpdatesService.shared!!.removeLocationUpdates()
     }
+
+
     //endregion
 
+    private inner class MyReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val location =
+                intent.getParcelableExtra<Location>(LocationUpdatesService.EXTRA_LOCATION)
 
+        }
+    }
 }

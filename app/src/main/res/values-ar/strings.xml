@@ -68,11 +68,12 @@
     <string name="english">اللغة الأنجليزية</string>
     <string name="warning">تحذير</string>
     <string name="info">أختيار</string>
-        <string name="map_option">أستعراض المهمة بواسطة . </string>
+    <string name="map_option">أستعراض المهمة بواسطة . </string>
     <string name="map_title">أختر طريقة فتح المهمة .</string>
     <string name="cancel">ألغاء</string>
     <string name="google_map">خرائط جوجل</string>
     <string name="login_another_device">حسابك يقوم بتسجيل الدخول من جهاز جديد.</string>
     <string name="error_google_ervice">لا يمكنك أستخدام الخريطة ، يرجى تنزيل خدمات جوجل أولاً.</string>
     <string name="error_gps_required">يتطلب هذا التطبيق GPS للعمل بشكل صحيح ، هل تريد تمكينه؟</string>
+    <string name="error_mock_location">يرجى إيقاف أي تطبيق يخدع تطبيق الموقع أولاً لاستخدام البرنامج.</string>
 </resources>

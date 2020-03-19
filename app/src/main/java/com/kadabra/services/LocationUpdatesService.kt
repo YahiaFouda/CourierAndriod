@@ -132,12 +132,12 @@ class LocationUpdatesService : Service() {
                 )
 //                    .addAction(R.mipmap.ic_launcher, getString(R.string.remove_location_updates),
 //                            servicePendingIntent)
-                .setContentText(text)
+//                .setContentText(text)
                 .setContentTitle(getString(R.string.app_name))
                 .setOngoing(true)
                 .setPriority(Notification.PRIORITY_HIGH)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setTicker(text)
+//                .setTicker(text)
                 .setWhen(System.currentTimeMillis())
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 builder.setChannelId(CHANNEL_ID)
@@ -159,7 +159,7 @@ class LocationUpdatesService : Service() {
                     onNewLocation(locationResult!!.lastLocation)
                     isMockLocationEnabled = checkMockLocations(locationResult!!.lastLocation)
                     if (isMockLocationEnabled) {
-                        Alert.showMessage(AppController.getContext(),"Please stop Mock Location App first to use COURIER.")
+                        Alert.showMessage(AppController.getContext(),getString(R.string.error_mock_location))
                         logOut()
                     }
                 } else
@@ -339,7 +339,7 @@ class LocationUpdatesService : Service() {
     }
 
     /**
-     * Returns true if this is a foreground service.
+     * Returns true if this is a foreground service.In
      *
      * @param context The [Context].
      */
@@ -408,8 +408,8 @@ class LocationUpdatesService : Service() {
         /**
          * The desired interval for location updates. Inexact. Updates may be more or less frequent.
          */
-//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
-        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
+        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
+//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
 
         /**
          * The fastest rate for active location updates. Updates will never be more frequent
@@ -556,7 +556,7 @@ class LocationUpdatesService : Service() {
                                 .setIsLogined(false)
                             UserSessionManager.getInstance(AppController.getContext())
                                 .setFirstTime(false)
-
+                            LocationUpdatesService.shared.removeLocationUpdates()
 
                             startActivity(
                                 Intent(

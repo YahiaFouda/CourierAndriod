@@ -5,14 +5,12 @@ import android.app.AlertDialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.PorterDuff
-import android.location.Geocoder
 import android.location.Location
 import android.os.*
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
 import android.widget.ImageView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.reach.plus.admin.util.UserSessionManager
 import com.kadabra.Networking.INetworkCallBack
@@ -20,7 +18,6 @@ import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.adapter.TaskAdapter
 import com.kadabra.courier.api.ApiResponse
 import com.kadabra.courier.api.ApiServices
-import com.kadabra.courier.callback.IBottomSheetCallback
 import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.Task
@@ -35,19 +32,13 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.PopupMenu
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
-import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
-import com.kadabra.courier.location.LocationHelper
-import com.kadabra.courier.model.location
 import com.kadabra.services.LocationUpdatesService
-import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -74,7 +65,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private var mBound = false
     private var lastVerion = 0
     private lateinit var languageMenu: PopupMenu
-    private var isFirst=true
+    private var isNewTaskReceived = false //new task is received but not accepted
+
 
     //endregion
 
@@ -99,7 +91,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
         override fun onServiceDisconnected(name: ComponentName) {
 //            mService = null
-            LocationUpdatesService.shared= LocationUpdatesService()
+            LocationUpdatesService.shared = LocationUpdatesService()
             mBound = false
         }
     }
@@ -115,7 +107,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         ivAccept.setOnClickListener(this)
         tvTimer.visibility = View.INVISIBLE
 
-        loadTasks()
+//        loadTasks()
         refresh.setOnRefreshListener {
             loadTasks()
         }
@@ -146,6 +138,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     }
 
     private fun accept() {
+        isNewTaskReceived = false
         cancelVibrate()
         stopSound()
 
@@ -168,59 +161,57 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 //        {
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
-         if(AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //no accepted task
-         {
-             var request = NetworkManager().create(ApiServices::class.java)
-             var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
-             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
-                 override fun onFailed(error: String) {
-                     hideProgress()
-                     Alert.showMessage(
-                         this@TaskActivity,
-                         getString(R.string.no_internet)
-                     )
-                 }
+            if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //no accepted task
+            {
+                var request = NetworkManager().create(ApiServices::class.java)
+                var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
+                NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
+                    override fun onFailed(error: String) {
+                        hideProgress()
+                        Alert.showMessage(
+                            this@TaskActivity,
+                            getString(R.string.no_internet)
+                        )
+                    }
 
-                 override fun onSuccess(response: ApiResponse<Courier>) {
-                     if (response.Status == AppConstants.STATUS_SUCCESS) {
-                         //stop  tracking service
-                         stopTracking()
-                         FirebaseManager.logOut()
-                         UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
-                         UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
-                         UserSessionManager.getInstance(this@TaskActivity).setFirstTime(false)
+                    override fun onSuccess(response: ApiResponse<Courier>) {
+                        if (response.Status == AppConstants.STATUS_SUCCESS) {
+                            //stop  tracking service
+                            AppConstants.FIRE_BASE_LOGOUT = false
+                            FirebaseManager.logOut()
+                            UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
+                            UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
+                            UserSessionManager.getInstance(this@TaskActivity).setFirstTime(false)
 
-                         startActivity(Intent(this@TaskActivity, LoginActivity::class.java))
-                         if (countDownTimer != null)
-                             countDownTimer!!.cancel()
-                         cancelVibrate()
-                         stopSound()
-
-                         //remove location update
+                            startActivity(Intent(this@TaskActivity, LoginActivity::class.java))
+                            if (countDownTimer != null)
+                                countDownTimer!!.cancel()
+                            cancelVibrate()
+                            stopSound()
+                            stopTracking()
+                            //remove location update
 //                        LocationHelper.shared.stopUpdateLocation()
-                         finish()
-                         hideProgress()
+                            finish()
+                            hideProgress()
 
-                     } else {
-                         hideProgress()
-                         Alert.showMessage(
-                             this@TaskActivity,
-                             getString(R.string.error_network)
-                         )
-                     }
+                        } else {
+                            hideProgress()
+                            Alert.showMessage(
+                                this@TaskActivity,
+                                getString(R.string.error_network)
+                            )
+                        }
 
-                 }
-             })
-         }
-
-            else //accepted task prevent logout
-         {
-             hideProgress()
-             Alert.showMessage(
-                 this@TaskActivity,
-                 getString(R.string.end_first)
-             )
-         }
+                    }
+                })
+            } else //accepted task prevent logout
+            {
+                hideProgress()
+                Alert.showMessage(
+                    this@TaskActivity,
+                    getString(R.string.end_first)
+                )
+            }
         } else {
             hideProgress()
             Alert.showMessage(
@@ -251,29 +242,29 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     }
 
     private fun processTask() {
-        if (!UserSessionManager.getInstance(this@TaskActivity).isAccepted()&&isFirst) {
-            isFirst=false
-            tvTimer.visibility = View.VISIBLE
-            vibrate()
-            playSound()
 
-            countDownTimer = object : CountDownTimer(durationTime, 1000) {
+        isNewTaskReceived = true
+        tvTimer.visibility = View.VISIBLE
+        vibrate()
+        playSound()
 
-                override fun onTick(millisUntilFinished: Long) {
-                    runOnUiThread(Runnable {
-                        val remainedSecs = millisUntilFinished / 1000
-                        tvTimer.text = "00" + ":" + remainedSecs % 60
-                    })
-                }
+        countDownTimer = object : CountDownTimer(durationTime, 1000) {
 
-                override fun onFinish() {
-                    logOut()
-                    cancelVibrate()
-                    stopSound()
+            override fun onTick(millisUntilFinished: Long) {
+                runOnUiThread(Runnable {
+                    val remainedSecs = millisUntilFinished / 1000
+                    tvTimer.text = "00" + ":" + remainedSecs % 60
+                })
+            }
 
-                }
-            }.start()
-        }
+            override fun onFinish() {
+                AppConstants.isCountDownTimerIsFinished = true
+                logOut()
+                cancelVibrate()
+                stopSound()
+
+            }
+        }.start()
 
 
     }
@@ -365,7 +356,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                                         false
                                     )
 
-                                processTask()
+//                                processTask()
 
                                 hideProgress()
                             } else {//no tasks
@@ -420,6 +411,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         getCurrentCourierLocation()
         forceUpdate()
 
+
         // Check that the user hasn't revoked permissions by going to Settings.
 //        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
 //            if (!checkPermissions()) {
@@ -433,25 +425,35 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 //        }
 
 
-
-
     }
 
 
     override fun onResume() {
         super.onResume()
 
-//        if (AppConstants.endTask) {
-//            loadTasks()
-//            AppConstants.endTask = false
-//
-//        }
+        if (AppConstants.endTask)
+            AppConstants.endTask = false
+
+        loadTasks()
 
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
             myReceiver!!,
             IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
         )
+
+        if (AppConstants.FIRE_BASE_LOGOUT) {
+
+            logOut()
+        }
+        if (AppConstants.FIRE_BASE_NEW_TASK) {
+            AppConstants.FIRE_BASE_NEW_TASK = false
+            processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
+//        if (!AppConstants.isCountDownTimerIsFinished) {
+//            tvTimer.visibility = View.VISIBLE
+//        }
+        }
+//
     }
 
     override fun onStart() {
@@ -502,6 +504,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         when (view!!.id) {
 
             R.id.ivSettings -> {
+                if (isNewTaskReceived)
+                    return
                 AlertDialog.Builder(this)
                     .setTitle(getString(R.string.warning))
                     .setMessage(getString(R.string.exit))
@@ -513,13 +517,16 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                     .show()
             }
             R.id.ivMenu -> {
+                if (isNewTaskReceived)
+                    return
                 var currentLanguage = UserSessionManager.getInstance(this).getLanguage()
                 languageMenu = PopupMenu(this, ivMenu)
                 languageMenu.menuInflater.inflate(R.menu.menu_language, languageMenu.menu)
                 languageMenu.setOnMenuItemClickListener {
                     if (it.itemId == R.id.arabic) {
                         if (currentLanguage != AppConstants.ARABIC) {
-                            UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ARABIC)
+                            UserSessionManager.getInstance(AppController.getContext())
+                                .setLanguage(AppConstants.ARABIC)
 //                        setNewLocale(this, AppConstants.ARABIC)
 //
                             val intent = baseContext.packageManager.getLaunchIntentForPackage(
@@ -532,7 +539,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
                     } else if (it.itemId == R.id.english) {
                         if (currentLanguage != AppConstants.ENGLISH) {
-                            UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ENGLISH)
+                            UserSessionManager.getInstance(AppController.getContext())
+                                .setLanguage(AppConstants.ENGLISH)
 //                        setNewLocale(this, AppConstants.ENGLISH)
                             val intent = baseContext.packageManager.getLaunchIntentForPackage(
                                 baseContext.packageName
@@ -581,7 +589,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         permissions: Array<String>, grantResults: IntArray
     ) {
         Log.i(TAG, "onRequestPermissionResult")
-        if (requestCode ==AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+        if (requestCode == AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
             if (grantResults.size <= 0) {
                 // If user interaction was interrupted, the permission request is cancelled and you
                 // receive empty arrays.
@@ -659,10 +667,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         }
     }
 
-            private fun stopTracking() {
-                if (LocationUpdatesService.shared != null)
-                    LocationUpdatesService.shared!!.removeLocationUpdates()
-            }
+    private fun stopTracking() {
+        if (LocationUpdatesService.shared != null)
+            LocationUpdatesService.shared!!.removeLocationUpdates()
+    }
 
 
     private fun forceUpdate() {
