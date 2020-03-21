@@ -82,6 +82,8 @@ object AppConstants {
     var CurrentCourierLocation: location = location()
     var currentSelectedStop: Stop = Stop()
     var CurrentLocation: Location? = null
+    var ALL_TASKS_DATA= ArrayList<Task>()
+
     //endregion
 
     //region Fire base

@@ -157,11 +157,11 @@ class LocationUpdatesService : Service() {
                 super.onLocationResult(locationResult)
                 if (NetworkManager().isNetworkAvailable(applicationContext)) {
                     onNewLocation(locationResult!!.lastLocation)
-                    isMockLocationEnabled = checkMockLocations(locationResult!!.lastLocation)
-                    if (isMockLocationEnabled) {
-                        Alert.showMessage(AppController.getContext(),getString(R.string.error_mock_location))
-                        logOut()
-                    }
+//                    isMockLocationEnabled = checkMockLocations(locationResult!!.lastLocation)
+//                    if (isMockLocationEnabled) {
+//                        Alert.showMessage(AppController.getContext(),getString(R.string.error_mock_location))
+//                        logOut()
+//                    }
                 } else
                     AppConstants.CurrentLocation = null
             }
@@ -408,8 +408,8 @@ class LocationUpdatesService : Service() {
         /**
          * The desired interval for location updates. Inexact. Updates may be more or less frequent.
          */
-        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
-//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
+//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
+        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
 
         /**
          * The fastest rate for active location updates. Updates will never be more frequent

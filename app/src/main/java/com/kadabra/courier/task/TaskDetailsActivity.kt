@@ -270,6 +270,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
                         FirebaseManager.endTask(task)
                         AppConstants.CurrentAcceptedTask = Task()
+                        AppConstants.ALL_TASKS_DATA.remove(task) //removed when life cycle
                         hideProgress()
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
@@ -351,6 +352,9 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             Intent(this, LocationUpdatesService::class.java), mServiceConnection,
             Context.BIND_AUTO_CREATE
         )
+
+        if(!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty())
+            loadTaskDetails(AppConstants.CurrentSelectedTask)
     }
 
     override fun onResume() {

@@ -1,5 +1,6 @@
 package com.kadabra.courier.task
 
+import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.AlertDialog
@@ -35,14 +36,16 @@ import com.kadabra.courier.direction.TaskLoadedCallback
 import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_location_details.*
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.location.LatLngInterpolator
 import com.kadabra.courier.location.MarkerAnimation
 import com.kadabra.services.LocationService
+import com.reach.plus.admin.util.UserSessionManager
 
 
 class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener, RoutingListener, TaskLoadedCallback {
+    GoogleMap.OnMarkerClickListener/*, RoutingListener*/, TaskLoadedCallback {
 
 
     //region Members
@@ -189,8 +192,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
                     ),
                     LOCATION_PERMISSION_REQUEST_CODE
                 )
@@ -199,8 +201,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
                     ),
                     LOCATION_PERMISSION_REQUEST_CODE
                 )
@@ -243,16 +244,16 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         map.addMarker(markerOptions)
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12f))
     }
-
-    private fun drawRouteOnMap(sourceLocation: LatLng, destinationLocation: LatLng) {
-        var routing = Routing.Builder()
-            .travelMode(AbstractRouting.TravelMode.DRIVING)
-            .withListener(this)
-            .alternativeRoutes(true)
-            .waypoints(sourceLocation, destinationLocation)
-            .build()
-        routing.execute()
-    }
+//
+//    private fun drawRouteOnMap(sourceLocation: LatLng, destinationLocation: LatLng) {
+//        var routing = Routing.Builder()
+//            .travelMode(AbstractRouting.TravelMode.DRIVING)
+//            .withListener(this)
+//            .alternativeRoutes(true)
+//            .waypoints(sourceLocation, destinationLocation)
+//            .build()
+//        routing.execute()
+//    }
 
 
     //update the current location
@@ -339,7 +340,6 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         init()
 
-
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -409,6 +409,15 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 
+
+    override fun onStart() {
+        super.onStart()
+//        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+//            if (!checkPermissions()) {
+//                requestPermissions()
+//            }
+//        }
+    }
     public override fun onResume() {
         super.onResume()
         if (!locationUpdateState) {
@@ -416,44 +425,44 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         }
     }
 
-    override fun onRoutingCancelled() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onRoutingStart() {
-
-    }
-
-    override fun onRoutingFailure(e: RouteException?) {
-        if (e != null) {
-            Toast.makeText(this, "Error: " + e.message, Toast.LENGTH_LONG).show()
-        } else {
-            Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onRoutingSuccess(routes: ArrayList<Route>?, shourtestRouteIndex: Int) {
-
-        if (polylines!!.isNotEmpty()) {
-            for (poly in polylines!!) {
-                poly.remove()
-            }
-        }
-
-        polylines = ArrayList()
-        for (i in routes!!.indices) {
-            var colorIndex = i % COLORS.size
-            var polyOptions = PolylineOptions()
-            polyOptions.color(resources.getColor(COLORS[colorIndex]))
-            polyOptions.width((10 + i * 3).toFloat())
-            polyOptions.addAll(routes[i].points)
-            var polyline = map.addPolyline(polyOptions)
-            (polylines as ArrayList<Polyline>).add(polyline)
-
-        }
-
-
-    }
+//    override fun onRoutingCancelled() {
+//        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//    }
+//
+//    override fun onRoutingStart() {
+//
+//    }
+//
+//    override fun onRoutingFailure(e: RouteException?) {
+//        if (e != null) {
+//            Toast.makeText(this, "Error: " + e.message, Toast.LENGTH_LONG).show()
+//        } else {
+//            Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//
+//    override fun onRoutingSuccess(routes: ArrayList<Route>?, shourtestRouteIndex: Int) {
+//
+//        if (polylines!!.isNotEmpty()) {
+//            for (poly in polylines!!) {
+//                poly.remove()
+//            }
+//        }
+//
+//        polylines = ArrayList()
+//        for (i in routes!!.indices) {
+//            var colorIndex = i % COLORS.size
+//            var polyOptions = PolylineOptions()
+//            polyOptions.color(resources.getColor(COLORS[colorIndex]))
+//            polyOptions.width((10 + i * 3).toFloat())
+//            polyOptions.addAll(routes[i].points)
+//            var polyline = map.addPolyline(polyOptions)
+//            (polylines as ArrayList<Polyline>).add(polyline)
+//
+//        }
+//
+//
+//    }
 
     override fun onTaskDone(vararg values: Any?) {
         if (currentPolyline != null)
@@ -465,7 +474,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
                 LatLng(
                     currentPolyline!!.points.get(0).latitude,
                     currentPolyline!!.points.get(0).longitude
-                ), 12f
+                ), 8f
             )
         )
     }
@@ -621,4 +630,49 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         return false
     }
 
+
+    // Returns the current state of the permissions needed
+    private fun checkPermissions(): Boolean {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
+
+    private fun requestPermissions() {
+        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+        )
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.")
+            Snackbar.make(
+                    findViewById(R.id.rlParent),
+                    R.string.permission_rationale,
+                    Snackbar.LENGTH_INDEFINITE
+            )
+                    .setAction(R.string.ok) {
+                        // Request permission
+                        ActivityCompat.requestPermissions(
+                                this@LocationDetailsActivity,
+                                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                                AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+                        )
+                    }
+                    .show()
+        } else {
+            Log.i(TAG, "Requesting permission")
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(
+                    this@LocationDetailsActivity,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+            )
+        }
+    }
 }

@@ -2,7 +2,7 @@ package com.kadabra.courier.model
 
 import com.google.firebase.database.Exclude
 
-class Task {
+class Task{
     @Exclude @set:Exclude @get:Exclude
     var TaskId: String = ""
     @Exclude @set:Exclude @get:Exclude
