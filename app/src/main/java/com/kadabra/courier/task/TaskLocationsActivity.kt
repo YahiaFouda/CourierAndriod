@@ -1,22 +1,21 @@
 package com.kadabra.courier.task
 
 import android.Manifest
-import android.app.Activity
 import android.app.ActivityManager
 import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.location.Location
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
-import com.directions.route.*
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
@@ -24,7 +23,6 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.location.places.ui.PlacePicker.IntentBuilder
-import com.google.android.gms.location.places.ui.PlacePicker.getPlace
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -37,20 +35,22 @@ import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_location_details.*
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.material.snackbar.Snackbar
+import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.location.LatLngInterpolator
+import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.location.MarkerAnimation
-import com.kadabra.services.LocationService
+import com.kadabra.courier.services.LocationService
 import com.reach.plus.admin.util.UserSessionManager
 
 
-class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener/*, RoutingListener*/, TaskLoadedCallback {
+class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
+        GoogleMap.OnMarkerClickListener/*, RoutingListener*/, TaskLoadedCallback {
 
 
     //region Members
 
-    private var TAG=LocationDetailsActivity.javaClass.simpleName
+    private var TAG = TaskLocationsActivity.javaClass.simpleName
     private var mLocationPermissionGranted = false
 
     private lateinit var map: GoogleMap
@@ -66,11 +66,11 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
     private var currentMarker: Marker? = null
 
     private val COLORS: IntArray = intArrayOf(
-        R.color.colorPrimary,
-        R.color.primary,
-        R.color.primary_light,
-        R.color.accent,
-        R.color.primary_dark_material_light
+            R.color.colorPrimary,
+            R.color.primary,
+            R.color.primary_light,
+            R.color.accent,
+            R.color.primary_dark_material_light
     )
 
 
@@ -100,7 +100,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+                .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -117,32 +117,32 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                     if (AppConstants.currentSelectedStop != null) { // destination stop
                         var selectedStopLocation = LatLng(
-                            AppConstants.currentSelectedStop.Latitude!!,
-                            AppConstants.currentSelectedStop.Longitude!!
+                                AppConstants.currentSelectedStop.Latitude!!,
+                                AppConstants.currentSelectedStop.Longitude!!
                         )
 
                         placeMarkerOnMap(
-                            selectedStopLocation,
-                            AppConstants.currentSelectedStop.StopName
+                                selectedStopLocation,
+                                AppConstants.currentSelectedStop.StopName
                         )
 
                         try {
                             if (lastLocation != null) {
 
                                 destination = LatLng(
-                                    AppConstants.currentSelectedStop.Latitude!!,
-                                    AppConstants.currentSelectedStop.Longitude!!
+                                        AppConstants.currentSelectedStop.Latitude!!,
+                                        AppConstants.currentSelectedStop.Longitude!!
                                 )
 //                                drawRouteOnMap(
 //                                    LatLng(lastLocation!!.latitude, lastLocation!!.longitude),
 //                                    destination
 //                                )
-                                FetchURL(this@LocationDetailsActivity).execute(
-                                    getUrl(
-                                        LatLng(lastLocation!!.latitude, lastLocation!!.longitude),
-                                        destination,
-                                        "driving"
-                                    ), "driving"
+                                FetchURL(this@TaskLocationsActivity).execute(
+                                        getUrl(
+                                                LatLng(lastLocation!!.latitude, lastLocation!!.longitude),
+                                                destination,
+                                                "driving"
+                                        ), "driving"
                                 )
                             }
 
@@ -156,9 +156,9 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
                     builder.include(LatLng(lastLocation!!.latitude, lastLocation!!.longitude))
                     builder.include(LatLng(destination.latitude, destination.longitude))
                     map.moveCamera(
-                        CameraUpdateFactory.newLatLngBounds(
-                            builder.build(), 25, 25, 0
-                        )
+                            CameraUpdateFactory.newLatLngBounds(
+                                    builder.build(), 25, 25, 0
+                            )
                     )
                     isFirstTime = false
                     builder.include(LatLng(destination.latitude, destination.longitude))
@@ -170,46 +170,45 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         createLocationRequest()
 
 
-
     }
 
     private fun setUpMap() {
 
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            )
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION
-                    ),
-                    LOCATION_PERMISSION_REQUEST_CODE
-                )
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION
-                    ),
-                    LOCATION_PERMISSION_REQUEST_CODE
-                )
-            }
-        } else {
-            // Permission has already been granted
-        }
-
+//        if (ActivityCompat.checkSelfPermission(
+//                        this,
+//                        android.Manifest.permission.ACCESS_FINE_LOCATION
+//                )
+//                != PackageManager.PERMISSION_GRANTED
+//        ) {
+//
+//            // Permission is not granted
+//            // Should we show an explanation?
+//            if (ActivityCompat.shouldShowRequestPermissionRationale(
+//                            this,
+//                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+//                    )
+//            ) {
+//                ActivityCompat.requestPermissions(
+//                        this,
+//                        arrayOf(
+//                                android.Manifest.permission.ACCESS_FINE_LOCATION
+//                        ),
+//                        LOCATION_PERMISSION_REQUEST_CODE
+//                )
+//            } else {
+//                // No explanation needed; request the permission
+//                ActivityCompat.requestPermissions(
+//                        this,
+//                        arrayOf(
+//                                android.Manifest.permission.ACCESS_FINE_LOCATION
+//                        ),
+//                        LOCATION_PERMISSION_REQUEST_CODE
+//                )
+//            }
+//        } else {
+//            // Permission has already been granted
+//
+//        }
 
 
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
@@ -232,50 +231,36 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         val markerOptions = MarkerOptions().position(location)
         //change marker icon
         markerOptions.icon(
-            BitmapDescriptorFactory.fromBitmap(
-                BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
-            )
+                BitmapDescriptorFactory.fromBitmap(
+                        BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+                )
         ).title(title)
 
-        //show address of the current location
-//        val titleStr = getAddress(location)  // add these two lines
-//        markerOptions.title(titleStr)
         // 2
         map.addMarker(markerOptions)
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12f))
     }
-//
-//    private fun drawRouteOnMap(sourceLocation: LatLng, destinationLocation: LatLng) {
-//        var routing = Routing.Builder()
-//            .travelMode(AbstractRouting.TravelMode.DRIVING)
-//            .withListener(this)
-//            .alternativeRoutes(true)
-//            .waypoints(sourceLocation, destinationLocation)
-//            .build()
-//        routing.execute()
-//    }
-
 
     //update the current location
     private fun startLocationUpdates() {
         //1
         if (ActivityCompat.checkSelfPermission(
-                this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+                        this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(
-                this,
-                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE
+                    this,
+                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                    LOCATION_PERMISSION_REQUEST_CODE
             )
             return
         }
         //2
         fusedLocationClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            null /* Looper */
+                locationRequest,
+                locationCallback,
+                null /* Looper */
         )
     }
 
@@ -289,7 +274,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         val builder = LocationSettingsRequest.Builder()
-            .addLocationRequest(locationRequest)
+                .addLocationRequest(locationRequest)
 
         // 4
         val client = LocationServices.getSettingsClient(this)
@@ -309,8 +294,8 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
                     // Show the dialog by calling startResolutionForResult(),
                     // and check the result in onActivityResult().
                     e.startResolutionForResult(
-                        this,
-                        REQUEST_CHECK_SETTINGS
+                            this,
+                            REQUEST_CHECK_SETTINGS
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     // Ignore the error.
@@ -365,44 +350,67 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>, grantResults: IntArray
+            requestCode: Int,
+            permissions: Array<String>, grantResults: IntArray
     ) {
-        when (requestCode) {
-            LOCATION_PERMISSION_REQUEST_CODE -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    setUpMap()
+        Log.i(TAG, "onRequestPermissionResult")
+        if (requestCode == AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (grantResults.size <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.")
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission was granted.
+//                LocationUpdatesService.shared!!.requestLocationUpdates()
+                map.isMyLocationEnabled = true
+            } else {
+                if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+                    if (!checkPermissions()) {
+                        requestPermissions()
+                    }
                 }
-                return
-            }
-        }// other 'case' lines to check for other
-        // permissions this app might request.
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CHECK_SETTINGS) {
-            if (resultCode == Activity.RESULT_OK) {
-                locationUpdateState = true
-                startLocationUpdates()
             }
         }
-        if (requestCode == PLACE_PICKER_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                val place = getPlace(this, data)
-                var addressText = place.name.toString()
-                addressText += "\n" + place.address.toString()
-
-                placeMarkerOnMap(place.latLng, AppConstants.currentSelectedStop.StopName)
-            }
-        }
+        if (!LocationHelper.shared.isGPSEnabled())
+            Snackbar.make(
+                    findViewById(R.id.rlParent),
+                    R.string.permission_denied_explanation,
+                    Snackbar.LENGTH_INDEFINITE
+            )
+                    .setAction(R.string.settings) {
+                        // Build intent that displays the App settings screen.
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        val uri = Uri.fromParts(
+                                "package",
+                                BuildConfig.APPLICATION_ID, null
+                        )
+                        intent.data = uri
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
+                    }
+                    .show()
     }
+
+
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//        if (requestCode == REQUEST_CHECK_SETTINGS) {
+//            if (resultCode == Activity.RESULT_OK) {
+//                locationUpdateState = true
+//                startLocationUpdates()
+//            }
+//        }
+//        if (requestCode == PLACE_PICKER_REQUEST) {
+//            if (resultCode == RESULT_OK) {
+//                val place = getPlace(this, data)
+//                var addressText = place.name.toString()
+//                addressText += "\n" + place.address.toString()
+//
+//                placeMarkerOnMap(place.latLng, AppConstants.currentSelectedStop.StopName)
+//            }
+//        }
+//    }
 
     override fun onPause() {
         super.onPause()
@@ -412,17 +420,18 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     override fun onStart() {
         super.onStart()
-//        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
-//            if (!checkPermissions()) {
-//                requestPermissions()
-//            }
-//        }
+        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+            if (!checkPermissions()) {
+                requestPermissions()
+            }
+        }
     }
+
     public override fun onResume() {
         super.onResume()
-        if (!locationUpdateState) {
-            startLocationUpdates()
-        }
+//        if (!locationUpdateState) {
+//            startLocationUpdates()
+//        }
     }
 
 //    override fun onRoutingCancelled() {
@@ -470,12 +479,12 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         currentPolyline = map.addPolyline(values[0] as PolylineOptions)
 
         map.animateCamera(
-            CameraUpdateFactory.newLatLngZoom(
-                LatLng(
-                    currentPolyline!!.points.get(0).latitude,
-                    currentPolyline!!.points.get(0).longitude
-                ), 8f
-            )
+                CameraUpdateFactory.newLatLngZoom(
+                        LatLng(
+                                currentPolyline!!.points.get(0).latitude,
+                                currentPolyline!!.points.get(0).longitude
+                        ), 8f
+                )
         )
     }
 
@@ -499,7 +508,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         val output = "json"
         // Building the url to the web service
         return "https://maps.googleapis.com/maps/api/directions/$output?$parameters&key=" + getString(
-            R.string.google_maps_key
+                R.string.google_maps_key
         )
     }
 
@@ -507,12 +516,12 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
 
         val zoom = map.cameraPosition.zoom
         map.animateCamera(
-            CameraUpdateFactory.newCameraPosition(
-                CameraPosition.fromLatLngZoom(
-                    latLng,
-                    zoom
+                CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.fromLatLngZoom(
+                                latLng,
+                                zoom
+                        )
                 )
-            )
         )
     }
 
@@ -520,12 +529,12 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         var latLng = LatLng(location.latitude, location.longitude)
         val zoom = map.cameraPosition.zoom
         map.moveCamera(
-            CameraUpdateFactory.newCameraPosition(
-                CameraPosition.fromLatLngZoom(
-                    latLng,
-                    zoom
+                CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.fromLatLngZoom(
+                                latLng,
+                                zoom
+                        )
                 )
-            )
         )
     }
 
@@ -534,18 +543,18 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
             val markerOptions = MarkerOptions().position(latLng)
             //change marker icon
             markerOptions.icon(
-                BitmapDescriptorFactory.fromBitmap(
-                    BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
-                )
+                    BitmapDescriptorFactory.fromBitmap(
+                            BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+                    )
             )
             currentMarker = map.addMarker(markerOptions)
 
 
         } else
             MarkerAnimation.animateMarkerToGB(
-                currentMarker,
-                latLng,
-                LatLngInterpolator.Spherical()
+                    currentMarker,
+                    latLng,
+                    LatLngInterpolator.Spherical()
             )
     }
 
@@ -553,7 +562,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
         Log.d(TAG, "isServicesOK: checking google services version")
 
         val available =
-            GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
+                GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
 
         if (available == ConnectionResult.SUCCESS) {
             //everything is fine and the user can make map requests
@@ -563,7 +572,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
             //an error occured but we can resolve it
             Log.d(TAG, "isServicesOK: an error occured but we can fix it")
             val dialog = GoogleApiAvailability.getInstance()
-                .getErrorDialog(this, available,AppConstants.ERROR_DIALOG_REQUEST)
+                    .getErrorDialog(this, available, AppConstants.ERROR_DIALOG_REQUEST)
             dialog.show()
         } else {
             Toast.makeText(this, "You can't make map requests", Toast.LENGTH_SHORT).show()
@@ -584,12 +593,12 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun buildAlertMessageNoGps() {
         val builder = AlertDialog.Builder(this)
         builder.setMessage("This application requires GPS to work properly, do you want to enable it?")
-            .setCancelable(false)
-            .setPositiveButton("Yes") { dialog, id ->
-                val enableGpsIntent =
-                    Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivityForResult(enableGpsIntent, AppConstants.PERMISSIONS_REQUEST_ENABLE_GPS)
-            }
+                .setCancelable(false)
+                .setPositiveButton("Yes") { dialog, id ->
+                    val enableGpsIntent =
+                            Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    startActivityForResult(enableGpsIntent, AppConstants.PERMISSIONS_REQUEST_ENABLE_GPS)
+                }
         val alert = builder.create()
         alert.show()
     }
@@ -657,7 +666,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
                     .setAction(R.string.ok) {
                         // Request permission
                         ActivityCompat.requestPermissions(
-                                this@LocationDetailsActivity,
+                                this@TaskLocationsActivity,
                                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                                 AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
                         )
@@ -669,7 +678,7 @@ class LocationDetailsActivity : BaseNewActivity(), OnMapReadyCallback,
             // sets the permission in a given state or the user denied the permission
             // previously and checked "Never ask again".
             ActivityCompat.requestPermissions(
-                    this@LocationDetailsActivity,
+                    this@TaskLocationsActivity,
                     arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                     AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
             )

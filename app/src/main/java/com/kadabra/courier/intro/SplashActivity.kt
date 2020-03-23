@@ -12,7 +12,7 @@ import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_splash.*
-import com.kadabra.services.ExitAppService
+import com.kadabra.courier.services.ExitAppService
 
 
 

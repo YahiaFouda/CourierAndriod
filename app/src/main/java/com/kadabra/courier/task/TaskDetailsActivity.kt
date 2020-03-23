@@ -28,7 +28,6 @@ import com.kadabra.courier.api.ApiServices
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
-import com.kadabra.courier.firebase.FirebaseManager.logOut
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.model.Courier
@@ -38,7 +37,7 @@ import com.kadabra.courier.model.location
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
-import com.kadabra.services.LocationUpdatesService
+import com.kadabra.courier.services.LocationUpdatesService
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task_details.*
 
@@ -108,11 +107,11 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     }
 
     private fun showPickUpLocation() {
-        startActivity(Intent(this, LocationDetailsActivity::class.java))
+        startActivity(Intent(this, TaskLocationsActivity::class.java))
     }
 
     private fun showDropOffLocation() {
-        startActivity(Intent(this, LocationDetailsActivity::class.java))
+        startActivity(Intent(this, TaskLocationsActivity::class.java))
 
     }
 
@@ -363,6 +362,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             myReceiver!!,
             IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
         )
+        if(!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty())
+            loadTaskDetails(AppConstants.CurrentSelectedTask)
     }
 
 
@@ -402,7 +403,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             AppConstants.CurrentAcceptedTask.isActive = true
                             AppConstants.CurrentAcceptedTask.CourierID =
                                 AppConstants.CurrentLoginCourier.CourierId
-                            var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
+                            var isGpsEnabled = LocationHelper.shared.isGPSEnabled()
                             if (AppConstants.CurrentLocation != null)
                                 AppConstants.CurrentAcceptedTask.location =
                                     location(
@@ -430,7 +431,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 }
             }
             R.id.btnLocation -> {
-//                var isGpsEnabled = LocationHelper.shared.isLocationEnabled()
+//                var isGpsEnabled = LocationHelper.shared.isGPSEnabled()
 //                task.location= location(AppConstants.CurrentLocation!!.latitude.toString(),AppConstants!!.CurrentLocation!!.longitude.toString(),isGpsEnabled)
 //                FirebaseManager.updateTaskLocation(task)
             }

@@ -39,7 +39,7 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".task.LocationDetailsActivity"
+            android:name=".task.TaskLocationsActivity"
             android:label="@string/title_activity_maps"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
@@ -86,14 +86,14 @@
         <!-- </intent-filter> -->
         <!-- </service> -->
         <service
-            android:name="com.kadabra.services.LocationUpdatesService"
+            android:name=".services.LocationUpdatesService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="location" />
         <service
-            android:name="com.kadabra.services.ExitAppService"
+            android:name=".services.ExitAppService"
             android:stopWithTask="false" />
-        <service android:name="com.kadabra.services.NotificatinService">
+        <service android:name=".services.NotificatinService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>

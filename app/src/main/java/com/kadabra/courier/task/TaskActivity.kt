@@ -38,7 +38,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.firebase.FirebaseManager
-import com.kadabra.services.LocationUpdatesService
+import com.kadabra.courier.services.LocationUpdatesService
 import kotlin.collections.ArrayList
 
 
@@ -66,7 +66,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private var lastVerion = 0
     private lateinit var languageMenu: PopupMenu
     private var isNewTaskReceived = false //new task is received but not accepted
-    private var KEY_TASK_LIST_DATA="taskList"
+    private var KEY_TASK_LIST_DATA = "taskList"
 
     //endregion
 
@@ -107,7 +107,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         ivAccept.setOnClickListener(this)
         tvTimer.visibility = View.INVISIBLE
 
-//        loadTasks()
+        loadTasks()
         refresh.setOnRefreshListener {
             loadTasks()
         }
@@ -178,6 +178,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                         if (response.Status == AppConstants.STATUS_SUCCESS) {
                             //stop  tracking service
                             AppConstants.FIRE_BASE_LOGOUT = false
+                            FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId,false)
                             FirebaseManager.logOut()
                             UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
                             UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
@@ -293,6 +294,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                     object : FirebaseManager.IFbOperation {
                         override fun onSuccess(code: Int) {
 
+                            prepareTasks(AppConstants.ALL_TASKS_DATA)
                         }
 
                         override fun onFailure(message: String) {
@@ -346,7 +348,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                                 tvEmptyData.visibility = View.INVISIBLE
                                 taskList = response.ResponseObj!!
                                 if (taskList.size > 0) {
-                                    AppConstants.ALL_TASKS_DATA=taskList
+                                    AppConstants.ALL_TASKS_DATA = taskList
                                     prepareTasks(taskList)
 
 //                                processTask()
@@ -378,7 +380,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
     }
 
-    private fun prepareTasks(tasks:ArrayList<Task>) {
+    private fun prepareTasks(tasks: ArrayList<Task>) {
         adapter = TaskAdapter(this@TaskActivity, tasks)
         rvTasks.adapter = adapter
         rvTasks?.layoutManager =
@@ -415,7 +417,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         FirebaseManager.setUpFirebase()
         getCurrentActiveTask()
         init()
-        loadTasks()
         getCurrentCourierLocation()
         forceUpdate()
 
@@ -440,6 +441,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         super.onResume()
 
 
+        if (AppConstants.ALL_TASKS_DATA.size > 0)
+            prepareTasks(AppConstants.ALL_TASKS_DATA)
 
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
@@ -463,27 +466,27 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         }
 
         bindService(
+
                 Intent(this, LocationUpdatesService::class.java), mServiceConnection,
                 Context.BIND_AUTO_CREATE
+
         )
 
+
+//        getCurrentActiveTask()
 
         if (AppConstants.endTask)
             AppConstants.endTask = false
 
-        if(AppConstants.ALL_TASKS_DATA.size>0)
-            prepareTasks(AppConstants.ALL_TASKS_DATA)
+//        if (AppConstants.ALL_TASKS_DATA.size > 0)
+//            prepareTasks(AppConstants.ALL_TASKS_DATA)
 
-        if (AppConstants.FIRE_BASE_LOGOUT) {
-
+        if (AppConstants.FIRE_BASE_LOGOUT)
             logOut()
-        }
+
         if (AppConstants.FIRE_BASE_NEW_TASK) {
             AppConstants.FIRE_BASE_NEW_TASK = false
             processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
-//        if (!AppConstants.isCountDownTimerIsFinished) {
-//            tvTimer.visibility = View.VISIBLE
-//        }
         }
 
     }
@@ -581,7 +584,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         super.onBackPressed()
         finish()
     }
-
 
 
     override fun onRequestPermissionsResult(

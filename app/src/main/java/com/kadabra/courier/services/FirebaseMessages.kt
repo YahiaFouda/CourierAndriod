@@ -1,4 +1,4 @@
-package com.kadabra.services
+package com.kadabra.courier.services
 
 import android.app.Notification
 import android.app.NotificationChannel

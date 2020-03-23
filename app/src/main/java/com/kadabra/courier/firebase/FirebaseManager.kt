@@ -162,7 +162,7 @@ object FirebaseManager {
 
     fun updateTaskLocation(task: Task) {
         if(AppConstants.CurrentLocation!=null) {
-            task.location.isGpsEnabled = LocationHelper.shared.isLocationEnabled()
+            task.location.isGpsEnabled = LocationHelper.shared.isGPSEnabled()
             dbCourierTaskHistory.child(task.TaskId).child("locations").push()
                 .setValue(task.location)
         }
@@ -172,6 +172,7 @@ object FirebaseManager {
         dbCourierTaskHistory.child(task.TaskId).child("active")
             .setValue(false)
     }
+
 
 
     fun getCurrentActiveTask(courieId: String, listener: IFbOperation) {
@@ -235,6 +236,7 @@ object FirebaseManager {
 
     }
 
+
     fun updateCourierLocation(courierId: String, location: location) {
         dbCourier.child(courierId)
             .child("location").setValue(location)
@@ -251,7 +253,7 @@ object FirebaseManager {
     //setValue(location)
 
 
-    fun updateCourierActive(courierId: Int, value: Object) {
+    fun updateCourierActive(courierId: Int, value: Boolean) {
         dbCourier.child(courierId.toString()).child(AppConstants.FIREBASE_IS_ACTIVE)
             .setValue(value)
 

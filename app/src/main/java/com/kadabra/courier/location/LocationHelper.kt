@@ -15,8 +15,6 @@ import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import android.content.Context
 import android.location.LocationManager
-import android.os.Build
-
 
 
 class LocationHelper : ILocationListener {
@@ -55,7 +53,7 @@ class LocationHelper : ILocationListener {
                     AppConstants.CurrentAcceptedTask.location = location(
                         lastLocation!!.latitude.toString(),
                         lastLocation!!.longitude.toString(),
-                        isLocationEnabled()
+                        isGPSEnabled()
                     )
                     FirebaseManager.updateTaskLocation(AppConstants.CurrentAcceptedTask)
                     FirebaseManager.updateCourierLocation(
@@ -63,7 +61,7 @@ class LocationHelper : ILocationListener {
                         location(
                             lastLocation!!.latitude.toString(),
                             lastLocation!!.longitude.toString(),
-                            isLocationEnabled()
+                            isGPSEnabled()
                         )
                     )
                 } else if (AppConstants.CurrentLoginCourier != null && AppConstants.CurrentLoginCourier.CourierId > 0) {
@@ -72,7 +70,7 @@ class LocationHelper : ILocationListener {
                         location(
                             lastLocation!!.latitude.toString(),
                             lastLocation!!.longitude.toString(),
-                            isLocationEnabled()
+                            isGPSEnabled()
                         )
                     )
                 }
@@ -172,7 +170,7 @@ class LocationHelper : ILocationListener {
     }
 
 
-    fun isLocationEnabled(): Boolean {
+    fun isGPSEnabled(): Boolean {
 
         var gps_enabled = false
         var network_enabled = false

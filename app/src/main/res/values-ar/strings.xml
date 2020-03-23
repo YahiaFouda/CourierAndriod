@@ -76,4 +76,5 @@
     <string name="error_google_ervice">لا يمكنك أستخدام الخريطة ، يرجى تنزيل خدمات جوجل أولاً.</string>
     <string name="error_gps_required">يتطلب هذا التطبيق GPS للعمل بشكل صحيح ، هل تريد تمكينه؟</string>
     <string name="error_mock_location">يرجى إيقاف أي تطبيق يخدع تطبيق الموقع أولاً لاستخدام البرنامج.</string>
+    <string name="error_gps">يتطلب هذا التطبيق GPS للعمل بشكل صحيح ،برجاء تفعيلة من الأعدادات.</string>
 </resources>

@@ -83,5 +83,6 @@
     <string name="error_google_ervice">You can\'t make map request,Please first download google services.</string>
     <string name="error_gps_required">This application requires GPS to work properly, do you want to enable it?</string>
     <string name="error_mock_location">Please stop any app deceiving Location App first to use program.</string>
+    <string name="error_gps">This application requires GPS to work properly,Please enable it.</string>
 
 </resources>

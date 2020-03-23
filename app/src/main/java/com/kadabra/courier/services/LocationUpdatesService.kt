@@ -1,4 +1,4 @@
-package com.kadabra.services
+package com.kadabra.courier.services
 
 import android.app.ActivityManager
 import android.app.Notification
@@ -157,11 +157,11 @@ class LocationUpdatesService : Service() {
                 super.onLocationResult(locationResult)
                 if (NetworkManager().isNetworkAvailable(applicationContext)) {
                     onNewLocation(locationResult!!.lastLocation)
-//                    isMockLocationEnabled = checkMockLocations(locationResult!!.lastLocation)
-//                    if (isMockLocationEnabled) {
-//                        Alert.showMessage(AppController.getContext(),getString(R.string.error_mock_location))
-//                        logOut()
-//                    }
+                    isMockLocationEnabled = checkMockLocations(locationResult!!.lastLocation)
+                    if (isMockLocationEnabled) {
+                        Alert.showMessage(AppController.getContext(),getString(R.string.error_mock_location))
+                        logOut()
+                    }
                 } else
                     AppConstants.CurrentLocation = null
             }
@@ -190,7 +190,7 @@ class LocationUpdatesService : Service() {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         Log.i(TAG, "Service started")
         val startedFromNotification = intent.getBooleanExtra(
-            EXTRA_STARTED_FROM_NOTIFICATION,
+                EXTRA_STARTED_FROM_NOTIFICATION,
             false
         )
 
@@ -408,8 +408,8 @@ class LocationUpdatesService : Service() {
         /**
          * The desired interval for location updates. Inexact. Updates may be more or less frequent.
          */
-//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
-        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
+        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
+//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
 
         /**
          * The fastest rate for active location updates. Updates will never be more frequent
@@ -549,6 +549,7 @@ class LocationUpdatesService : Service() {
 
                             //stop  tracking service
                             removeLocationUpdates()
+                            FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId,false)
                             FirebaseManager.logOut()
                             UserSessionManager.getInstance(AppController.getContext())
                                 .setUserData(null)
@@ -556,7 +557,7 @@ class LocationUpdatesService : Service() {
                                 .setIsLogined(false)
                             UserSessionManager.getInstance(AppController.getContext())
                                 .setFirstTime(false)
-                            LocationUpdatesService.shared.removeLocationUpdates()
+                            shared.removeLocationUpdates()
 
                             startActivity(
                                 Intent(
