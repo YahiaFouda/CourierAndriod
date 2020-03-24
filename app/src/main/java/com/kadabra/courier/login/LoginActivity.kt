@@ -342,7 +342,6 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         courier.name = courier.CourierName
         courier.token = FirebaseManager.getCurrentUser()!!.uid //token
         courier.isActive = true
-        courier.isActive = true
 
     }
 

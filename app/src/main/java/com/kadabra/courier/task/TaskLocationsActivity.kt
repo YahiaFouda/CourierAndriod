@@ -172,59 +172,22 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     }
 
-    private fun setUpMap() {
-
-//        if (ActivityCompat.checkSelfPermission(
-//                        this,
-//                        android.Manifest.permission.ACCESS_FINE_LOCATION
-//                )
-//                != PackageManager.PERMISSION_GRANTED
-//        ) {
+//    private fun setUpMap() {
 //
-//            // Permission is not granted
-//            // Should we show an explanation?
-//            if (ActivityCompat.shouldShowRequestPermissionRationale(
-//                            this,
-//                            android.Manifest.permission.ACCESS_COARSE_LOCATION
-//                    )
-//            ) {
-//                ActivityCompat.requestPermissions(
-//                        this,
-//                        arrayOf(
-//                                android.Manifest.permission.ACCESS_FINE_LOCATION
-//                        ),
-//                        LOCATION_PERMISSION_REQUEST_CODE
-//                )
-//            } else {
-//                // No explanation needed; request the permission
-//                ActivityCompat.requestPermissions(
-//                        this,
-//                        arrayOf(
-//                                android.Manifest.permission.ACCESS_FINE_LOCATION
-//                        ),
-//                        LOCATION_PERMISSION_REQUEST_CODE
-//                )
+//        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+//
+//
+//            // Got last known location. In some rare situations this can be null.
+//            if (location != null) {
+//                lastLocation = location
+//                val currentLatLng = LatLng(location.latitude, location.longitude)
+//                placeMarkerOnMap(currentLatLng, getString(R.string.you_are_here))
+//
 //            }
-//        } else {
-//            // Permission has already been granted
-//
 //        }
-
-
-        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-
-
-            // Got last known location. In some rare situations this can be null.
-            if (location != null) {
-                lastLocation = location
-                val currentLatLng = LatLng(location.latitude, location.longitude)
-                placeMarkerOnMap(currentLatLng, getString(R.string.you_are_here))
-
-            }
-        }
-        return
-
-    }
+//        return
+//
+//    }
 
     private fun placeMarkerOnMap(location: LatLng, title: String) {
         // 1
@@ -334,7 +297,20 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         map.uiSettings.isZoomControlsEnabled = true
         map.setOnMarkerClickListener(this)
 
-        setUpMap()
+
+
+        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
+
+
+            // Got last known location. In some rare situations this can be null.
+            if (location != null) {
+                lastLocation = location
+                val currentLatLng = LatLng(location.latitude, location.longitude)
+                placeMarkerOnMap(currentLatLng, getString(R.string.you_are_here))
+
+            }
+        }
+
     }
 
     override fun onMarkerClick(p0: Marker?): Boolean {

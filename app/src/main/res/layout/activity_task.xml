@@ -31,6 +31,17 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginBottom="10dp"
                 android:src="@drawable/ic_log_out" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:text="@string/beta_version"
+                android:textAlignment="center"
+                android:textColor="@color/textColor"
+                android:textSize="18sp" />
 
 
             <TextView
@@ -114,7 +125,8 @@
                 android:layout_centerInParent="true"
                 android:layout_marginRight="24dp"
                 android:layout_marginBottom="20dp"
-                android:src="@drawable/ic_accept" />
+                android:src="@drawable/ic_accept"
+                android:elevation="1dp"/>
         </RelativeLayout>
     </ScrollView>
 

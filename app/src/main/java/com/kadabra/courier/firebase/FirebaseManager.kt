@@ -259,6 +259,12 @@ object FirebaseManager {
 
     }
 
+    fun updateCourierHaveTask(courierId: Int, value: Boolean) {
+        dbCourier.child(courierId.toString()).child(AppConstants.FIREBASE_HAVE_TASK)
+                .setValue(value)
+
+    }
+
     fun listenOnTaskHistory(taskId: String): Courier {
         // User data change listener
 

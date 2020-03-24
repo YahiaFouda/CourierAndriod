@@ -18,47 +18,48 @@ class Courier {
     @Exclude
     @set:Exclude
     @get:Exclude
-    var CourierName: String = ""
+    var CourierName= ""
     @Exclude
     @set:Exclude
     @get:Exclude
-    var Mobile: String = ""
-    var name: String = ""
+    var Mobile= ""
+    var name= ""
     @Exclude
     @set:Exclude
     @get:Exclude
-    var email: String = ""
+    var email= ""
     @Exclude
     @set:Exclude
     @get:Exclude
-    var password: String = ""
+    var password= ""
     @Exclude
     @set:Exclude
     @get:Exclude
-    var phone: String = ""
+    var phone= ""
     @Exclude
     @set:Exclude
     @get:Exclude
-    var birthdate: String = ""
-    var token: String = ""
+    var birthdate= ""
+    var token= ""
     @Exclude
     @set:Exclude
     @get:Exclude
-    var rating: String = ""
+    var rating= ""
     @Exclude
     @set:Exclude
     @get:Exclude
-    var created_at: String = ""
+    var created_at= ""
     @Exclude
     @set:Exclude
     @get:Exclude
-    var updated_at: String = ""
+    var updated_at= ""
     @Exclude
     @set:Exclude
     @get:Exclude
     var fullImagePath: String? = null
     var location: location? = null
-    var isActive: Boolean = false
+    var isActive = false
+    var haveTask=false
     var city = ""
 
 
