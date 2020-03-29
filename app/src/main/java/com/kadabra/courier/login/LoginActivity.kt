@@ -24,11 +24,22 @@ import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AppCompatActivity
 
 import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
+import com.kadabra.courier.utilities.Alert.hideProgress
+import com.kadabra.courier.utilities.Alert.showProgress
+import com.kadabra.courier.utilities.AppController
+import com.kadabra.courier.utilities.LocaleManager
+import io.fabric.sdk.android.services.common.CommonUtils.hideKeyboard
+import kotlinx.android.synthetic.main.activity_login.avi
+import kotlinx.android.synthetic.main.activity_login.btnLogin
+import kotlinx.android.synthetic.main.activity_login.etPassword
+import kotlinx.android.synthetic.main.activity_login.etUsername
+import kotlinx.android.synthetic.main.activity_login1.*
 
 
 class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
@@ -38,6 +49,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     private var lastLocation: Location? = null
     private var userCustomEmail = ""
     private val TAG = this.javaClass.simpleName
+    private  var lang=""
+
     //endregion
 
     //region Constructor
@@ -50,11 +63,19 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     //region Events
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.activity_login1)
 
 
         FirebaseManager.setUpFirebase()
         init()
+
+         lang = UserSessionManager.getInstance(AppController.getContext())
+                .getLanguage()
+        if (lang == AppConstants.ARABIC)
+            rbArabic.isChecked = true
+        else if (lang == AppConstants.ENGLISH)
+            rbEnglish.isChecked = true
+
 
     }
 
@@ -72,6 +93,15 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                     logIn(userName, password)
 //                    LocationHelper.shared.stopUpdateLocation()
                 }
+            }
+
+            R.id.rbArabic -> {
+                if(lang!=AppConstants.ARABIC)
+                setNewLocale(this,AppConstants.ARABIC)
+            }
+            R.id.rbEnglish -> {
+                if(lang!=AppConstants.ENGLISH)
+                    setNewLocale(this,AppConstants.ENGLISH)
             }
         }
     }
@@ -96,8 +126,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>, grantResults: IntArray
+            requestCode: Int,
+            permissions: Array<String>, grantResults: IntArray
     ) {
         when (requestCode) {
             LOCATION_PERMISSION_REQUEST_CODE -> {
@@ -107,23 +137,23 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                     Snackbar.make(
-                        findViewById(R.id.rlParent),
-                        R.string.permission_denied_explanation,
-                        Snackbar.LENGTH_INDEFINITE
+                            findViewById(R.id.rlParent),
+                            R.string.permission_denied_explanation,
+                            Snackbar.LENGTH_INDEFINITE
                     )
-                        .setAction(R.string.settings) {
-                            // Build intent that displays the App settings screen.
-                            val intent = Intent()
-                            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                            val uri = Uri.fromParts(
-                                "package",
-                                BuildConfig.APPLICATION_ID, null
-                            )
-                            intent.data = uri
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            startActivity(intent)
-                        }
-                        .show()
+                            .setAction(R.string.settings) {
+                                // Build intent that displays the App settings screen.
+                                val intent = Intent()
+                                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                val uri = Uri.fromParts(
+                                        "package",
+                                        BuildConfig.APPLICATION_ID, null
+                                )
+                                intent.data = uri
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                startActivity(intent)
+                            }
+                            .show()
 
 
                 }
@@ -139,6 +169,10 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     //region Helper Functions
     private fun init() {
         btnLogin.setOnClickListener(this)
+        rbArabic.setOnClickListener(this)
+        rbEnglish.setOnClickListener(this)
+
+
     }
 
     private fun validateData(): Boolean {
@@ -165,8 +199,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                 override fun onFailed(error: String) {
                     hideProgress()
                     Alert.showMessage(
-                        this@LoginActivity,
-                        getString(R.string.error_login_server_error)
+                            this@LoginActivity,
+                            getString(R.string.error_login_server_error)
                     )
                 }
 
@@ -176,36 +210,36 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
                         courier = response.ResponseObj!!
                         AppConstants.CurrentLoginCourier = courier
+                        var data = FirebaseManager.getCurrentUser()
                         if (FirebaseManager.getCurrentUser() == null) //create new user
                         {
                             FirebaseManager.logIn(
-                                userCustomEmail,
-                                password
+                                    userCustomEmail,
+                                    password
                             )
                             { user, error ->
                                 if (user != null) {
                                     Log.d(TAG, "AUTH- LOGIN - SUCCESS")
                                     prepareCourierData()
-                                    sendUserToken(courier.CourierId,FirebaseManager.token)
+                                    sendUserToken(courier.CourierId, FirebaseManager.token)
                                     FirebaseManager.updateCourier(courier) {
 
-                                            success ->
+                                        success ->
                                         if (success) {
                                             Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
                                             saveUserData(courier)
-
                                             startActivity(
-                                                Intent(
-                                                    this@LoginActivity,
-                                                    TaskActivity::class.java
-                                                )
+                                                    Intent(
+                                                            this@LoginActivity,
+                                                            TaskActivity::class.java
+                                                    )
                                             )
                                             finish()
                                             hideProgress()
                                         } else {
                                             Alert.showMessage(
-                                                this@LoginActivity,
-                                                error!!
+                                                    this@LoginActivity,
+                                                    error!!
                                             )
                                             hideProgress()
                                         }
@@ -214,46 +248,46 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                                 } else //user is new
                                 {
                                     FirebaseManager.createAccount(
-                                        userCustomEmail,
-                                        password
+                                            userCustomEmail,
+                                            password
                                     ) { user, error ->
                                         if (user != null) {
 
                                             Log.d(TAG, "AUTH- SIGNUP - SUCCESS")
                                             prepareCourierData()
-                                            sendUserToken(courier.CourierId,FirebaseManager.token)
+                                            sendUserToken(courier.CourierId, FirebaseManager.token)
                                             FirebaseManager.createCourier(courier) { success ->
                                                 if (success) {
                                                     Log.d(
-                                                        TAG,
-                                                        "FBDB - CREATE NEW USER - SUCCESS"
+                                                            TAG,
+                                                            "FBDB - CREATE NEW USER - SUCCESS"
                                                     )
                                                     saveUserData(courier)
                                                     startActivity(
-                                                        Intent(
-                                                            this@LoginActivity,
-                                                            TaskActivity::class.java
-                                                        )
+                                                            Intent(
+                                                                    this@LoginActivity,
+                                                                    TaskActivity::class.java
+                                                            )
                                                     )
                                                     finish()
                                                     hideProgress()
                                                 } else {
                                                     Alert.showMessage(
-                                                        this@LoginActivity,
-                                                        error!!
+                                                            this@LoginActivity,
+                                                            error!!
                                                     )
                                                     hideProgress()
                                                     Log.d(
-                                                        TAG,
-                                                        "Failed to connect to server - Error Code 2"
+                                                            TAG,
+                                                            "Failed to connect to server - Error Code 2"
                                                     )
                                                 }
                                             }
 
                                         } else {
                                             Alert.showMessage(
-                                                this@LoginActivity,
-                                                error!!
+                                                    this@LoginActivity,
+                                                    error!!
                                             )
                                             hideProgress()
                                         }
@@ -266,31 +300,32 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                         } else  //login
                         {
                             FirebaseManager.logIn(
-                                userCustomEmail,
-                                password
+                                    userCustomEmail,
+                                    password
                             )
                             { user, error ->
                                 if (user != null) {
                                     Log.d(TAG, "AUTH- LOGIN - SUCCESS")
                                     prepareCourierData()
+                                    sendUserToken(courier.CourierId, FirebaseManager.token)
                                     FirebaseManager.updateCourier(courier) {
 
-                                            success ->
+                                        success ->
                                         if (success) {
                                             Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
                                             saveUserData(courier)
                                             startActivity(
-                                                Intent(
-                                                    this@LoginActivity,
-                                                    TaskActivity::class.java
-                                                )
+                                                    Intent(
+                                                            this@LoginActivity,
+                                                            TaskActivity::class.java
+                                                    )
                                             )
                                             finish()
                                             hideProgress()
                                         } else {
                                             Alert.showMessage(
-                                                this@LoginActivity,
-                                                error!!
+                                                    this@LoginActivity,
+                                                    error!!
                                             )
                                             hideProgress()
                                         }
@@ -299,8 +334,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                                 } else //user is null
                                 {
                                     Alert.showMessage(
-                                        this@LoginActivity,
-                                        error!!
+                                            this@LoginActivity,
+                                            error!!
                                     )
                                     hideProgress()
                                 }
@@ -313,15 +348,162 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                         Log.d(TAG, "logIn - API - Failed.${response.Message}")
                         hideProgress()
                         Alert.showMessage(
-                            this@LoginActivity,
-                            getString(R.string.error_incorrect_user_name)
+                                this@LoginActivity,
+                                getString(R.string.error_incorrect_user_name)
                         )
                     } else if (response.Status == AppConstants.STATUS_INCORRECT_DATA) {
                         Log.d(TAG, "logIn - API - Failed.${response.Message}")
                         hideProgress()
                         Alert.showMessage(
+                                this@LoginActivity,
+                                getString(R.string.error_incorrect_password)
+                        )
+                    }
+
+                }
+            })
+
+        } else {
+            Log.d(TAG, "logIn - API - NO INTERNET.")
+            hideProgress()
+            Alert.showMessage(this@LoginActivity, getString(R.string.no_internet))
+        }
+
+
+        return courier
+    }
+
+    private fun logIn1(userName: String, password: String): Courier {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.logIn(userName, password)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
+                override fun onFailed(error: String) {
+                    hideProgress()
+                    Alert.showMessage(
                             this@LoginActivity,
-                            getString(R.string.error_incorrect_password)
+                            getString(R.string.error_login_server_error)
+                    )
+                }
+
+                override fun onSuccess(response: ApiResponse<Courier>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS && response.ResponseObj != null) {
+                        Log.d(TAG, "logIn - API - Success.$response")
+
+                        courier = response.ResponseObj!!
+                        AppConstants.CurrentLoginCourier = courier
+                        var data = FirebaseManager.getCurrentUser()
+                        if (FirebaseManager.getCurrentUser() == null) //create new user
+                        {
+                            // REGISTER - NEW USER
+                            FirebaseManager.createAccount(
+                                    userCustomEmail,
+                                    password
+                            ) { user, error ->
+                                if (user != null) {
+
+                                    Log.d(TAG, "AUTH- SIGNUP - SUCCESS")
+                                    prepareCourierData()
+                                    sendUserToken(courier.CourierId, FirebaseManager.token)
+                                    FirebaseManager.createCourier(courier) { success ->
+                                        if (success) {
+                                            Log.d(
+                                                    TAG,
+                                                    "FBDB - CREATE NEW USER - SUCCESS"
+                                            )
+                                            saveUserData(courier)
+                                            startActivity(
+                                                    Intent(
+                                                            this@LoginActivity,
+                                                            TaskActivity::class.java
+                                                    )
+                                            )
+                                            finish()
+                                            hideProgress()
+                                        } else {
+                                            Alert.showMessage(
+                                                    this@LoginActivity,
+                                                    error!!
+                                            )
+                                            hideProgress()
+                                            Log.d(
+                                                    TAG,
+                                                    "Failed to connect to server - Error Code 2"
+                                            )
+                                        }
+                                    }
+
+                                } else {
+                                    Alert.showMessage(
+                                            this@LoginActivity,
+                                            error!!
+                                    )
+                                    hideProgress()
+                                }
+                            }
+
+                        } else  //LOGIN -  EXISTING USER
+                        {
+                            FirebaseManager.logIn(
+                                    userCustomEmail,
+                                    password
+                            )
+                            { user, error ->
+                                if (user != null) {
+                                    Log.d(TAG, "AUTH- LOGIN - SUCCESS")
+                                    prepareCourierData()
+                                    sendUserToken(courier.CourierId, FirebaseManager.token)
+                                    FirebaseManager.updateCourier(courier) {
+
+                                        success ->
+                                        if (success) {
+                                            Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
+                                            saveUserData(courier)
+                                            startActivity(
+                                                    Intent(
+                                                            this@LoginActivity,
+                                                            TaskActivity::class.java
+                                                    )
+                                            )
+                                            finish()
+                                            hideProgress()
+                                        } else {
+                                            Alert.showMessage(
+                                                    this@LoginActivity,
+                                                    error!!
+                                            )
+                                            hideProgress()
+                                        }
+                                    }
+
+                                } else //user is null
+                                {
+                                    Alert.showMessage(
+                                            this@LoginActivity,
+                                            error!!
+                                    )
+                                    hideProgress()
+                                }
+
+                            }
+                        }
+
+
+                    } else if (response.Status == AppConstants.STATUS_FAILED) {
+                        Log.d(TAG, "logIn - API - Failed.${response.Message}")
+                        hideProgress()
+                        Alert.showMessage(
+                                this@LoginActivity,
+                                getString(R.string.error_incorrect_user_name)
+                        )
+                    } else if (response.Status == AppConstants.STATUS_INCORRECT_DATA) {
+                        Log.d(TAG, "logIn - API - Failed.${response.Message}")
+                        hideProgress()
+                        Alert.showMessage(
+                                this@LoginActivity,
+                                getString(R.string.error_incorrect_password)
                         )
                     }
 
@@ -340,26 +522,26 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
     private fun prepareCourierData() {
         courier.name = courier.CourierName
-        courier.token = FirebaseManager.getCurrentUser()!!.uid //token
+        var oldToken = FirebaseManager.getCurrentUser()!!.uid
+        var token = FirebaseManager.token
+        courier.token = oldToken//FirebaseManager.getCurrentUser()!!.uid //token
         courier.isActive = true
 
     }
 
 
     private fun saveUserData(courier: Courier) {
-        UserSessionManager.getInstance(this@LoginActivity)
-            .setFirstTime(false)
         AppConstants.CurrentLoginCourier = courier
+        UserSessionManager.getInstance(this).setFirstTime(false)
         UserSessionManager.getInstance(this).setUserData(courier)
         UserSessionManager.getInstance(this).setIsLogined(true)
-
     }
 
     private fun showProgress() {
         avi.smoothToShow()
         window.setFlags(
-            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         )
     }
 
@@ -380,8 +562,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                 override fun onFailed(error: String) {
                     Log.d(TAG, "SEND TOKEN - API - FAILED.")
                     Alert.showMessage(
-                        this@LoginActivity,
-                        getString(R.string.error_login_server_error)
+                            this@LoginActivity,
+                            getString(R.string.error_login_server_error)
                     )
                 }
             })
@@ -396,12 +578,17 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
     fun hideKeyboard(view: View) {
         val inputMethodManager =
-            getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+                getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager!!.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
 
+    fun setNewLocale(mContext: AppCompatActivity, @LocaleManager.LocaleDef language: String) {
+        UserSessionManager.getInstance(this).setLanguage(language)
+        val intent = mContext.intent
+        mContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
 
+    }
     //endregion
 
 }

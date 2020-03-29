@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <RelativeLayout
+        android:id="@+id/rlParent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:focusableInTouchMode="true">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:fitsSystemWindows="true"
+            android:scrollbars="none">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorSecondary"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+
+                <Button
+                    android:id="@+id/btnLogin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/rgLanguage"
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="80dp"
+                    android:background="@drawable/rounded_button"
+                    android:text="@string/login"
+                    android:textColor="@color/colorSecondary" />
+
+
+                <EditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/etUsername"
+                    android:layout_gravity="start"
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="20dp"
+                    android:hint="@string/password"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPassword"
+                    android:selectAllOnFocus="true"
+                    android:textAlignment="viewStart" />
+
+                <EditText
+                    android:id="@+id/etUsername"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/tvWelcome"
+                    android:layout_gravity="start"
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="100dp"
+                    android:hint="@string/user_name"
+                    android:imeOptions="actionNext"
+                    android:inputType="textEmailAddress"
+                    android:selectAllOnFocus="true"
+                    android:textAlignment="viewStart" />
+
+                <RadioGroup
+                    android:id="@+id/rgLanguage"
+                    android:layout_below="@+id/etPassword"
+                    android:layout_marginEnd="24dp"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="25dp"
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checkedButton="@+id/rbArabic">
+                    <RadioButton
+                        android:id="@+id/rbArabic"
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/arabic"/>
+                    <RadioButton
+                        android:id="@+id/rbEnglish"
+                        android:layout_weight="1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/english"/>
+
+
+                </RadioGroup>
+
+
+                <TextView
+                    android:id="@+id/tvWelcome"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerInParent="true"
+                    android:layout_marginTop="100dp"
+                    android:gravity="center"
+                    android:text="@string/welcome"
+                    android:textAlignment="center"
+                    android:textColor="@color/textColor"
+                    android:textSize="30sp" />
+
+                <TextView
+
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="20dp"
+                    android:gravity="center"
+                    android:text="@string/beta_version"
+                    android:textAlignment="center"
+                    android:textColor="@color/textColor"
+                    android:textSize="18sp" />
+
+
+            </RelativeLayout>
+
+
+        </ScrollView>
+
+        <com.wang.avi.AVLoadingIndicatorView
+            android:id="@+id/avi"
+            style="@style/AVLoadingIndicatorView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="invisible"
+            app:indicatorColor="@color/colorPrimary"
+            app:indicatorName="BallScaleRippleIndicator" />
+    </RelativeLayout>
+
+</layout>

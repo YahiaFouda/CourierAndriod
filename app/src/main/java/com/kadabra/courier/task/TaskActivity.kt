@@ -1,11 +1,13 @@
 package com.kadabra.courier.task
 
 import android.Manifest
+import android.app.ActivityManager
 import android.app.AlertDialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.PorterDuff
 import android.location.Location
+import android.location.LocationManager
 import android.os.*
 import android.view.MotionEvent
 import android.view.View
@@ -30,15 +32,22 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.provider.Settings
 import android.util.Log
+import android.view.WindowManager
 import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.*
 import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.firebase.FirebaseManager
+import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.services.LocationUpdatesService
+import kotlinx.android.synthetic.main.activity_task.avi
 import kotlin.collections.ArrayList
 
 
@@ -67,6 +76,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private lateinit var languageMenu: PopupMenu
     private var isNewTaskReceived = false //new task is received but not accepted
     private var KEY_TASK_LIST_DATA = "taskList"
+    private var mLocationPermissionGranted = false
 
     //endregion
 
@@ -107,7 +117,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         ivAccept.setOnClickListener(this)
         tvTimer.visibility = View.INVISIBLE
 
-        loadTasks()
+
         refresh.setOnRefreshListener {
             loadTasks()
         }
@@ -178,11 +188,13 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                         if (response.Status == AppConstants.STATUS_SUCCESS) {
                             //stop  tracking service
                             AppConstants.FIRE_BASE_LOGOUT = false
-                            FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId,false)
-                            FirebaseManager.logOut()
-                            UserSessionManager.getInstance(this@TaskActivity).setUserData(null)
-                            UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
-                            UserSessionManager.getInstance(this@TaskActivity).setFirstTime(false)
+                            FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId, false)
+//                            FirebaseManager.logOut()
+
+                            UserSessionManager.getInstance(this@TaskActivity).logout()
+//                            UserSessionManager.getInstance(this@TaskActivity).setUserData(Courier())
+//                            UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
+//                            UserSessionManager.getInstance(this@TaskActivity).setFirstTime(false)
 
                             startActivity(Intent(this@TaskActivity, LoginActivity::class.java))
                             if (countDownTimer != null)
@@ -190,10 +202,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                             cancelVibrate()
                             stopSound()
                             stopTracking()
-                            //remove location update
-//                        LocationHelper.shared.stopUpdateLocation()
-                            finish()
                             hideProgress()
+                            finish()
 
                         } else {
                             hideProgress()
@@ -221,13 +231,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             )
         }
 
-//        }
-//        else{
-//            Alert.showMessage(
-//                this@TaskActivity,
-//                getString(R.string.no_internet)
-//            )
-//        }
 
     }
 
@@ -323,6 +326,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
 
     private fun loadTasks() {
+        Log.d(TAG, "loadTasks: Enter method")
         ivNoInternet.visibility = View.INVISIBLE
         showProgress()
         if (NetworkManager().isNetworkAvailable(this)) {
@@ -333,6 +337,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                     endPoint,
                     object : INetworkCallBack<ApiResponse<ArrayList<Task>>> {
                         override fun onFailed(error: String) {
+                            Log.d(TAG, "onFailed: "+error)
                             refresh.isRefreshing = false
                             hideProgress()
                             Alert.showMessage(
@@ -342,24 +347,39 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                         }
 
                         override fun onSuccess(response: ApiResponse<ArrayList<Task>>) {
-
+                            Log.d(TAG, "onSuccess: Enter method")
                             if (response.Status == AppConstants.STATUS_SUCCESS) {
+                                Log.d(TAG, "onSuccess: AppConstants.STATUS_SUCCESS: "+AppConstants.STATUS_SUCCESS)
                                 refresh.isRefreshing = false
                                 tvEmptyData.visibility = View.INVISIBLE
                                 taskList = response.ResponseObj!!
+                                Log.d(TAG, "onSuccess"+taskList.size.toString())
+                                Log.d(TAG, "AppConstants.FIRE_BASE_NEW_TASK"+AppConstants.FIRE_BASE_NEW_TASK)
+
                                 if (taskList.size > 0) {
+                                    Log.d(TAG, "onSuccess: taskList.size > 0: ")
                                     AppConstants.ALL_TASKS_DATA = taskList
                                     prepareTasks(taskList)
 
-//                                processTask()
+                                    if (AppConstants.FIRE_BASE_NEW_TASK) {
+                                        Log.d(TAG, "onSuccess: AppConstants.FIRE_BASE_NEW_TASK: "+AppConstants.FIRE_BASE_NEW_TASK)
+                                        AppConstants.FIRE_BASE_NEW_TASK = false
+                                        processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
+                                    }
 
                                     hideProgress()
                                 } else {//no tasks
+                                    Log.d(TAG, "no tasks: ")
+                                    refresh.isRefreshing = false
                                     tvTimer.visibility = View.INVISIBLE
                                     tvEmptyData.visibility = View.VISIBLE
+                                    taskList.clear()
+                                    prepareTasks(taskList)
                                 }
 
                             } else {
+                                Log.d(TAG, "onSuccess: Enter method")
+                                refresh.isRefreshing = false
                                 hideProgress()
                                 tvEmptyData.visibility = View.VISIBLE
                             }
@@ -395,11 +415,16 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private fun showProgress() {
         tvEmptyData.visibility = View.INVISIBLE
         avi.smoothToShow()
+        window.setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        )
     }
 
     private fun hideProgress() {
         avi.smoothToHide()
         tvEmptyData.visibility = View.INVISIBLE
+        window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
     }
 
 
@@ -409,16 +434,16 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // recovering the instance state
-
         setContentView(R.layout.activity_task)
-
-
+        Log.d(TAG, "onCreate")
         myReceiver = MyReceiver()
         FirebaseManager.setUpFirebase()
-        getCurrentActiveTask()
         init()
-        getCurrentCourierLocation()
-        forceUpdate()
+
+//        loadTasks()
+//        getCurrentActiveTask()
+//        getCurrentCourierLocation()
+//        forceUpdate()
 
 
         // Check that the user hasn't revoked permissions by going to Settings.
@@ -439,6 +464,19 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
     override fun onResume() {
         super.onResume()
+        Log.d(TAG, "onResume")
+        if (checkMapServices()) {
+            if (mLocationPermissionGranted) {
+                Log.d(TAG, "onResume-mLocationPermissionGranted-loadTasks")
+                loadTasks()
+                getCurrentActiveTask()
+                getCurrentCourierLocation()
+                forceUpdate()
+            } else {
+                Log.d(TAG, "onResume-No perission")
+                getLocationPermission()
+            }
+        }
 
 
         if (AppConstants.ALL_TASKS_DATA.size > 0)
@@ -459,12 +497,13 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         // Bind to the service. If the service is in foreground mode, this signals to the service
         // that since this activity is in the foreground, the service can exit foreground mode.
 
-        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
-            if (!checkPermissions()) {
-                requestPermissions()
-            }
-        }
 
+//            if (!checkPermissions()) {
+//                requestPermissions()
+//            }
+
+
+        Log.d(TAG, "onStart")
         bindService(
 
                 Intent(this, LocationUpdatesService::class.java), mServiceConnection,
@@ -484,10 +523,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         if (AppConstants.FIRE_BASE_LOGOUT)
             logOut()
 
-        if (AppConstants.FIRE_BASE_NEW_TASK) {
-            AppConstants.FIRE_BASE_NEW_TASK = false
-            processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
-        }
+//        if (AppConstants.FIRE_BASE_NEW_TASK) {
+//            AppConstants.FIRE_BASE_NEW_TASK = false
+//            processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
+//        }
 
     }
 
@@ -590,38 +629,54 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             requestCode: Int,
             permissions: Array<String>, grantResults: IntArray
     ) {
+        mLocationPermissionGranted = false
         Log.i(TAG, "onRequestPermissionResult")
-        if (requestCode == AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
-            if (grantResults.size <= 0) {
-                // If user interaction was interrupted, the permission request is cancelled and you
-                // receive empty arrays.
-                Log.i(TAG, "User interaction was cancelled.")
-            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION && grantResults.isNotEmpty()
+        ) {
+//            if (grantResults.size <= 0) {
+//                // If user interaction was interrupted, the permission request is cancelled and you
+//                // receive empty arrays.
+//                Log.i(TAG, "User interaction was cancelled.")
+//            } else
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission was granted.
+                Log.d(TAG, "onRequestPermissionsResult-mLocationPermissionGranted-loadTasks")
+//                if(!isLocationServiceRunning())
                 LocationUpdatesService.shared!!.requestLocationUpdates()
-            } else {
-                // Permission denied.
-//                setButtonsState(false)
-                Snackbar.make(
-                        findViewById(R.id.rlParent),
-                        R.string.permission_denied_explanation,
-                        Snackbar.LENGTH_INDEFINITE
-                )
-                        .setAction(R.string.settings) {
-                            // Build intent that displays the App settings screen.
-                            val intent = Intent()
-                            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                            val uri = Uri.fromParts(
-                                    "package",
-                                    BuildConfig.APPLICATION_ID, null
-                            )
-                            intent.data = uri
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            startActivity(intent)
-                        }
-                        .show()
+                mLocationPermissionGranted = true
+                loadTasks()
+                getCurrentActiveTask()
+                getCurrentCourierLocation()
+                forceUpdate()
+
             }
+//                else {
+//                if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+//                    if (!checkPermissions()) {
+//                        requestPermissions()
+//                    }
+//                }
+//            }
         }
+//        if (!LocationHelper.shared.isGPSEnabled())
+//            Snackbar.make(
+//                    findViewById(R.id.rlParent),
+//                    R.string.permission_denied_explanation,
+//                    Snackbar.LENGTH_INDEFINITE
+//            )
+//                    .setAction(R.string.settings) {
+//                        // Build intent that displays the App settings screen.
+//                        val intent = Intent()
+//                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+//                        val uri = Uri.fromParts(
+//                                "package",
+//                                BuildConfig.APPLICATION_ID, null
+//                        )
+//                        intent.data = uri
+//                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+//                        startActivity(intent)
+//                    }
+//                    .show()
     }
 
     // Returns the current state of the permissions needed
@@ -766,6 +821,116 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         }
     }
 
+
+    private fun checkMapServices(): Boolean {
+        if (isServicesOK()) {
+            if (isMapsEnabled()) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun isServicesOK(): Boolean {
+        Log.d(TAG, "isServicesOK: checking google services version")
+
+        val available =
+                GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
+
+        if (available == ConnectionResult.SUCCESS) {
+            //everything is fine and the user can make map requests
+            Log.d(TAG, "isServicesOK: Google Play Services is working")
+            return true
+        } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
+            //an error occured but we can resolve it
+            Log.d(TAG, "isServicesOK: an error occured but we can fix it")
+            val dialog = GoogleApiAvailability.getInstance()
+                    .getErrorDialog(this, available, AppConstants.ERROR_DIALOG_REQUEST)
+            dialog.show()
+        } else {
+            Toast.makeText(this, "You can't make map requests", Toast.LENGTH_SHORT).show()
+        }
+        return false
+    }
+
+
+    fun isMapsEnabled(): Boolean {
+        val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps()
+            return false
+        }
+        return true
+    }
+
+    private fun buildAlertMessageNoGps() {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage(getString(R.string.error_gps_required))
+                .setCancelable(false)
+                .setPositiveButton(getString(R.string.ok)) { dialog, id ->
+                    val enableGpsIntent =
+                            Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    startActivityForResult(enableGpsIntent, AppConstants.PERMISSIONS_REQUEST_ENABLE_GPS)
+                }
+        val alert = builder.create()
+        alert.show()
+    }
+
+    private fun getLocationPermission() {
+        /*
+         * Request location permission, so that we can get the location of the
+         * device. The result of the permission request is handled by a callback,
+         * onRequestPermissionsResult.
+         */
+        if (ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "getLocationPermission-mLocationPermissionGranted-loadTasks")
+            mLocationPermissionGranted = true
+            loadTasks()
+            getCurrentActiveTask()
+            getCurrentCourierLocation()
+            forceUpdate()
+
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                    AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        Log.d(TAG, "onActivityResult: called.")
+        when (requestCode) {
+            AppConstants.PERMISSIONS_REQUEST_ENABLE_GPS -> {
+                if (mLocationPermissionGranted) {
+                    Log.d(TAG, "onActivityResult-mLocationPermissionGranted-loadTasks")
+//                    LocationUpdatesService.shared!!.requestLocationUpdates()
+                    loadTasks()
+                    getCurrentActiveTask()
+                    getCurrentCourierLocation()
+                    forceUpdate()
+
+                } else {
+                    Log.d(TAG, "getLocationPermission-Request")
+                    getLocationPermission()
+                }
+            }
+        }
+    }
+
+    private fun isLocationServiceRunning(): Boolean {
+        val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
+            if ("com.kadabra.courier.services.LocationUpdatesService" == service.service.className) {
+                Log.d(TAG, "isLocationServiceRunning: location service is already running.")
+                return true
+            }
+        }
+        Log.d(TAG, "isLocationServiceRunning: location service is not running.")
+        return false
+    }
 
     //endregion
 

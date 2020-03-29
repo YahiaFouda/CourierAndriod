@@ -51,7 +51,7 @@ class UserSessionManager(val context: Context) {
     }
 
     fun setIsLogined(isFirst: Boolean) {
-        editor.putBoolean(AppConstants.IS_FIRST, isFirst).commit()
+        editor.putBoolean(AppConstants.IS_LOGIN, isFirst).commit()
     }
 
     fun getLanguage(): String {
@@ -121,11 +121,16 @@ class UserSessionManager(val context: Context) {
     }
 
     fun logout() {
-        var isFirst = isFirstTime()
+        var currentLang=getLanguage()
+        setFirstTime(true)
+        setIsLogined(false)
+        setUserData(Courier())
+        setRequestingLocationUpdates(false)
         editor.clear()
         editor.commit()
-        setFirstTime(isFirst)
-        setIsLogined(false)
+        setLanguage(currentLang)
+
+
     }
 
 

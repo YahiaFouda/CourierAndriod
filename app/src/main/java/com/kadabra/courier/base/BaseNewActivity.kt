@@ -48,13 +48,17 @@ open class BaseNewActivity : AppCompatActivity() {
                 currentLanguage.isNullOrEmpty() -> {
                     var locale = getLocale(this.resources)
                     lang = locale.language
+
+//                    UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ARABIC)
                 }
                 currentLanguage == AppConstants.ARABIC -> lang = AppConstants.ARABIC
                 currentLanguage == AppConstants.ENGLISH -> lang = AppConstants.ENGLISH
             }
 
         } catch (e: Exception) {
-            lang = AppConstants.ENGLISH
+            lang=AppConstants.ARABIC
+            UserSessionManager.getInstance(AppController.getContext())
+                    .setLanguage(AppConstants.ARABIC)
         }
 
         val langContext = MyContextWrapper.wrap(base, Locale(lang))
@@ -73,12 +77,12 @@ open class BaseNewActivity : AppCompatActivity() {
 
     }
 
-    fun setNewLocale(mContext: AppCompatActivity, @LocaleManager.LocaleDef language: String) {
-        LocaleManager.setNewLocale(this, language)
-        val intent = mContext.intent
-        mContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
-
-    }
+//    fun setNewLocale(mContext: AppCompatActivity, @LocaleManager.LocaleDef language: String) {
+//        LocaleManager.setNewLocale(this, language)
+//        val intent = mContext.intent
+//        mContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
+//
+//    }
 
     fun getLocale(res: Resources): Locale {
         val config = res.configuration

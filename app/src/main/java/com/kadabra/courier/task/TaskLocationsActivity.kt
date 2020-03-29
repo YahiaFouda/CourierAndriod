@@ -396,10 +396,13 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     override fun onStart() {
         super.onStart()
-        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
-            if (!checkPermissions()) {
-                requestPermissions()
-            }
+//        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+//            if (!checkPermissions()) {
+//                requestPermissions()
+//            }
+//        }
+        if (!checkPermissions()) {
+            requestPermissions()
         }
     }
 

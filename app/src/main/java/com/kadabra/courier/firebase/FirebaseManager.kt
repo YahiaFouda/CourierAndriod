@@ -67,13 +67,14 @@ object FirebaseManager {
 
     //auth courier for deal with db or not
     fun createAccount(
-        userName: String,
-        password: String,
-        listener: (user: FirebaseUser?, error: String?) -> Unit
+            userName: String,
+            password: String,
+            listener: (user: FirebaseUser?, error: String?) -> Unit
     ) {
         auth.createUserWithEmailAndPassword(userName, password).addOnCompleteListener {
             if (it.isSuccessful) {// user created in auth and ready to insert to db
                 // setCurrentUser(auth.currentUser!!)
+                fireBaseUser = auth.currentUser!!
                 listener(auth.currentUser, null)
                 //  listener.onSuccess(1)
             } else { //failed to auth user so it must be register and prevent deal with him
@@ -85,7 +86,7 @@ object FirebaseManager {
     }
 
     fun logIn(
-        userName: String, password: String, listener: (user: FirebaseUser?, error: String?) -> Unit
+            userName: String, password: String, listener: (user: FirebaseUser?, error: String?) -> Unit
     ) {
         auth.signInWithEmailAndPassword(userName, password).addOnCompleteListener {
             if (it.isSuccessful) {
@@ -110,15 +111,15 @@ object FirebaseManager {
     fun updateCourierPassword(password: String): Boolean {
         var done = false
         auth.currentUser?.updatePassword(password)
-            ?.addOnCompleteListener {
-                done = it.isSuccessful
-            }
+                ?.addOnCompleteListener {
+                    done = it.isSuccessful
+                }
         return done
     }
 
     fun createCourier(
-        courier: Courier,
-        completion: (success: Boolean) -> Unit
+            courier: Courier,
+            completion: (success: Boolean) -> Unit
     ) {
 
         dbCourier.child(courier.CourierId.toString()).setValue(courier) { error, _ ->
@@ -132,17 +133,17 @@ object FirebaseManager {
     }
 
     fun updateCourier(
-        courier: Courier,
-        completion: (success: Boolean) -> Unit
+            courier: Courier,
+            completion: (success: Boolean) -> Unit
     ) {
 
 
         val map = mapOf(
-            "token" to courier.token,
-            "name" to courier.name,
-            "city" to courier.city,
-            "location" to courier.location,
-            "isActive" to courier.isActive
+                "token" to courier.token,
+                "name" to courier.name,
+                "city" to courier.city,
+                "location" to courier.location,
+                "active" to courier.isActive
         )
         dbCourier.child(courier.CourierId.toString()).updateChildren(map)
         { error, _ ->
@@ -153,24 +154,24 @@ object FirebaseManager {
     }
 
     fun createNewTask(task: Task) {
-       if(AppConstants.CurrentLocation!=null)
-       {
-           dbCourierTaskHistory.child(task.TaskId).setValue(task)
-           updateTaskLocation(task)
-       }
+        if(AppConstants.CurrentLocation!=null)
+        {
+            dbCourierTaskHistory.child(task.TaskId).setValue(task)
+            updateTaskLocation(task)
+        }
     }
 
     fun updateTaskLocation(task: Task) {
         if(AppConstants.CurrentLocation!=null) {
             task.location.isGpsEnabled = LocationHelper.shared.isGPSEnabled()
             dbCourierTaskHistory.child(task.TaskId).child("locations").push()
-                .setValue(task.location)
+                    .setValue(task.location)
         }
     }
 
     fun endTask(task: Task) {
         dbCourierTaskHistory.child(task.TaskId).child("active")
-            .setValue(false)
+                .setValue(false)
     }
 
 
@@ -232,20 +233,20 @@ object FirebaseManager {
 
     fun updateCourierCity(courierId: Int, value: Any) {
         dbCourier.child(courierId.toString()).child(AppConstants.FIREBASE_CITY)
-            .setValue(value)
+                .setValue(value)
 
     }
 
 
     fun updateCourierLocation(courierId: String, location: location) {
         dbCourier.child(courierId)
-            .child("location").setValue(location)
-            .addOnFailureListener {
-                Log.d("Location", it.toString())
-            }.addOnSuccessListener {
-                var t = 120
-                var s = t
-            }
+                .child("location").setValue(location)
+                .addOnFailureListener {
+                    Log.d("Location", it.toString())
+                }.addOnSuccessListener {
+                    var t = 120
+                    var s = t
+                }
 
 
     }
@@ -255,7 +256,7 @@ object FirebaseManager {
 
     fun updateCourierActive(courierId: Int, value: Boolean) {
         dbCourier.child(courierId.toString()).child(AppConstants.FIREBASE_IS_ACTIVE)
-            .setValue(value)
+                .setValue(value)
 
     }
 
@@ -337,9 +338,9 @@ object FirebaseManager {
         val mAuth = FirebaseAuth.getInstance()
         var isExist = false
         auth.fetchSignInMethodsForEmail(email)
-            .addOnCompleteListener {
-                isExist = !it.result.toString().isEmpty()
-            }
+                .addOnCompleteListener {
+                    isExist = !it.result.toString().isEmpty()
+                }
         return isExist
     }
 

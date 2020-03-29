@@ -51,11 +51,11 @@ class MainViewModel : BaseViewModel() {
 //        }
         tempMarkerList.clear()
 
-        fetchList(tempMarkerList, markers, zoom)
+//        fetchList(tempMarkerList, markers, zoom)
     }
 
     // MainActivity is observing ths markers
-    private fun fetchList(markers: ArrayList<Marker>, liveDataMarkers: MutableLiveData<List<Marker>>?, zoom: Double?) {
+    private fun TfetchList(markers: ArrayList<Marker>, liveDataMarkers: MutableLiveData<List<Marker>>?, zoom: Double?) {
 
         val api = mapFactory!!.create()
 

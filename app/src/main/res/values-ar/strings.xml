@@ -39,8 +39,8 @@
     <string name="no">لا</string>
     <string name="no_internet">لا يوجد اتصال بالإنترنت</string>
     <string name="no_results">لا تتوافر بيانات</string>
-    <string name="no_stop">No location determined.</string>
-    <string name="no_tasks_available">No Tasks Available</string>
+    <string name="no_stop">لم يتم تحديد موقع.</string>
+    <string name="no_tasks_available">لا توجد مهام متاحة.</string>
     <string name="ok">حسنا</string>
     <string name="password">كلمة السر</string>
     <string name="permission_denied_explanation">تم رفض الإذن ، ولكن هناك حاجة إلية للقيام بالوظائف الأساسية</string>
@@ -78,4 +78,8 @@
     <string name="error_mock_location">يرجى إيقاف أي تطبيق يخدع تطبيق الموقع أولاً لاستخدام البرنامج.</string>
     <string name="error_gps">يتطلب هذا التطبيق GPS للعمل بشكل صحيح ،برجاء تفعيلة من الأعدادات.</string>
     <string name="beta_version">نسخة تجريبية</string>
+    <string name="yes">حسنا</string>
+    <string name="confirm">تأكيد</string>
+    <string name="courier_power_by_kadabra">Powered by kadabra</string>
+
 </resources>

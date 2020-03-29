@@ -68,10 +68,11 @@ class SplashActivity : AppCompatActivity() {
                 if(courier!=null&&courier.CourierId>0)
                     AppConstants.CurrentLoginCourier=courier!!
 
-                if (!UserSessionManager.getInstance(this).isFirstTime() || UserSessionManager.getInstance(
+                if (UserSessionManager.getInstance(this).isFirstTime() || UserSessionManager.getInstance(
                         this
                     ).getUserData() == null
                 ) {
+
                     startActivity(Intent(this@SplashActivity, LoginActivity::class.java))
                     finish()
 

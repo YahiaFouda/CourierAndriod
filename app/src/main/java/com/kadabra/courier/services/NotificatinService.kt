@@ -50,6 +50,11 @@ class NotificatinService : FirebaseMessagingService() {
 
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
+
+        var courier = UserSessionManager.getInstance(
+                this
+        ).getUserData()
+
         val map = remoteMessage.data
         var title = ""
         var message = ""
@@ -67,10 +72,11 @@ class NotificatinService : FirebaseMessagingService() {
         if (message == "LogOut") {
             AppConstants.FIRE_BASE_LOGOUT=true
             FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId,false)
-            FirebaseManager.logOut()
-            UserSessionManager.getInstance(this).setUserData(null)
-            UserSessionManager.getInstance(this).setIsLogined(false)
-            UserSessionManager.getInstance(this).setFirstTime(false)
+//            FirebaseManager.logOut()
+//            UserSessionManager.getInstance(this).setUserData(null)
+//            UserSessionManager.getInstance(this).setIsLogined(false)
+//            UserSessionManager.getInstance(this).setFirstTime(false)
+            UserSessionManager.getInstance(AppController.getContext()).logout()
             LocationUpdatesService.shared.removeLocationUpdates()
             startActivity(
                 Intent(
@@ -78,18 +84,47 @@ class NotificatinService : FirebaseMessagingService() {
                     LoginActivity::class.java
                 ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             )
-        } else if (title == "Kadabra") {
+        }
+        else if (title == "Kadabra") {
             AppConstants.FIRE_BASE_NEW_TASK=true
-            var intent= Intent(
-                AppController.getContext(),
-                TaskActivity::class.java
-            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                .setAction(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_LAUNCHER )
-            startActivity(intent
+
+            Log.d(
+                    TAG, "New Task Added: \n" +
+                    AppConstants.FIRE_BASE_NEW_TASK + "\n" +
+                    "Courier: " + courier?.CourierId
             )
-            sendNotification(title!!, message, intent)
-        } else {
+            if(courier!=null&&courier.CourierId>0)
+            {
+                var intent= Intent(
+                        AppController.getContext(),
+                        TaskActivity::class.java
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        .setAction(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER )
+                startActivity(intent
+                )
+                sendNotification(title!!, message, intent)
+
+                Log.d(TAG, "Sended")
+            }
+            else // user didn't log in yet
+            {
+                Log.d(TAG, "Not Login yet")
+                var intent= Intent(
+                        AppController.getContext(),
+                        LoginActivity::class.java
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        .setAction(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER )
+                startActivity(intent
+                )
+                sendNotification(title!!, message, intent)
+            }
+
+
+        }
+        else {
+            Log.d(TAG, "DEFAULT")
             val intent = Intent(this, TaskActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             startActivity(intent)
@@ -117,22 +152,6 @@ class NotificatinService : FirebaseMessagingService() {
             notificationChannel.enableLights(true)
             notificationChannel.lightColor = Color.RED
 
-            notificationChannel.vibrationPattern = longArrayOf(
-                500,
-                500,
-                500,
-                500,
-                500,
-                500,
-                500,
-                500,
-                500,
-                500,
-                500,
-                500,
-                500,
-                500
-            )
             notificationChannel.enableVibration(true)
             notificationManager.createNotificationChannel(notificationChannel)
         }

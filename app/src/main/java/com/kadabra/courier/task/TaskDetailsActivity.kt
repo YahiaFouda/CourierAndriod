@@ -341,10 +341,14 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
     override fun onStart() {
         super.onStart()
-        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
-            if (!checkPermissions()) {
-                requestPermissions()
-            }
+//        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
+//            if (!checkPermissions()) {
+//                requestPermissions()
+//            }
+//        }
+
+        if (!checkPermissions()) {
+            requestPermissions()
         }
 
         bindService(
@@ -557,10 +561,10 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             //stop  tracking service
                             stopTracking()
                             FirebaseManager.logOut()
-                            UserSessionManager.getInstance(this@TaskDetailsActivity).setUserData(null)
-                            UserSessionManager.getInstance(this@TaskDetailsActivity).setIsLogined(false)
-                            UserSessionManager.getInstance(this@TaskDetailsActivity).setFirstTime(false)
-
+//                            UserSessionManager.getInstance(this@TaskDetailsActivity).setUserData(null)
+//                            UserSessionManager.getInstance(this@TaskDetailsActivity).setIsLogined(false)
+//                            UserSessionManager.getInstance(this@TaskDetailsActivity).setFirstTime(false)
+                            UserSessionManager.getInstance(this@TaskDetailsActivity).logout()
                             startActivity(Intent(this@TaskDetailsActivity, LoginActivity::class.java))
 
 
