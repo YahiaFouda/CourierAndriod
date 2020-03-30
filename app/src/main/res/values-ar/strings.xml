@@ -81,5 +81,6 @@
     <string name="yes">حسنا</string>
     <string name="confirm">تأكيد</string>
     <string name="courier_power_by_kadabra">Powered by kadabra</string>
+    <string name="status">الحالة</string>
 
 </resources>

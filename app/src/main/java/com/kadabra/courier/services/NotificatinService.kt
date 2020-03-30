@@ -72,10 +72,7 @@ class NotificatinService : FirebaseMessagingService() {
         if (message == "LogOut") {
             AppConstants.FIRE_BASE_LOGOUT=true
             FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId,false)
-//            FirebaseManager.logOut()
-//            UserSessionManager.getInstance(this).setUserData(null)
-//            UserSessionManager.getInstance(this).setIsLogined(false)
-//            UserSessionManager.getInstance(this).setFirstTime(false)
+
             UserSessionManager.getInstance(AppController.getContext()).logout()
             LocationUpdatesService.shared.removeLocationUpdates()
             startActivity(

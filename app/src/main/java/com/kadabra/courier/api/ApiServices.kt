@@ -34,8 +34,14 @@ interface ApiServices {
             : Call<ApiResponse<ArrayList<Task>>>
 
     @POST(AppConstants.URL_END_TAKS)
+    fun acceptTask(@Query("taskId") taskID: String)
+            : Call<ApiResponse<Task>>
+
+
+    @POST(AppConstants.URL_END_TAKS)
     fun endTask(@Query("taskId") taskID: String)
             : Call<ApiResponse<Task>>
+
 
     @GET(AppConstants.URL_GET_TAKS_DETAILS)
     fun getTaskDetails(@Query("taskId") taskID: String)

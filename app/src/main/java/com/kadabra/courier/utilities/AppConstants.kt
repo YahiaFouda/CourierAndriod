@@ -60,6 +60,7 @@ object AppConstants {
     const val URL_SET_USER_TOKEN = "SetCourierToken"
 
     const val URL_GET_AVALIABLE_TAKS = "GetAvailableTask"
+    const val URL_ACCEPT_TAKS = "UpdateAcceptTask"
     const val URL_END_TAKS = "UpdateEndTask"
     const val URL_GET_TAKS_DETAILS = "GetTaskByID"
     const val URL_GET_VERSION_CODE = "GetVersionCode"

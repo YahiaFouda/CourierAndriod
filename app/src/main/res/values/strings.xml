@@ -89,6 +89,7 @@
     <string name="error_mock_location">Please stop any app deceiving Location App first to use program.</string>
     <string name="error_gps">This application requires GPS to work properly,Please enable it.</string>
     <string name="beta_version">Beta Version</string>
+    <string name="status">Status</string>
 
 
 </resources>

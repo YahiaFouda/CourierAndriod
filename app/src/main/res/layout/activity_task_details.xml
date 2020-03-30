@@ -63,6 +63,21 @@
                     android:layout_height="match_parent">
 
                     <TextView
+                        android:id="@+id/tvStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginEnd="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/status"
+                        android:textColor="@color/colorApp"
+                        android:textSize="18sp"
+                        android:textStyle="bold|italic" />
+                    <TextView
                         android:id="@+id/tvTask"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
