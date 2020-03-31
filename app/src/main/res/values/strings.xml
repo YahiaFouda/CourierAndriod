@@ -90,6 +90,15 @@
     <string name="error_gps">This application requires GPS to work properly,Please enable it.</string>
     <string name="beta_version">Beta Version</string>
     <string name="status">Status</string>
+    <string name="nav_task">Your Tasks</string>
+    <string name="nav_notification">Notification</string>
+    <string name="nav_task_history">Task History</string>
+    <string name="nav_setting">Settings</string>
+    <string name="nav_call">Call Agent</string>
+
+    <string name="nav_logout">Logout</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
 
 
 </resources>

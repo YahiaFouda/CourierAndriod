@@ -9,8 +9,6 @@ import android.graphics.PorterDuff
 import android.location.Location
 import android.location.LocationManager
 import android.os.*
-import android.view.MotionEvent
-import android.view.View
 import android.view.View.OnTouchListener
 import android.widget.ImageView
 import androidx.recyclerview.widget.GridLayoutManager
@@ -30,28 +28,38 @@ import kotlinx.android.synthetic.main.activity_task.*
 import com.kadabra.courier.R
 import android.media.MediaPlayer
 import android.net.Uri
-import android.provider.Settings
 import android.util.Log
-import android.view.WindowManager
+import android.view.*
 import android.widget.PopupMenu
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.*
+import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.firebase.FirebaseManager
-import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.services.LocationUpdatesService
 import kotlinx.android.synthetic.main.activity_task.avi
+import kotlinx.android.synthetic.main.activity_task.ivAccept
+import kotlinx.android.synthetic.main.activity_task.ivNoInternet
+import kotlinx.android.synthetic.main.activity_task.refresh
+import kotlinx.android.synthetic.main.activity_task.rvTasks
+import kotlinx.android.synthetic.main.activity_task.tvEmptyData
+import kotlinx.android.synthetic.main.activity_task.tvTimer
+import kotlinx.android.synthetic.main.nav_header_main.*
+import kotlinx.android.synthetic.main.nav_header_main.view.*
 import kotlin.collections.ArrayList
 
 
-class TaskActivity : BaseNewActivity(), View.OnClickListener {
+class TaskActivity : BaseNewActivity(), View.OnClickListener,
+    NavigationView.OnNavigationItemSelectedListener {
 
     //region Members
 
@@ -112,8 +120,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
 
 
-        ivSettings.setOnClickListener(this)
-        ivMenu.setOnClickListener(this)
         ivAccept.setOnClickListener(this)
         tvTimer.visibility = View.INVISIBLE
 
@@ -121,9 +127,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         refresh.setOnRefreshListener {
             loadTasks()
         }
-
-
-
 
         ivAccept.setOnTouchListener(OnTouchListener { v, event ->
             when (event.action) {
@@ -144,6 +147,23 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             false
         })
 
+        setSupportActionBar(toolbar)
+        this.title = ""//getString(R.string.beta_version)
+        val toggle = ActionBarDrawerToggle(
+            this, drawer, toolbar,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        drawer.addDrawerListener(toggle)
+        toggle.syncState()
+
+       var headerView= navigationView.getHeaderView(0)
+        var tvName=headerView.findViewById<TextView>(R.id.tvName)
+        var tvPhoneNo=headerView.findViewById<TextView>(R.id.tvPhoneNo)
+        tvName.text=AppConstants.CurrentLoginCourier.CourierName
+        tvPhoneNo.text=AppConstants.CurrentLoginCourier.Mobile
+
+
+        navigationView.setNavigationItemSelectedListener(this)
 
     }
 
@@ -161,8 +181,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             UserSessionManager.getInstance(this).setIsAccepted(true)
         else
             Alert.showMessage(
-                    this@TaskActivity,
-                    getString(R.string.no_internet)
+                this@TaskActivity,
+                getString(R.string.no_internet)
             )
     }
 
@@ -179,8 +199,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                     override fun onFailed(error: String) {
                         hideProgress()
                         Alert.showMessage(
-                                this@TaskActivity,
-                                getString(R.string.no_internet)
+                            this@TaskActivity,
+                            getString(R.string.no_internet)
                         )
                     }
 
@@ -188,7 +208,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                         if (response.Status == AppConstants.STATUS_SUCCESS) {
                             //stop  tracking service
                             AppConstants.FIRE_BASE_LOGOUT = false
-                            FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId, false)
+                            FirebaseManager.updateCourierActive(
+                                AppConstants.CurrentLoginCourier.CourierId,
+                                false
+                            )
 //                            FirebaseManager.logOut()
 
                             UserSessionManager.getInstance(this@TaskActivity).logout()
@@ -208,8 +231,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
                         } else {
                             hideProgress()
                             Alert.showMessage(
-                                    this@TaskActivity,
-                                    getString(R.string.error_network)
+                                this@TaskActivity,
+                                getString(R.string.error_network)
                             )
                         }
 
@@ -219,15 +242,15 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             {
                 hideProgress()
                 Alert.showMessage(
-                        this@TaskActivity,
-                        getString(R.string.end_first)
+                    this@TaskActivity,
+                    getString(R.string.end_first)
                 )
             }
         } else {
             hideProgress()
             Alert.showMessage(
-                    this@TaskActivity,
-                    getString(R.string.no_internet)
+                this@TaskActivity,
+                getString(R.string.no_internet)
             )
         }
 
@@ -278,8 +301,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         vibrator = this.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator!!.vibrate(
-                    pattern,
-                    0
+                pattern,
+                0
             )
         } else {
             vibrator!!.vibrate(60000)
@@ -294,16 +317,16 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private fun getCurrentActiveTask() {
         if (NetworkManager().isNetworkAvailable(this)) {
             FirebaseManager.getCurrentActiveTask(AppConstants.CurrentLoginCourier.CourierId.toString(),
-                    object : FirebaseManager.IFbOperation {
-                        override fun onSuccess(code: Int) {
+                object : FirebaseManager.IFbOperation {
+                    override fun onSuccess(code: Int) {
 
-                            prepareTasks(AppConstants.ALL_TASKS_DATA)
-                        }
+                        prepareTasks(AppConstants.ALL_TASKS_DATA)
+                    }
 
-                        override fun onFailure(message: String) {
-                            AppConstants.CurrentAcceptedTask = Task()
-                        }
-                    })
+                    override fun onFailure(message: String) {
+                        AppConstants.CurrentAcceptedTask = Task()
+                    }
+                })
         }
 
     }
@@ -311,15 +334,15 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private fun getCurrentCourierLocation() {
         if (NetworkManager().isNetworkAvailable(this)) {
             FirebaseManager.getCurrentCourierLocation(AppConstants.CurrentLoginCourier.CourierId.toString(),
-                    object : FirebaseManager.IFbOperation {
-                        override fun onSuccess(code: Int) {
+                object : FirebaseManager.IFbOperation {
+                    override fun onSuccess(code: Int) {
 
-                        }
+                    }
 
-                        override fun onFailure(message: String) {
+                    override fun onFailure(message: String) {
 
-                        }
-                    })
+                    }
+                })
         }
 
     }
@@ -334,66 +357,75 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             var request = NetworkManager().create(ApiServices::class.java)
             var endPoint = request.getAvaliableTasks(AppConstants.CurrentLoginCourier.CourierId)
             NetworkManager().request(
-                    endPoint,
-                    object : INetworkCallBack<ApiResponse<ArrayList<Task>>> {
-                        override fun onFailed(error: String) {
-                            Log.d(TAG, "onFailed: "+error)
-                            refresh.isRefreshing = false
-                            hideProgress()
-                            Alert.showMessage(
-                                    this@TaskActivity,
-                                    getString(R.string.error_login_server_error)
+                endPoint,
+                object : INetworkCallBack<ApiResponse<ArrayList<Task>>> {
+                    override fun onFailed(error: String) {
+                        Log.d(TAG, "onFailed: " + error)
+                        refresh.isRefreshing = false
+                        hideProgress()
+                        Alert.showMessage(
+                            this@TaskActivity,
+                            getString(R.string.error_login_server_error)
+                        )
+                    }
+
+                    override fun onSuccess(response: ApiResponse<ArrayList<Task>>) {
+                        Log.d(TAG, "onSuccess: Enter method")
+                        if (response.Status == AppConstants.STATUS_SUCCESS) {
+                            Log.d(
+                                TAG,
+                                "onSuccess: AppConstants.STATUS_SUCCESS: " + AppConstants.STATUS_SUCCESS
                             )
-                        }
+                            refresh.isRefreshing = false
+                            tvEmptyData.visibility = View.INVISIBLE
+                            taskList = response.ResponseObj!!
+                            Log.d(TAG, "onSuccess" + taskList.size.toString())
+                            Log.d(
+                                TAG,
+                                "AppConstants.FIRE_BASE_NEW_TASK" + AppConstants.FIRE_BASE_NEW_TASK
+                            )
 
-                        override fun onSuccess(response: ApiResponse<ArrayList<Task>>) {
-                            Log.d(TAG, "onSuccess: Enter method")
-                            if (response.Status == AppConstants.STATUS_SUCCESS) {
-                                Log.d(TAG, "onSuccess: AppConstants.STATUS_SUCCESS: "+AppConstants.STATUS_SUCCESS)
-                                refresh.isRefreshing = false
-                                tvEmptyData.visibility = View.INVISIBLE
-                                taskList = response.ResponseObj!!
-                                Log.d(TAG, "onSuccess"+taskList.size.toString())
-                                Log.d(TAG, "AppConstants.FIRE_BASE_NEW_TASK"+AppConstants.FIRE_BASE_NEW_TASK)
+                            if (taskList.size > 0) {
+                                Log.d(TAG, "onSuccess: taskList.size > 0: ")
+                                AppConstants.ALL_TASKS_DATA = taskList
+                                prepareTasks(taskList)
 
-                                if (taskList.size > 0) {
-                                    Log.d(TAG, "onSuccess: taskList.size > 0: ")
-                                    AppConstants.ALL_TASKS_DATA = taskList
-                                    prepareTasks(taskList)
-
-                                    if (AppConstants.FIRE_BASE_NEW_TASK) {
-                                        Log.d(TAG, "onSuccess: AppConstants.FIRE_BASE_NEW_TASK: "+AppConstants.FIRE_BASE_NEW_TASK)
-                                        AppConstants.FIRE_BASE_NEW_TASK = false
-                                        processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
-                                    }
-
-                                    hideProgress()
-                                } else {//no tasks
-                                    Log.d(TAG, "no tasks: ")
-                                    refresh.isRefreshing = false
-                                    tvTimer.visibility = View.INVISIBLE
-                                    tvEmptyData.visibility = View.VISIBLE
-                                    taskList.clear()
-                                    prepareTasks(taskList)
+                                if (AppConstants.FIRE_BASE_NEW_TASK) {
+                                    Log.d(
+                                        TAG,
+                                        "onSuccess: AppConstants.FIRE_BASE_NEW_TASK: " + AppConstants.FIRE_BASE_NEW_TASK
+                                    )
+                                    AppConstants.FIRE_BASE_NEW_TASK = false
+                                    processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
                                 }
 
-                            } else {
-                                Log.d(TAG, "onSuccess: Enter method")
-                                refresh.isRefreshing = false
                                 hideProgress()
+                            } else {//no tasks
+                                Log.d(TAG, "no tasks: ")
+                                refresh.isRefreshing = false
+                                tvTimer.visibility = View.INVISIBLE
                                 tvEmptyData.visibility = View.VISIBLE
+                                taskList.clear()
+                                prepareTasks(taskList)
                             }
 
+                        } else {
+                            Log.d(TAG, "onSuccess: Enter method")
+                            refresh.isRefreshing = false
+                            hideProgress()
+                            tvEmptyData.visibility = View.VISIBLE
                         }
-                    })
+
+                    }
+                })
 
         } else {
             refresh.isRefreshing = false
             hideProgress()
             ivNoInternet.visibility = View.VISIBLE
             Alert.showMessage(
-                    this@TaskActivity,
-                    getString(R.string.no_internet)
+                this@TaskActivity,
+                getString(R.string.no_internet)
             )
         }
 
@@ -404,20 +436,20 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         adapter = TaskAdapter(this@TaskActivity, tasks)
         rvTasks.adapter = adapter
         rvTasks?.layoutManager =
-                GridLayoutManager(
-                        AppController.getContext(),
-                        1,
-                        GridLayoutManager.VERTICAL,
-                        false
-                )
+            GridLayoutManager(
+                AppController.getContext(),
+                1,
+                GridLayoutManager.VERTICAL,
+                false
+            )
     }
 
     private fun showProgress() {
         tvEmptyData.visibility = View.INVISIBLE
         avi.smoothToShow()
         window.setFlags(
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         )
     }
 
@@ -427,6 +459,132 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
     }
 
+    // Returns the current state of the permissions needed
+    private fun checkPermissions(): Boolean {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
+
+    private fun requestPermissions() {
+        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.")
+            Snackbar.make(
+                findViewById(R.id.rlParent),
+                R.string.permission_rationale,
+                Snackbar.LENGTH_INDEFINITE
+            )
+                .setAction(R.string.ok) {
+                    // Request permission
+                    ActivityCompat.requestPermissions(
+                        this@TaskActivity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+                    )
+                }
+                .show()
+        } else {
+            Log.i(TAG, "Requesting permission")
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(
+                this@TaskActivity,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+            )
+        }
+    }
+
+    private fun stopTracking() {
+        if (LocationUpdatesService.shared != null)
+            LocationUpdatesService.shared!!.removeLocationUpdates()
+    }
+
+
+    private fun forceUpdate() {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.forceUpdate()
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<String>> {
+                override fun onFailed(error: String) {
+                    hideProgress()
+                    Alert.showMessage(
+                        this@TaskActivity,
+                        getString(R.string.no_internet)
+                    )
+                }
+
+                override fun onSuccess(response: ApiResponse<String>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+                        //stop  tracking service
+                        lastVerion = response.ResponseObj!!.toInt()
+                        if (lastVerion > BuildConfig.VERSION_CODE)
+                            showDilogUpdate()
+
+                        hideProgress()
+
+                    } else {
+                        hideProgress()
+                        Alert.showMessage(
+                            this@TaskActivity,
+                            getString(R.string.error_network)
+                        )
+                    }
+
+                }
+            })
+
+        } else {
+            hideProgress()
+            Alert.showMessage(
+                this@TaskActivity,
+                getString(R.string.no_internet)
+            )
+        }
+
+
+    }
+
+
+    private fun showDilogUpdate() {
+        val builder = AlertDialog.Builder(this@TaskActivity)
+        builder.setTitle(getString(R.string.update))
+        builder.setMessage(getString(R.string.please_update))
+        builder.setPositiveButton(getString(R.string.update_now)) { dialogInterface, i ->
+            val uri = Uri.parse("market://details?id=com.kadabra.courier")
+            val goToMarket = Intent(Intent.ACTION_VIEW, uri)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                goToMarket.addFlags(
+                    Intent.FLAG_ACTIVITY_NO_HISTORY or
+                            Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
+                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                )
+                startActivity(goToMarket)
+            } else {
+                startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://play.google.com/store/apps/details?id=com.kadabra.courier")
+                    )
+                )
+            }
+        }
+        val alertDialog = builder.create()
+        alertDialog.setCancelable(false)
+        if (!this@TaskActivity.isFinishing) {
+            alertDialog.show()
+        }
+    }
 
     //endregion
 
@@ -461,7 +619,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
     }
 
-
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume")
@@ -484,8 +641,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
-                myReceiver!!,
-                IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
+            myReceiver!!,
+            IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
         )
 
 
@@ -506,8 +663,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         Log.d(TAG, "onStart")
         bindService(
 
-                Intent(this, LocationUpdatesService::class.java), mServiceConnection,
-                Context.BIND_AUTO_CREATE
+            Intent(this, LocationUpdatesService::class.java), mServiceConnection,
+            Context.BIND_AUTO_CREATE
 
         )
 
@@ -530,7 +687,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 
     }
 
-
     override fun onPause() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(myReceiver!!)
         super.onPause()
@@ -548,69 +704,16 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         super.onStop()
     }
 
-
     override fun onClick(view: View?) {
         when (view!!.id) {
 
-            R.id.ivSettings -> {
-                if (isNewTaskReceived)
-                    return
-                AlertDialog.Builder(this)
-                        .setTitle(getString(R.string.warning))
-                        .setMessage(getString(R.string.exit))
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setPositiveButton(getString(R.string.ok)) { dialog, which ->
-                            logOut()
-                        }
-                        .setNegativeButton(getString(R.string.cancel)) { dialog, which -> }
-                        .show()
-            }
-            R.id.ivMenu -> {
-                if (isNewTaskReceived)
-                    return
-                var currentLanguage = UserSessionManager.getInstance(this).getLanguage()
-                languageMenu = PopupMenu(this, ivMenu)
-                languageMenu.menuInflater.inflate(R.menu.menu_language, languageMenu.menu)
-                languageMenu.setOnMenuItemClickListener {
-                    if (it.itemId == R.id.arabic) {
-                        if (currentLanguage != AppConstants.ARABIC) {
-                            UserSessionManager.getInstance(AppController.getContext())
-                                    .setLanguage(AppConstants.ARABIC)
-//                        setNewLocale(this, AppConstants.ARABIC)
-//
-                            val intent = baseContext.packageManager.getLaunchIntentForPackage(
-                                    baseContext.packageName
-                            )
-                            intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                            startActivity(intent)
-                        }
-
-
-                    } else if (it.itemId == R.id.english) {
-                        if (currentLanguage != AppConstants.ENGLISH) {
-                            UserSessionManager.getInstance(AppController.getContext())
-                                    .setLanguage(AppConstants.ENGLISH)
-//                        setNewLocale(this, AppConstants.ENGLISH)
-                            val intent = baseContext.packageManager.getLaunchIntentForPackage(
-                                    baseContext.packageName
-                            )
-                            intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                            startActivity(intent)
-                        }
-
-
-                    }
-                    true
-                }
-                languageMenu.show()
-            }
             R.id.ivAccept -> {
                 if (taskList.size > 0) {
                     accept()
                 } else
                     Alert.showMessage(
-                            this,
-                            getString(R.string.no_tasks_available)
+                        this,
+                        getString(R.string.no_tasks_available)
                     )
 
             }
@@ -618,16 +721,18 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         }
     }
 
-
     override fun onBackPressed() {
-        super.onBackPressed()
-        finish()
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
     }
 
 
     override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<String>, grantResults: IntArray
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
     ) {
         mLocationPermissionGranted = false
         Log.i(TAG, "onRequestPermissionResult")
@@ -679,131 +784,91 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
 //                    .show()
     }
 
-    // Returns the current state of the permissions needed
-    private fun checkPermissions(): Boolean {
-        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    }
-
-    private fun requestPermissions() {
-        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-        )
-
-        // Provide an additional rationale to the user. This would happen if the user denied the
-        // request previously, but didn't check the "Don't ask again" checkbox.
-        if (shouldProvideRationale) {
-            Log.i(TAG, "Displaying permission rationale to provide additional context.")
-            Snackbar.make(
-                    findViewById(R.id.rlParent),
-                    R.string.permission_rationale,
-                    Snackbar.LENGTH_INDEFINITE
-            )
-                    .setAction(R.string.ok) {
-                        // Request permission
-                        ActivityCompat.requestPermissions(
-                                this@TaskActivity,
-                                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                                AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-                        )
-                    }
-                    .show()
-        } else {
-            Log.i(TAG, "Requesting permission")
-            // Request permission. It's possible this can be auto answered if device policy
-            // sets the permission in a given state or the user denied the permission
-            // previously and checked "Never ask again".
-            ActivityCompat.requestPermissions(
-                    this@TaskActivity,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-            )
-        }
-    }
-
-    private fun stopTracking() {
-        if (LocationUpdatesService.shared != null)
-            LocationUpdatesService.shared!!.removeLocationUpdates()
-    }
-
-
-    private fun forceUpdate() {
-        showProgress()
-        if (NetworkManager().isNetworkAvailable(this)) {
-            var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.forceUpdate()
-            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<String>> {
-                override fun onFailed(error: String) {
-                    hideProgress()
-                    Alert.showMessage(
-                            this@TaskActivity,
-                            getString(R.string.no_internet)
-                    )
-                }
-
-                override fun onSuccess(response: ApiResponse<String>) {
-                    if (response.Status == AppConstants.STATUS_SUCCESS) {
-                        //stop  tracking service
-                        lastVerion = response.ResponseObj!!.toInt()
-                        if (lastVerion > BuildConfig.VERSION_CODE)
-                            showDilogUpdate()
-
-                        hideProgress()
-
-                    } else {
-                        hideProgress()
-                        Alert.showMessage(
-                                this@TaskActivity,
-                                getString(R.string.error_network)
-                        )
-                    }
-
-                }
-            })
-
-        } else {
-            hideProgress()
-            Alert.showMessage(
-                    this@TaskActivity,
-                    getString(R.string.no_internet)
-            )
-        }
-
-
-    }
-
-
-    private fun showDilogUpdate() {
-        val builder = AlertDialog.Builder(this@TaskActivity)
-        builder.setTitle(getString(R.string.update))
-        builder.setMessage(getString(R.string.please_update))
-        builder.setPositiveButton(getString(R.string.update_now)) { dialogInterface, i ->
-            val uri = Uri.parse("market://details?id=com.kadabra.courier")
-            val goToMarket = Intent(Intent.ACTION_VIEW, uri)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                goToMarket.addFlags(
-                        Intent.FLAG_ACTIVITY_NO_HISTORY or
-                                Intent.FLAG_ACTIVITY_NEW_DOCUMENT or
-                                Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-                )
-                startActivity(goToMarket)
-            } else {
-                startActivity(
-                        Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse("https://play.google.com/store/apps/details?id=com.kadabra.courier")
-                        )
-                )
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.nav_tasks -> {
             }
+            R.id.nav_Notification -> {
+            }
+            R.id.nav_task_history -> {
+            }
+            R.id.nav_Settings -> {
+                if (!isNewTaskReceived)
+                {
+                    var currentLanguage = UserSessionManager.getInstance(this).getLanguage()
+                    languageMenu = PopupMenu(this, ivAccept)
+                    languageMenu.menuInflater.inflate(R.menu.menu_language, languageMenu.menu)
+                    languageMenu.setOnMenuItemClickListener {
+                        if (it.itemId == R.id.arabic) {
+                            if (currentLanguage != AppConstants.ARABIC) {
+                                UserSessionManager.getInstance(AppController.getContext())
+                                    .setLanguage(AppConstants.ARABIC)
+//
+                                val intent = baseContext.packageManager.getLaunchIntentForPackage(
+                                    baseContext.packageName
+                                )
+                                intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                startActivity(intent)
+                            }
+
+
+                        } else if (it.itemId == R.id.english) {
+                            if (currentLanguage != AppConstants.ENGLISH) {
+                                UserSessionManager.getInstance(AppController.getContext())
+                                    .setLanguage(AppConstants.ENGLISH)
+//                        setNewLocale(this, AppConstants.ENGLISH)
+                                val intent = baseContext.packageManager.getLaunchIntentForPackage(
+                                    baseContext.packageName
+                                )
+                                intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                startActivity(intent)
+                            }
+
+
+                        }
+                        true
+                    }
+                    languageMenu.show()
+                }
+
+            }
+            R.id.nav_Call -> {
+                val intent = Intent(Intent.ACTION_DIAL)
+                startActivity(intent)
+            }
+            R.id.nav_logout -> {
+                if (!isNewTaskReceived)
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.warning))
+                    .setMessage(getString(R.string.exit))
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setPositiveButton(getString(R.string.ok)) { dialog, which ->
+                        logOut()
+                    }
+                    .setNegativeButton(getString(R.string.cancel)) { dialog, which -> }
+                    .show()
+            }
+
         }
-        val alertDialog = builder.create()
-        alertDialog.setCancelable(false)
-        if (!this@TaskActivity.isFinishing) {
-            alertDialog.show()
+        drawer.closeDrawer(GravityCompat.START)
+        return true
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_option, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_notification)
+        {
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.closeDrawer(GravityCompat.START)
+            }
+            startActivity(Intent(this,NotificationActivity::class.java))
         }
+            return true
+        //open notification view
     }
     //endregion
 
@@ -816,7 +881,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private inner class MyReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val location =
-                    intent.getParcelableExtra<Location>(LocationUpdatesService.EXTRA_LOCATION)
+                intent.getParcelableExtra<Location>(LocationUpdatesService.EXTRA_LOCATION)
 
         }
     }
@@ -835,7 +900,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
         Log.d(TAG, "isServicesOK: checking google services version")
 
         val available =
-                GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
+            GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
 
         if (available == ConnectionResult.SUCCESS) {
             //everything is fine and the user can make map requests
@@ -845,7 +910,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             //an error occured but we can resolve it
             Log.d(TAG, "isServicesOK: an error occured but we can fix it")
             val dialog = GoogleApiAvailability.getInstance()
-                    .getErrorDialog(this, available, AppConstants.ERROR_DIALOG_REQUEST)
+                .getErrorDialog(this, available, AppConstants.ERROR_DIALOG_REQUEST)
             dialog.show()
         } else {
             Toast.makeText(this, "You can't make map requests", Toast.LENGTH_SHORT).show()
@@ -867,12 +932,12 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
     private fun buildAlertMessageNoGps() {
         val builder = AlertDialog.Builder(this)
         builder.setMessage(getString(R.string.error_gps_required))
-                .setCancelable(false)
-                .setPositiveButton(getString(R.string.ok)) { dialog, id ->
-                    val enableGpsIntent =
-                            Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                    startActivityForResult(enableGpsIntent, AppConstants.PERMISSIONS_REQUEST_ENABLE_GPS)
-                }
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.ok)) { dialog, id ->
+                val enableGpsIntent =
+                    Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivityForResult(enableGpsIntent, AppConstants.PERMISSIONS_REQUEST_ENABLE_GPS)
+            }
         val alert = builder.create()
         alert.show()
     }
@@ -883,8 +948,11 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
          * device. The result of the permission request is handled by a callback,
          * onRequestPermissionsResult.
          */
-        if (ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION) === PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) === PackageManager.PERMISSION_GRANTED
+        ) {
             Log.d(TAG, "getLocationPermission-mLocationPermissionGranted-loadTasks")
             mLocationPermissionGranted = true
             loadTasks()
@@ -893,9 +961,11 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener {
             forceUpdate()
 
         } else {
-            ActivityCompat.requestPermissions(this,
-                    arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                    AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION)
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+            )
         }
     }
 

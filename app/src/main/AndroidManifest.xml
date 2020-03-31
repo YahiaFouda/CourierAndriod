@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.kadabra.courier">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -20,10 +21,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
-        <activity android:name=".task.NotificationActivity"
-            android:showOnLockScreen="true"
-            android:screenOrientation="sensorPortrait"></activity>
+        android:usesCleartextTraffic="true"
+        tools:ignore="GoogleAppIndexingWarning">
+
+
+        <activity
+            android:name=".task.NotificationActivity"
+            android:screenOrientation="sensorPortrait"
+            android:showOnLockScreen="true" />
         <activity
             android:name=".recyclerview.RecyclerViewActivity"
             android:screenOrientation="portrait" />
@@ -52,11 +57,6 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-                <!-- <action android:StopName="android.settings.SETTINGS" /> -->
-                <!-- <action android:StopName="android.intent.action.MAIN" /> -->
-                <!-- <category android:StopName="android.intent.category.HOME" /> -->
-                <!-- <category android:StopName="android.intent.category.DEFAULT" /> -->
-                <!-- <category android:StopName="android.intent.category.LAUNCHER" /> -->
             </intent-filter>
         </activity>
         <activity
@@ -100,17 +100,15 @@
             </intent-filter>
         </service>
 
-        <receiver android:name=".utilities.NotificationBroadcastReceiver" >
+        <receiver android:name=".utilities.NotificationBroadcastReceiver">
             <intent-filter>
                 <action android:name="some string" />
             </intent-filter>
         </receiver>
+
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/placeholder" />
-<!--        <meta-data-->
-<!--            android:name="com.google.firebase.messaging.default_notification_channel_id"-->
-<!--            android:value="@string/channel_id" />-->
     </application>
 
 </manifest>

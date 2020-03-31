@@ -1,7 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/menu_recyclerview"
-        android:title="리스트"/>
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_tasks"
+            android:icon="@drawable/ic_tasks"
+            android:title="@string/nav_task"/>
+        <item
+            android:id="@+id/nav_Notification"
+            android:icon="@drawable/ic_notifications"
+            android:title="@string/nav_notification"/>
+        <item
+            android:id="@+id/nav_task_history"
+            android:icon="@drawable/ic_task_history"
+            android:title="@string/nav_task_history"/>
+        <item
+            android:id="@+id/nav_Settings"
+            android:icon="@drawable/ic_setting"
+            android:title="@string/nav_setting"/>
+        <item
+            android:id="@+id/nav_Call"
+            android:icon="@drawable/ic_call"
+            android:title="@string/nav_call"/>
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_log_out"
+            android:title="@string/nav_logout"/>
+    </group>
 </menu>
