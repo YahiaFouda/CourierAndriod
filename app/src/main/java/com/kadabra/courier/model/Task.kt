@@ -2,35 +2,62 @@ package com.kadabra.courier.model
 
 import com.google.firebase.database.Exclude
 
-class Task{
-    @Exclude @set:Exclude @get:Exclude
+class Task {
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var TaskId: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var TicketId: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var TaskName: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var TaskDescription: String = ""
-    var CourierID: Int ? = null
-    @Exclude @set:Exclude @get:Exclude
+    var CourierID: Int? = null
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var CourierName: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var Amount = 0.0
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var title: String? = null
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var stopsmodel = ArrayList<Stop>()
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var stopPickUp = Stop()
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var stopDropOff = Stop()
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var defaultStops = ArrayList<Stop>()
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var AddedBy: String = ""
-    @Exclude @set:Exclude @get:Exclude
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     lateinit var location: location
     var isActive: Boolean = false
+    var Status = ""
 
 
     constructor() {}

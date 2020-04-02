@@ -135,6 +135,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 //        if (!task.TaskName.isNullOrEmpty())
         tvTask.text = task.TaskName
         tvTaskDescription.text = task.TaskDescription
+        tvStatus.text=task.Status
 
         if (task.Amount!! > 0)
             tvTaskAmount.text =
@@ -268,7 +269,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
                         hideProgress()
                         AppConstants.CurrentAcceptedTask = task
-                        acceptTaskFirebase(task)
+                        acceptTaskFirebase(task,AppConstants.CurrentLoginCourier.CourierId)
                     } else {
                         hideProgress()
                         Alert.showMessage(
@@ -308,7 +309,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 override fun onSuccess(response: ApiResponse<Task>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
 
-                        FirebaseManager.endTask(task)
+                        FirebaseManager.endTask(task,AppConstants.CurrentLoginCourier.CourierId)
                         AppConstants.CurrentAcceptedTask = Task()
                         AppConstants.ALL_TASKS_DATA.remove(task) //removed when life cycle
                         hideProgress()
@@ -338,16 +339,16 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
     }
 
-    private fun acceptTaskFirebase(task: Task) {
+    private fun acceptTaskFirebase(task: Task,courierId:Int) {
         if (NetworkManager().isNetworkAvailable(this)) {
-            FirebaseManager.createNewTask(task)
+            FirebaseManager.createNewTask(task,courierId)
             btnEndTask.text = getString(R.string.end_task)
 
         } else {
 
             Alert.showMessage(
-                    this@TaskDetailsActivity,
-                    getString(R.string.no_internet)
+                this@TaskDetailsActivity,
+                getString(R.string.no_internet)
             )
         }
 
@@ -454,7 +455,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                                                 AppConstants.CurrentLocation!!.longitude.toString(),
                                                 isGpsEnabled
                                         )
-                            acceptTaskFirebase(AppConstants.CurrentAcceptedTask!!)
+                            acceptTaskFirebase(AppConstants.CurrentAcceptedTask!!,AppConstants.CurrentLoginCourier.CourierId)
                         }
                     } else {
                         if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions

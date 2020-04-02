@@ -29,7 +29,7 @@ import com.reach.plus.admin.util.UserSessionManager
  */
 
 class TaskAdapter(private val context: Context, private val tasksList: ArrayList<Task>) :
-        RecyclerView.Adapter<TaskAdapter.MyViewHolder>() {
+    RecyclerView.Adapter<TaskAdapter.MyViewHolder>() {
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     private var task: Task = Task()
@@ -50,11 +50,12 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
         if (viewType == 1)//default layout
         {
             val view =
-                    LayoutInflater.from(parent.context).inflate(R.layout.task_layout, parent, false)
+                LayoutInflater.from(parent.context).inflate(R.layout.task_layout, parent, false)
             return MyViewHolder(view)
         } else {
             val view1 =
-                    LayoutInflater.from(parent.context).inflate(R.layout.task_layout_accepted, parent, false)
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.task_layout_accepted, parent, false)
             return MyViewHolder(view1)
         }
     }
@@ -66,21 +67,19 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
         if (!task.TaskName.isNullOrEmpty())
             holder.tvTaskName.text = task.TaskName
 
-//        if (task.stopsmodel.size > 0) {
-//            task.stopsmodel.sortBy { it.StopTypeID }
-//
+        holder.tvStatus.text = task.Status
         task.stopsmodel.forEach {
 
             when (it.StopTypeID) {
                 1 -> { //pickup
                     task.stopPickUp = it
                     holder.tvPickupLocation.text =
-                            context.getString(com.kadabra.courier.R.string.from) + " " + it.StopName
+                        context.getString(com.kadabra.courier.R.string.from) + " " + it.StopName
                 }
                 2 -> { //dropOff
                     task.stopDropOff = it
                     holder.tvDropOffLocation.text =
-                            context.getString(com.kadabra.courier.R.string.to) + " " + it.StopName
+                        context.getString(com.kadabra.courier.R.string.to) + " " + it.StopName
                 }
                 3 -> {
                     task.defaultStops.add(it)
@@ -94,7 +93,7 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
         if (task.Amount!! > 0)
             holder.tvTaskAmount.text =
-                    task.Amount.toString() + " " + context.getString(com.kadabra.courier.R.string.le)
+                task.Amount.toString() + " " + context.getString(com.kadabra.courier.R.string.le)
         else
             holder.tvTaskAmount.text = "0 " + context.getString(com.kadabra.courier.R.string.le)
 
@@ -113,7 +112,7 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
     override fun getItemViewType(position: Int): Int {
 //        return position
         return if (AppConstants.CurrentAcceptedTask.TaskId == tasksList[position].TaskId) {
-            Log.d("task",AppConstants.CurrentAcceptedTask.TaskId)
+            Log.d("task", AppConstants.CurrentAcceptedTask.TaskId)
             2 // R.layout.task_layout_accepted
 
         } else
@@ -125,8 +124,11 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
         var tvTaskName: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvTaskName)
         var tvTaskAmount: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvTaskAmount)
-        var tvPickupLocation: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvPickupLocation)
-        var tvDropOffLocation: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvDropOffLocation)
+        var tvPickupLocation: TextView =
+            itemView.findViewById(com.kadabra.courier.R.id.tvPickupLocation)
+        var tvDropOffLocation: TextView =
+            itemView.findViewById(com.kadabra.courier.R.id.tvDropOffLocation)
+        var tvStatus: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvStatus)
 
 
         init {
@@ -140,21 +142,19 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 //                task.stopsmodel = stops
 
 
-                if (checkPermissions()&&LocationHelper.shared.isGPSEnabled()) {
+                if (checkPermissions() && LocationHelper.shared.isGPSEnabled()) {
                     AppConstants.CurrentSelectedTask = task
                     context.startActivity(Intent(context, TaskDetailsActivity::class.java))
-                }
-                else
-                {
-                    if(!checkPermissions())
+                } else {
+                    if (!checkPermissions())
                         Alert.showMessage(
-                                context,
-                                context.getString(R.string.permission_rationale)
+                            context,
+                            context.getString(R.string.permission_rationale)
                         )
-                    else if(!LocationHelper.shared.isGPSEnabled())
+                    else if (!LocationHelper.shared.isGPSEnabled())
                         Alert.showMessage(
-                                context,
-                                context.getString(R.string.error_gps)
+                            context,
+                            context.getString(R.string.error_gps)
                         )
                 }
 //                } else
@@ -172,8 +172,8 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
     private fun checkPermissions(): Boolean {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
         )
     }
 

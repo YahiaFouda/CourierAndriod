@@ -46,6 +46,7 @@ class NotificatinService : FirebaseMessagingService() {
 //            }.addOnFailureListener {
 //                Log.w(ContentValues.TAG, "Error sending token", it)
 //            }
+
     }
 
 

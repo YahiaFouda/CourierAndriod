@@ -199,8 +199,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                 override fun onFailed(error: String) {
                     hideProgress()
                     Alert.showMessage(
-                            this@LoginActivity,
-                            getString(R.string.error_login_server_error)
+                        this@LoginActivity,
+                        getString(R.string.error_login_server_error)
                     )
                 }
 
@@ -214,8 +214,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                         if (FirebaseManager.getCurrentUser() == null) //create new user
                         {
                             FirebaseManager.logIn(
-                                    userCustomEmail,
-                                    password
+                                userCustomEmail,
+                                password
                             )
                             { user, error ->
                                 if (user != null) {
@@ -224,22 +224,22 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                                     sendUserToken(courier.CourierId, FirebaseManager.token)
                                     FirebaseManager.updateCourier(courier) {
 
-                                        success ->
+                                            success ->
                                         if (success) {
                                             Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
                                             saveUserData(courier)
                                             startActivity(
-                                                    Intent(
-                                                            this@LoginActivity,
-                                                            TaskActivity::class.java
-                                                    )
+                                                Intent(
+                                                    this@LoginActivity,
+                                                    TaskActivity::class.java
+                                                )
                                             )
                                             finish()
                                             hideProgress()
                                         } else {
                                             Alert.showMessage(
-                                                    this@LoginActivity,
-                                                    error!!
+                                                this@LoginActivity,
+                                                error!!
                                             )
                                             hideProgress()
                                         }
@@ -248,8 +248,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                                 } else //user is new
                                 {
                                     FirebaseManager.createAccount(
-                                            userCustomEmail,
-                                            password
+                                        userCustomEmail,
+                                        password
                                     ) { user, error ->
                                         if (user != null) {
 
@@ -259,35 +259,35 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                                             FirebaseManager.createCourier(courier) { success ->
                                                 if (success) {
                                                     Log.d(
-                                                            TAG,
-                                                            "FBDB - CREATE NEW USER - SUCCESS"
+                                                        TAG,
+                                                        "FBDB - CREATE NEW USER - SUCCESS"
                                                     )
                                                     saveUserData(courier)
                                                     startActivity(
-                                                            Intent(
-                                                                    this@LoginActivity,
-                                                                    TaskActivity::class.java
-                                                            )
+                                                        Intent(
+                                                            this@LoginActivity,
+                                                            TaskActivity::class.java
+                                                        )
                                                     )
                                                     finish()
                                                     hideProgress()
                                                 } else {
                                                     Alert.showMessage(
-                                                            this@LoginActivity,
-                                                            error!!
+                                                        this@LoginActivity,
+                                                        error!!
                                                     )
                                                     hideProgress()
                                                     Log.d(
-                                                            TAG,
-                                                            "Failed to connect to server - Error Code 2"
+                                                        TAG,
+                                                        "Failed to connect to server - Error Code 2"
                                                     )
                                                 }
                                             }
 
                                         } else {
                                             Alert.showMessage(
-                                                    this@LoginActivity,
-                                                    error!!
+                                                this@LoginActivity,
+                                                error!!
                                             )
                                             hideProgress()
                                         }
@@ -300,8 +300,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                         } else  //login
                         {
                             FirebaseManager.logIn(
-                                    userCustomEmail,
-                                    password
+                                userCustomEmail,
+                                password
                             )
                             { user, error ->
                                 if (user != null) {
@@ -310,22 +310,22 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                                     sendUserToken(courier.CourierId, FirebaseManager.token)
                                     FirebaseManager.updateCourier(courier) {
 
-                                        success ->
+                                            success ->
                                         if (success) {
                                             Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
                                             saveUserData(courier)
                                             startActivity(
-                                                    Intent(
-                                                            this@LoginActivity,
-                                                            TaskActivity::class.java
-                                                    )
+                                                Intent(
+                                                    this@LoginActivity,
+                                                    TaskActivity::class.java
+                                                )
                                             )
                                             finish()
                                             hideProgress()
                                         } else {
                                             Alert.showMessage(
-                                                    this@LoginActivity,
-                                                    error!!
+                                                this@LoginActivity,
+                                                error!!
                                             )
                                             hideProgress()
                                         }
@@ -334,8 +334,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                                 } else //user is null
                                 {
                                     Alert.showMessage(
-                                            this@LoginActivity,
-                                            error!!
+                                        this@LoginActivity,
+                                        error!!
                                     )
                                     hideProgress()
                                 }
@@ -348,162 +348,15 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                         Log.d(TAG, "logIn - API - Failed.${response.Message}")
                         hideProgress()
                         Alert.showMessage(
-                                this@LoginActivity,
-                                getString(R.string.error_incorrect_user_name)
-                        )
-                    } else if (response.Status == AppConstants.STATUS_INCORRECT_DATA) {
-                        Log.d(TAG, "logIn - API - Failed.${response.Message}")
-                        hideProgress()
-                        Alert.showMessage(
-                                this@LoginActivity,
-                                getString(R.string.error_incorrect_password)
-                        )
-                    }
-
-                }
-            })
-
-        } else {
-            Log.d(TAG, "logIn - API - NO INTERNET.")
-            hideProgress()
-            Alert.showMessage(this@LoginActivity, getString(R.string.no_internet))
-        }
-
-
-        return courier
-    }
-
-    private fun logIn1(userName: String, password: String): Courier {
-        showProgress()
-        if (NetworkManager().isNetworkAvailable(this)) {
-
-            var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.logIn(userName, password)
-            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
-                override fun onFailed(error: String) {
-                    hideProgress()
-                    Alert.showMessage(
                             this@LoginActivity,
-                            getString(R.string.error_login_server_error)
-                    )
-                }
-
-                override fun onSuccess(response: ApiResponse<Courier>) {
-                    if (response.Status == AppConstants.STATUS_SUCCESS && response.ResponseObj != null) {
-                        Log.d(TAG, "logIn - API - Success.$response")
-
-                        courier = response.ResponseObj!!
-                        AppConstants.CurrentLoginCourier = courier
-                        var data = FirebaseManager.getCurrentUser()
-                        if (FirebaseManager.getCurrentUser() == null) //create new user
-                        {
-                            // REGISTER - NEW USER
-                            FirebaseManager.createAccount(
-                                    userCustomEmail,
-                                    password
-                            ) { user, error ->
-                                if (user != null) {
-
-                                    Log.d(TAG, "AUTH- SIGNUP - SUCCESS")
-                                    prepareCourierData()
-                                    sendUserToken(courier.CourierId, FirebaseManager.token)
-                                    FirebaseManager.createCourier(courier) { success ->
-                                        if (success) {
-                                            Log.d(
-                                                    TAG,
-                                                    "FBDB - CREATE NEW USER - SUCCESS"
-                                            )
-                                            saveUserData(courier)
-                                            startActivity(
-                                                    Intent(
-                                                            this@LoginActivity,
-                                                            TaskActivity::class.java
-                                                    )
-                                            )
-                                            finish()
-                                            hideProgress()
-                                        } else {
-                                            Alert.showMessage(
-                                                    this@LoginActivity,
-                                                    error!!
-                                            )
-                                            hideProgress()
-                                            Log.d(
-                                                    TAG,
-                                                    "Failed to connect to server - Error Code 2"
-                                            )
-                                        }
-                                    }
-
-                                } else {
-                                    Alert.showMessage(
-                                            this@LoginActivity,
-                                            error!!
-                                    )
-                                    hideProgress()
-                                }
-                            }
-
-                        } else  //LOGIN -  EXISTING USER
-                        {
-                            FirebaseManager.logIn(
-                                    userCustomEmail,
-                                    password
-                            )
-                            { user, error ->
-                                if (user != null) {
-                                    Log.d(TAG, "AUTH- LOGIN - SUCCESS")
-                                    prepareCourierData()
-                                    sendUserToken(courier.CourierId, FirebaseManager.token)
-                                    FirebaseManager.updateCourier(courier) {
-
-                                        success ->
-                                        if (success) {
-                                            Log.d(TAG, "FBDB - UPDATE USER - SUCCESS")
-                                            saveUserData(courier)
-                                            startActivity(
-                                                    Intent(
-                                                            this@LoginActivity,
-                                                            TaskActivity::class.java
-                                                    )
-                                            )
-                                            finish()
-                                            hideProgress()
-                                        } else {
-                                            Alert.showMessage(
-                                                    this@LoginActivity,
-                                                    error!!
-                                            )
-                                            hideProgress()
-                                        }
-                                    }
-
-                                } else //user is null
-                                {
-                                    Alert.showMessage(
-                                            this@LoginActivity,
-                                            error!!
-                                    )
-                                    hideProgress()
-                                }
-
-                            }
-                        }
-
-
-                    } else if (response.Status == AppConstants.STATUS_FAILED) {
-                        Log.d(TAG, "logIn - API - Failed.${response.Message}")
-                        hideProgress()
-                        Alert.showMessage(
-                                this@LoginActivity,
-                                getString(R.string.error_incorrect_user_name)
+                            getString(R.string.error_incorrect_user_name)
                         )
                     } else if (response.Status == AppConstants.STATUS_INCORRECT_DATA) {
                         Log.d(TAG, "logIn - API - Failed.${response.Message}")
                         hideProgress()
                         Alert.showMessage(
-                                this@LoginActivity,
-                                getString(R.string.error_incorrect_password)
+                            this@LoginActivity,
+                            getString(R.string.error_incorrect_password)
                         )
                     }
 
@@ -519,6 +372,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
         return courier
     }
+
+
 
     private fun prepareCourierData() {
         courier.name = courier.CourierName
@@ -526,6 +381,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         var token = FirebaseManager.token
         courier.token = token//FirebaseManager.getCurrentUser()!!.uid //token
         courier.isActive = true
+        courier.haveTask=false
 
     }
 

@@ -76,7 +76,9 @@
                         android:text="@string/status"
                         android:textColor="@color/colorApp"
                         android:textSize="18sp"
-                        android:textStyle="bold|italic" />
+                        android:textStyle="bold|italic"
+                        android:layout_alignParentRight="true"
+                        android:layout_marginRight="10dp" />
                     <TextView
                         android:id="@+id/tvTask"
                         android:layout_width="wrap_content"
@@ -154,16 +156,16 @@
                         android:visibility="gone"
                         tools:ignore="HardcodedText" />
 
-                                 <com.wang.avi.AVLoadingIndicatorView
-                                     android:id="@+id/avi"
-                                     style="@style/AVLoadingIndicatorView.Large"
-                                     android:layout_width="wrap_content"
-                                     android:layout_height="wrap_content"
-                                     android:layout_centerInParent="true"
-                                     android:visibility="invisible"
-                                     app:indicatorColor="@color/colorPrimary"
-                                     app:indicatorName="BallScaleRippleIndicator"
-                                     android:elevation="2dp"/>
+                    <com.wang.avi.AVLoadingIndicatorView
+                        android:id="@+id/avi"
+                        style="@style/AVLoadingIndicatorView.Large"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:visibility="invisible"
+                        app:indicatorColor="@color/colorPrimary"
+                        app:indicatorName="BallScaleRippleIndicator"
+                        android:elevation="2dp"/>
 
                     <TextView
                         android:id="@+id/tvStops"

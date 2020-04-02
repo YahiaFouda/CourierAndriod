@@ -40,7 +40,8 @@
             android:maxLines="1"
             android:text="@string/kadabra"
             android:textColor="@color/colorApp"
-            android:textSize="15sp" />
+            android:textSize="15sp"
+            android:layout_toRightOf="@+id/ivProductImage" />
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
@@ -55,7 +56,9 @@
             android:text="@string/status"
             android:textColor="@color/colorApp"
             android:textSize="11sp"
-            android:textStyle="bold|italic" />
+            android:textStyle="bold|italic"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp" />
 
 
 
@@ -68,7 +71,8 @@
             android:layout_marginTop="4dp"
             android:text="@string/from"
             android:textColor="@color/colorWelcome"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:layout_alignLeft="@+id/tvTaskAmount" />
 
         <TextView
             android:id="@+id/tvDropOffLocation"
@@ -79,7 +83,8 @@
             android:layout_marginTop="5dp"
             android:text="@string/to"
             android:textColor="@color/colorWelcome"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:layout_alignLeft="@+id/tvTaskName" />
 
         <TextView
             android:id="@+id/tvTaskAmount"
