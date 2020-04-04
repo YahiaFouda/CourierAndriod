@@ -95,10 +95,18 @@
     <string name="nav_task_history">Task History</string>
     <string name="nav_setting">Settings</string>
     <string name="nav_call">Call Agent</string>
-
     <string name="nav_logout">Logout</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="notification">Notification</string>
+    <string name="notification_details">Notification Details</string>
+    <string name="tasks_history">Tasks History</string>
+    <string name="in_progress">In Progress</string>
+    <string name="new_task">New</string>
+    <string name="completed">Completed</string>
+    <string name="total_completed">Total Completed</string>
+    <string name="unread">Unread</string>
+    <string name="choose_language">Choose Language</string>
 
 
 </resources>

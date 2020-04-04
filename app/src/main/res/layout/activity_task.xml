@@ -78,25 +78,56 @@
             android:id="@+id/refresh"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/toolbar">
+            android:layout_below="@+id/toolbar"
+
+            >
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvTasks"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="vertical" />
+                android:orientation="vertical"
+                android:layout_marginBottom="10dp"/>
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-        <ImageView
-            android:id="@+id/ivAccept"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+
+        <com.skyfishjy.library.RippleBackground
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_alignParentBottom="true"
             android:layout_centerInParent="true"
             android:layout_marginRight="24dp"
             android:layout_marginBottom="20dp"
-            android:src="@drawable/ic_accept"
-            android:elevation="1dp"/>
+            android:id="@+id/rippleBackground"
+            app:rb_color="#05000000"
+            app:rb_radius="82dp"
+            app:rb_rippleAmount="4"
+            app:rb_scale="6"
+            android:elevation="0dp">
+            <ImageView
+                android:id="@+id/ivAccept"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerInParent="true"
+                android:layout_marginRight="24dp"
+                android:layout_marginBottom="20dp"
+                android:src="@drawable/ic_accept"
+                android:elevation="1dp"
+                android:visibility="gone"/>
+        </com.skyfishjy.library.RippleBackground>
+<!--        <ImageView-->
+<!--            android:id="@+id/ivAccept"-->
+<!--            android:layout_width="100dp"-->
+<!--            android:layout_height="100dp"-->
+<!--            android:layout_alignParentBottom="true"-->
+<!--            android:layout_centerInParent="true"-->
+<!--            android:layout_marginRight="24dp"-->
+<!--            android:layout_marginBottom="20dp"-->
+<!--            android:src="@drawable/ic_accept"-->
+<!--            android:elevation="1dp"-->
+<!--            android:visibility="gone"/>-->
 
     </RelativeLayout>
 

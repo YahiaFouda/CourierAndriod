@@ -82,5 +82,20 @@
     <string name="confirm">تأكيد</string>
     <string name="courier_power_by_kadabra">Powered by kadabra</string>
     <string name="status">الحالة</string>
+    <string name="in_progress">قيد التنفيذ</string>
+    <string name="nav_call">الأتصال بعميل</string>
+    <string name="nav_logout">تسجيل خروج</string>
+    <string name="nav_notification">تنبيهات</string>
+    <string name="nav_setting">الإعدادات</string>
+    <string name="nav_task">مهامك</string>
+    <string name="nav_task_history">تاريخ المهام</string>
+    <string name="notification">تنبيهات</string>
+    <string name="notification_details">تفاصيل التنبيه</string>
+    <string name="tasks_history">تاريخ المهام</string>
+    <string name="total_completed">إجمالي المكتمل</string>
+    <string name="unread">غير مقروء</string>
+    <string name="completed">تم بنجاح</string>
+    <string name="new_task">جديد</string>
+    <string name="choose_language">اختر اللغة</string>
 
 </resources>

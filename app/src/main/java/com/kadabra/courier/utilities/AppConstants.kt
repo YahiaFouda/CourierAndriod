@@ -1,18 +1,13 @@
 package com.kadabra.courier.utilities
 
 import android.location.Location
-import com.kadabra.courier.model.Courier
-import com.kadabra.courier.model.Stop
-import com.kadabra.courier.model.Task
-import com.kadabra.courier.model.location
+import com.kadabra.courier.model.*
 
 
 /**
  * Created by Mokhtar on 6/18/2019.
  */
 object AppConstants {
-
-
 
 
     const val BASE_URL = "https://courier.kadabraservices.com/api/Account/"
@@ -35,7 +30,7 @@ object AppConstants {
     val CODE_444 = 444
     //endregion
     //region languages
-    val TOKEN="token"
+    val TOKEN = "token"
     val LANGUAGE = "lang"
     val ARABIC = "ar"
     val ENGLISH = "en"
@@ -60,8 +55,14 @@ object AppConstants {
     const val URL_SET_USER_TOKEN = "SetCourierToken"
 
     const val URL_GET_AVALIABLE_TAKS = "GetAvailableTask"
+    const val URL_GET_NOTIFICATION = "GetAllCourierNotification"
+    const val URL_GET_TASKS_HOSTORY = "GetHistoryOfCourier"
+
+
     const val URL_ACCEPT_TAKS = "UpdateAcceptTask"
     const val URL_END_TAKS = "UpdateEndTask"
+    const val URL_UPDATE_NOTIFICATION = "UpdateReadedNotification"
+
     const val URL_GET_TAKS_DETAILS = "GetTaskByID"
     const val URL_GET_VERSION_CODE = "GetVersionCode"
 
@@ -75,7 +76,7 @@ object AppConstants {
     const val FALSE = "false"
     const val IS_ACCEPTED = "accepted"
     var endTask = false
-    var CURRENT_DEVICE_TOKEN=""
+    var CURRENT_DEVICE_TOKEN = ""
 
     var CurrentLoginCourier: Courier = Courier()
     var CurrentSelectedTask: Task = Task()
@@ -83,7 +84,8 @@ object AppConstants {
     var CurrentCourierLocation: location = location()
     var currentSelectedStop: Stop = Stop()
     var CurrentLocation: Location? = null
-    var ALL_TASKS_DATA= ArrayList<Task>()
+    var ALL_TASKS_DATA = ArrayList<Task>()
+    var CurrentSelecedNotification = Notification()
 
     //endregion
 
@@ -93,7 +95,7 @@ object AppConstants {
     const val FIREBASE_CITY = "city"
     const val FIREBASE_LOCATION = "location"
     const val FIREBASE_LOCATION_LAT = "lat"
-    const val FIREBASE_LOCATION_LONG = "lnog"
+    const val FIREBASE_LOCATION_LONG = "long"
     const val FIREBASE_IS_ACTIVE = "isActive"
     const val FIREBASE_HAVE_TASK = "haveTask"
 
@@ -102,9 +104,15 @@ object AppConstants {
     val ERROR_DIALOG_REQUEST = 9001
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 9002
     val PERMISSIONS_REQUEST_ENABLE_GPS = 9003
-        var FIRE_BASE_LOGOUT=false
-    var FIRE_BASE_NEW_TASK=false
-    var isCountDownTimerIsFinished=false
+    var FIRE_BASE_LOGOUT = false
+    var FIRE_BASE_NEW_TASK = false
+    var FIRE_BASE_EDIT_TASK = false
+    var FIRE_BASE_DELETE_TASK = false
+    var FIRE_BASE_REASSIGN_TASK = false
+
+
+
+    var isCountDownTimerIsFinished = false
 
 
 }

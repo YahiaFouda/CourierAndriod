@@ -14,21 +14,18 @@ import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.task.TaskDetailsActivity
 import com.kadabra.courier.utilities.AppConstants
-import android.widget.FrameLayout
-import android.view.animation.AnimationUtils
 import androidx.core.app.ActivityCompat
 import com.kadabra.courier.R
-import com.kadabra.courier.location.Location
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.utilities.Alert
-import com.reach.plus.admin.util.UserSessionManager
+import kotlinx.android.synthetic.main.activity_task_details.*
 
 
 /**
  * Created by Mokhtar on 1/8/2020.
  */
 
-class TaskAdapter(private val context: Context, private val tasksList: ArrayList<Task>) :
+class TaskAdapter(private val context: Context, private var tasksList: ArrayList<Task>) :
     RecyclerView.Adapter<TaskAdapter.MyViewHolder>() {
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)
@@ -58,6 +55,8 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
                     .inflate(R.layout.task_layout_accepted, parent, false)
             return MyViewHolder(view1)
         }
+
+
     }
 
 
@@ -67,35 +66,40 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
         if (!task.TaskName.isNullOrEmpty())
             holder.tvTaskName.text = task.TaskName
 
-        holder.tvStatus.text = task.Status
+        if (task.Status == "In progress")
+            holder.tvStatus.text =context.getString(R.string.in_progress)
+
+        else
+            holder.tvStatus.text =context.getString(R.string.new_task)
+
+
         task.stopsmodel.forEach {
 
             when (it.StopTypeID) {
                 1 -> { //pickup
                     task.stopPickUp = it
                     holder.tvPickupLocation.text =
-                        context.getString(com.kadabra.courier.R.string.from) + " " + it.StopName
+                        context.getString(R.string.from) + " " + it.StopName
                 }
                 2 -> { //dropOff
                     task.stopDropOff = it
                     holder.tvDropOffLocation.text =
-                        context.getString(com.kadabra.courier.R.string.to) + " " + it.StopName
+                        context.getString(R.string.to) + " " + it.StopName
                 }
                 3 -> {
                     task.defaultStops.add(it)
                 }
             }
 
-//
         }
 
 
 
         if (task.Amount!! > 0)
             holder.tvTaskAmount.text =
-                task.Amount.toString() + " " + context.getString(com.kadabra.courier.R.string.le)
+                task.Amount.toString() + " " + context.getString(R.string.le)
         else
-            holder.tvTaskAmount.text = "0 " + context.getString(com.kadabra.courier.R.string.le)
+            holder.tvTaskAmount.text = "0 " + context.getString(R.string.le)
 
 
     }
@@ -110,25 +114,35 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
 
     override fun getItemViewType(position: Int): Int {
+
 //        return position
-        return if (AppConstants.CurrentAcceptedTask.TaskId == tasksList[position].TaskId) {
+//        return if (AppConstants.CurrentAcceptedTask.TaskId == tasksList[position].TaskId) {
+//            Log.d("task", AppConstants.CurrentAcceptedTask.TaskId)
+//            2 // R.layout.task_layout_accepted
+//
+//        } else
+//            1//R.layout.task_layout
+        var task = tasksList[position]
+        return if (tasksList[position].Status == "In progress") {
+            AppConstants.CurrentAcceptedTask=task
             Log.d("task", AppConstants.CurrentAcceptedTask.TaskId)
             2 // R.layout.task_layout_accepted
 
         } else
             1//R.layout.task_layout
 
+//        notifyDataSetChanged()
     }
 
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        var tvTaskName: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvTaskName)
-        var tvTaskAmount: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvTaskAmount)
+        var tvTaskName: TextView = itemView.findViewById(R.id.tvTaskName)
+        var tvTaskAmount: TextView = itemView.findViewById(R.id.tvTaskAmount)
         var tvPickupLocation: TextView =
-            itemView.findViewById(com.kadabra.courier.R.id.tvPickupLocation)
+            itemView.findViewById(R.id.tvPickupLocation)
         var tvDropOffLocation: TextView =
-            itemView.findViewById(com.kadabra.courier.R.id.tvDropOffLocation)
-        var tvStatus: TextView = itemView.findViewById(com.kadabra.courier.R.id.tvStatus)
+            itemView.findViewById(R.id.tvDropOffLocation)
+        var tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
 
 
         init {
@@ -217,8 +231,8 @@ class TaskAdapter(private val context: Context, private val tasksList: ArrayList
 
     }
 
-    private fun setAnimation(container: FrameLayout, position: Int) {
-        val animation = AnimationUtils.loadAnimation(context, android.R.anim.slide_in_left)
-        container.startAnimation(animation)
+    fun updateData(data: ArrayList<Task>) {
+        this.tasksList = data
+        notifyDataSetChanged()
     }
 }

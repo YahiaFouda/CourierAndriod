@@ -4,13 +4,13 @@
     android:id="@+id/card_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
-    android:layout_marginBottom="15dp"
+    android:layout_marginEnd="10dp"
+    android:layout_marginStart="10dp"
+    android:layout_marginTop="10dp"
+
     android:background="@color/white">
 
     <RelativeLayout
-        android:layout_marginTop="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         >
@@ -35,20 +35,23 @@
             android:layout_marginTop="20dp"
             android:layout_marginEnd="10dp"
             android:layout_toEndOf="@+id/ivProductImage"
+            android:layout_toRightOf="@+id/ivProductImage"
             android:ellipsize="end"
             android:gravity="start"
             android:maxLines="1"
             android:text="@string/kadabra"
             android:textColor="@color/colorApp"
-            android:textSize="15sp"
-            android:layout_toRightOf="@+id/ivProductImage" />
+            android:textSize="15sp" />
+
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
             android:layout_marginTop="5dp"
             android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
             android:layout_marginBottom="10dp"
             android:ellipsize="end"
             android:gravity="center"
@@ -56,10 +59,7 @@
             android:text="@string/status"
             android:textColor="@color/colorApp"
             android:textSize="11sp"
-            android:textStyle="bold|italic"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="10dp" />
-
+            android:textStyle="bold|italic" />
 
 
         <TextView
@@ -68,11 +68,11 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvTaskName"
             android:layout_alignStart="@+id/tvTaskAmount"
+            android:layout_alignLeft="@+id/tvTaskAmount"
             android:layout_marginTop="4dp"
             android:text="@string/from"
             android:textColor="@color/colorWelcome"
-            android:textSize="13sp"
-            android:layout_alignLeft="@+id/tvTaskAmount" />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvDropOffLocation"
@@ -80,11 +80,11 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvPickupLocation"
             android:layout_alignStart="@+id/tvTaskName"
+            android:layout_alignLeft="@+id/tvTaskName"
             android:layout_marginTop="5dp"
             android:text="@string/to"
             android:textColor="@color/colorWelcome"
-            android:textSize="13sp"
-            android:layout_alignLeft="@+id/tvTaskName" />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvTaskAmount"

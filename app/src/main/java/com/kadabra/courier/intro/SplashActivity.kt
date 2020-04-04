@@ -15,20 +15,23 @@ import kotlinx.android.synthetic.main.activity_splash.*
 import com.kadabra.courier.services.ExitAppService
 
 
-
-
 class SplashActivity : AppCompatActivity() {
 
 
     //region Members
     private var startTime: Long = 1500
-
-
     //endregion
-//region Events
+
+    //region Events
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(com.kadabra.courier.R.layout.activity_splash)
+
+//     if (!isTaskRoot) {
+//        finish()
+//        return
+//    }
+
         startService(Intent(baseContext, ExitAppService::class.java))
         init()
 
@@ -65,8 +68,8 @@ class SplashActivity : AppCompatActivity() {
                     this
                 ).getUserData()
 
-                if(courier!=null&&courier.CourierId>0)
-                    AppConstants.CurrentLoginCourier=courier!!
+                if (courier != null && courier.CourierId > 0)
+                    AppConstants.CurrentLoginCourier = courier!!
 
                 if (UserSessionManager.getInstance(this).isFirstTime() || UserSessionManager.getInstance(
                         this
@@ -87,7 +90,6 @@ class SplashActivity : AppCompatActivity() {
 
 
     }
-
 
 
     override fun onBackPressed() {

@@ -3,13 +3,9 @@ package com.kadabra.courier.services
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.media.AudioAttributes
-import android.media.RingtoneManager
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -18,12 +14,9 @@ import com.google.firebase.messaging.RemoteMessage
 import com.kadabra.courier.R
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
-import android.annotation.SuppressLint
 import android.app.Notification
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.login.LoginActivity
-import com.kadabra.courier.task.NotificationActivity
-import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppController
 import com.reach.plus.admin.util.UserSessionManager
 import java.util.*
@@ -83,11 +76,11 @@ class NotificatinService : FirebaseMessagingService() {
                 ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             )
         }
-        else if (title == "Kadabra") {
+        else if (title == "NewTask" ) {
             AppConstants.FIRE_BASE_NEW_TASK=true
 
             Log.d(
-                    TAG, "New Task Added: \n" +
+                    TAG, "$title: \n" +
                     AppConstants.FIRE_BASE_NEW_TASK + "\n" +
                     "Courier: " + courier?.CourierId
             )
@@ -121,6 +114,123 @@ class NotificatinService : FirebaseMessagingService() {
 
 
         }
+        else if (title == "EditTask" ) {
+            AppConstants.FIRE_BASE_EDIT_TASK=true
+
+            Log.d(
+                    TAG, "$title: \n" +
+                    AppConstants.FIRE_BASE_EDIT_TASK + "\n" +
+                    "Courier: " + courier?.CourierId
+            )
+            if(courier!=null&&courier.CourierId>0)
+            {
+                var intent= Intent(
+                        AppController.getContext(),
+                        TaskActivity::class.java
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        .setAction(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER )
+                startActivity(intent
+                )
+                sendNotification(title!!, message, intent)
+
+                Log.d(TAG, "Sended")
+            }
+            else // user didn't log in yet
+            {
+                Log.d(TAG, "Not Login yet")
+                var intent= Intent(
+                        AppController.getContext(),
+                        LoginActivity::class.java
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        .setAction(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER )
+                startActivity(intent
+                )
+                sendNotification(title!!, message, intent)
+            }
+
+
+        }
+
+
+        else if (title == "deleteTask") {
+            AppConstants.FIRE_BASE_DELETE_TASK=true
+
+            Log.d(
+                    TAG, "$title: \n" +
+                    AppConstants.FIRE_BASE_DELETE_TASK + "\n" +
+                    "Courier: " + courier?.CourierId
+            )
+            if(courier!=null&&courier.CourierId>0)
+            {
+                var intent= Intent(
+                        AppController.getContext(),
+                        TaskActivity::class.java
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        .setAction(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER )
+                startActivity(intent
+                )
+                sendNotification(title!!, message, intent)
+
+                Log.d(TAG, "Sended")
+            }
+            else // user didn't log in yet
+            {
+                Log.d(TAG, "Not Login yet")
+                var intent= Intent(
+                        AppController.getContext(),
+                        LoginActivity::class.java
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        .setAction(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER )
+                startActivity(intent
+                )
+                sendNotification(title!!, message, intent)
+            }
+
+
+        }
+        else if (title == "ReassignTask") {
+            AppConstants.FIRE_BASE_REASSIGN_TASK=true
+
+            Log.d(
+                TAG, "$title: \n" +
+                        AppConstants.FIRE_BASE_REASSIGN_TASK + "\n" +
+                        "Courier: " + courier?.CourierId
+            )
+            if(courier!=null&&courier.CourierId>0)
+            {
+                var intent= Intent(
+                    AppController.getContext(),
+                    TaskActivity::class.java
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    .setAction(Intent.ACTION_MAIN)
+                    .addCategory(Intent.CATEGORY_LAUNCHER )
+                startActivity(intent
+                )
+                sendNotification(title!!, message, intent)
+
+                Log.d(TAG, "Sended")
+            }
+            else // user didn't log in yet
+            {
+                Log.d(TAG, "Not Login yet")
+                var intent= Intent(
+                    AppController.getContext(),
+                    LoginActivity::class.java
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    .setAction(Intent.ACTION_MAIN)
+                    .addCategory(Intent.CATEGORY_LAUNCHER )
+                startActivity(intent
+                )
+                sendNotification(title!!, message, intent)
+            }
+
+
+        }
+
         else {
             Log.d(TAG, "DEFAULT")
             val intent = Intent(this, TaskActivity::class.java)

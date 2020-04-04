@@ -3,6 +3,7 @@ package com.kadabra.courier.task
 import android.Manifest
 import android.app.ActivityManager
 import android.app.AlertDialog
+import android.app.PendingIntent.getActivity
 import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.PorterDuff
@@ -10,7 +11,6 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.*
 import android.view.View.OnTouchListener
-import android.widget.ImageView
 import androidx.recyclerview.widget.GridLayoutManager
 import com.reach.plus.admin.util.UserSessionManager
 import com.kadabra.Networking.INetworkCallBack
@@ -30,12 +30,13 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 import android.view.*
-import android.widget.PopupMenu
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
+import androidx.core.view.forEach
+import androidx.core.view.iterator
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
@@ -45,7 +46,12 @@ import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.firebase.FirebaseManager
+import com.kadabra.courier.notifications.NotificationActivity
 import com.kadabra.courier.services.LocationUpdatesService
+import com.kadabra.courier.utilities.LocaleManager
+import kotlinx.android.synthetic.main.activity_login1.*
+import kotlinx.android.synthetic.main.activity_login1.rbArabic
+import kotlinx.android.synthetic.main.activity_login1.rbEnglish
 import kotlinx.android.synthetic.main.activity_task.avi
 import kotlinx.android.synthetic.main.activity_task.ivAccept
 import kotlinx.android.synthetic.main.activity_task.ivNoInternet
@@ -53,8 +59,7 @@ import kotlinx.android.synthetic.main.activity_task.refresh
 import kotlinx.android.synthetic.main.activity_task.rvTasks
 import kotlinx.android.synthetic.main.activity_task.tvEmptyData
 import kotlinx.android.synthetic.main.activity_task.tvTimer
-import kotlinx.android.synthetic.main.nav_header_main.*
-import kotlinx.android.synthetic.main.nav_header_main.view.*
+import kotlinx.android.synthetic.main.choose_language_layout.*
 import kotlin.collections.ArrayList
 
 
@@ -85,6 +90,13 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var isNewTaskReceived = false //new task is received but not accepted
     private var KEY_TASK_LIST_DATA = "taskList"
     private var mLocationPermissionGranted = false
+    private var alertDialog: AlertDialog? = null
+    private var serviceCostView: View? = null
+    private var ivLanguageBack: ImageView? = null
+    private var rbArabic: RadioButton? = null
+    private var rbEnglish: RadioButton? = null
+    private var lang=""
+
 
     //endregion
 
@@ -119,33 +131,26 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private fun init() {
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
 
+        serviceCostView = View.inflate(this, R.layout.choose_language_layout, null)
+        ivLanguageBack = serviceCostView!!.findViewById<ImageView>(R.id.ivBackLanguage)
+        rbArabic = serviceCostView!!.findViewById<RadioButton>(R.id.rbArabic)
+        rbEnglish = serviceCostView!!.findViewById<RadioButton>(R.id.rbEnglish)
 
         ivAccept.setOnClickListener(this)
+        ivLanguageBack!!.setOnClickListener(this)
+        rbArabic!!.setOnClickListener(this)
+        rbEnglish!!.setOnClickListener(this)
+
         tvTimer.visibility = View.INVISIBLE
 
+        chooseLanguageWindow()
 
         refresh.setOnRefreshListener {
             loadTasks()
+
         }
 
-        ivAccept.setOnTouchListener(OnTouchListener { v, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    val view = v as ImageView
-                    //overlay is black with transparency of 0x77 (119)
-                    view.drawable.setColorFilter(0x77000000, PorterDuff.Mode.SRC_ATOP)
-                    view.invalidate()
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val view = v as ImageView
-                    //clear the overlay
-                    view.drawable.clearColorFilter()
-                    view.invalidate()
-                }
-            }
 
-            false
-        })
 
         setSupportActionBar(toolbar)
         this.title = ""//getString(R.string.beta_version)
@@ -156,11 +161,11 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
-       var headerView= navigationView.getHeaderView(0)
-        var tvName=headerView.findViewById<TextView>(R.id.tvName)
-        var tvPhoneNo=headerView.findViewById<TextView>(R.id.tvPhoneNo)
-        tvName.text=AppConstants.CurrentLoginCourier.CourierName
-        tvPhoneNo.text=AppConstants.CurrentLoginCourier.Mobile
+        var headerView = navigationView.getHeaderView(0)
+        var tvName = headerView.findViewById<TextView>(R.id.tvName)
+        var tvPhoneNo = headerView.findViewById<TextView>(R.id.tvPhoneNo)
+        tvName.text = AppConstants.CurrentLoginCourier.CourierName
+        tvPhoneNo.text = AppConstants.CurrentLoginCourier.Mobile
 
 
         navigationView.setNavigationItemSelectedListener(this)
@@ -184,6 +189,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 this@TaskActivity,
                 getString(R.string.no_internet)
             )
+
+        ivAccept.visibility=View.GONE
+        rippleBackground.visibility=View.INVISIBLE
+        rippleBackground.stopRippleAnimation()
     }
 
     private fun logOut() {
@@ -269,7 +278,9 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     }
 
     private fun processTask() {
-
+        ivAccept.visibility=View.VISIBLE
+        rippleBackground.visibility=View.VISIBLE
+        rippleBackground.startRippleAnimation()
         isNewTaskReceived = true
         tvTimer.visibility = View.VISIBLE
         vibrate()
@@ -376,18 +387,13 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                                 TAG,
                                 "onSuccess: AppConstants.STATUS_SUCCESS: " + AppConstants.STATUS_SUCCESS
                             )
-                            refresh.isRefreshing = false
-                            tvEmptyData.visibility = View.INVISIBLE
+
                             taskList = response.ResponseObj!!
-                            Log.d(TAG, "onSuccess" + taskList.size.toString())
-                            Log.d(
-                                TAG,
-                                "AppConstants.FIRE_BASE_NEW_TASK" + AppConstants.FIRE_BASE_NEW_TASK
-                            )
 
                             if (taskList.size > 0) {
                                 Log.d(TAG, "onSuccess: taskList.size > 0: ")
                                 AppConstants.ALL_TASKS_DATA = taskList
+
                                 prepareTasks(taskList)
 
                                 if (AppConstants.FIRE_BASE_NEW_TASK) {
@@ -399,6 +405,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                                     processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
                                 }
 
+                                refresh.isRefreshing = false
+                                tvEmptyData.visibility = View.INVISIBLE
                                 hideProgress()
                             } else {//no tasks
                                 Log.d(TAG, "no tasks: ")
@@ -408,6 +416,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                                 taskList.clear()
                                 prepareTasks(taskList)
                             }
+
 
                         } else {
                             Log.d(TAG, "onSuccess: Enter method")
@@ -622,11 +631,15 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume")
+        navigationView.menu.forEach { item -> item.isChecked = false }
+        if (adapter != null)
+            adapter!!.notifyDataSetChanged()
+
         if (checkMapServices()) {
             if (mLocationPermissionGranted) {
                 Log.d(TAG, "onResume-mLocationPermissionGranted-loadTasks")
                 loadTasks()
-                getCurrentActiveTask()
+//                getCurrentActiveTask()
                 getCurrentCourierLocation()
                 forceUpdate()
             } else {
@@ -636,8 +649,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         }
 
 
-        if (AppConstants.ALL_TASKS_DATA.size > 0)
-            prepareTasks(AppConstants.ALL_TASKS_DATA)
+//        if (AppConstants.ALL_TASKS_DATA.size > 0)
+//            prepareTasks(AppConstants.ALL_TASKS_DATA)
 
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
@@ -669,7 +682,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         )
 
 
-//        getCurrentActiveTask()
 
         if (AppConstants.endTask)
             AppConstants.endTask = false
@@ -718,6 +730,20 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
             }
 
+            R.id.ivBackLanguage -> {
+                alertDialog!!.dismiss()
+            }
+            R.id.rbArabic -> {
+                if (lang != AppConstants.ARABIC)
+                    setNewLocale(this, AppConstants.ARABIC)
+            }
+            R.id.rbEnglish -> {
+                if (lang != AppConstants.ENGLISH)
+                    setNewLocale(this, AppConstants.ENGLISH)
+            }
+
+
+
         }
     }
 
@@ -750,7 +776,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 LocationUpdatesService.shared!!.requestLocationUpdates()
                 mLocationPermissionGranted = true
                 loadTasks()
-                getCurrentActiveTask()
+//                getCurrentActiveTask()
                 getCurrentCourierLocation()
                 forceUpdate()
 
@@ -786,49 +812,58 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.nav_tasks -> {
-            }
-            R.id.nav_Notification -> {
-            }
+//            R.id.nav_tasks -> {
+//                startActivity(Intent(this,NotificationActivity::class.java))
+//            }
+//            R.id.nav_Notification -> {
+//                startActivity(Intent(this,NotificationActivity::class.java))
+//            }
             R.id.nav_task_history -> {
+                startActivity(Intent(this, TaskHistoryActivity::class.java))
+
+
             }
             R.id.nav_Settings -> {
-                if (!isNewTaskReceived)
-                {
-                    var currentLanguage = UserSessionManager.getInstance(this).getLanguage()
-                    languageMenu = PopupMenu(this, ivAccept)
-                    languageMenu.menuInflater.inflate(R.menu.menu_language, languageMenu.menu)
-                    languageMenu.setOnMenuItemClickListener {
-                        if (it.itemId == R.id.arabic) {
-                            if (currentLanguage != AppConstants.ARABIC) {
-                                UserSessionManager.getInstance(AppController.getContext())
-                                    .setLanguage(AppConstants.ARABIC)
+                if (!isNewTaskReceived) {
+//                    var currentLanguage = UserSessionManager.getInstance(this).getLanguage()
 //
-                                val intent = baseContext.packageManager.getLaunchIntentForPackage(
-                                    baseContext.packageName
-                                )
-                                intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                startActivity(intent)
-                            }
+////                    var view=findViewById<item>( R.id.nav_Settings)
+//                    languageMenu = PopupMenu(this, ivAccept)
+//                    languageMenu.menuInflater.inflate(R.menu.menu_language, languageMenu.menu)
+//
+//                    languageMenu.setOnMenuItemClickListener {
+//                        if (it.itemId == R.id.arabic) {
+//                            if (currentLanguage != AppConstants.ARABIC) {
+//                                UserSessionManager.getInstance(AppController.getContext())
+//                                    .setLanguage(AppConstants.ARABIC)
+////
+//                                val intent = baseContext.packageManager.getLaunchIntentForPackage(
+//                                    baseContext.packageName
+//                                )
+//                                intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+//                                startActivity(intent)
+//                            }
+//
+//
+//                        } else if (it.itemId == R.id.english) {
+//                            if (currentLanguage != AppConstants.ENGLISH) {
+//                                UserSessionManager.getInstance(AppController.getContext())
+//                                    .setLanguage(AppConstants.ENGLISH)
+////                        setNewLocale(this, AppConstants.ENGLISH)
+//                                val intent = baseContext.packageManager.getLaunchIntentForPackage(
+//                                    baseContext.packageName
+//                                )
+//                                intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+//                                startActivity(intent)
+//                            }
+//
+//
+//                        }
+//                        true
+//                    }
+//                    languageMenu.show()
 
-
-                        } else if (it.itemId == R.id.english) {
-                            if (currentLanguage != AppConstants.ENGLISH) {
-                                UserSessionManager.getInstance(AppController.getContext())
-                                    .setLanguage(AppConstants.ENGLISH)
-//                        setNewLocale(this, AppConstants.ENGLISH)
-                                val intent = baseContext.packageManager.getLaunchIntentForPackage(
-                                    baseContext.packageName
-                                )
-                                intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                startActivity(intent)
-                            }
-
-
-                        }
-                        true
-                    }
-                    languageMenu.show()
+                    alertDialog!!.show()
                 }
 
             }
@@ -838,15 +873,15 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             }
             R.id.nav_logout -> {
                 if (!isNewTaskReceived)
-                AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.warning))
-                    .setMessage(getString(R.string.exit))
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setPositiveButton(getString(R.string.ok)) { dialog, which ->
-                        logOut()
-                    }
-                    .setNegativeButton(getString(R.string.cancel)) { dialog, which -> }
-                    .show()
+                    AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.warning))
+                        .setMessage(getString(R.string.exit))
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setPositiveButton(getString(R.string.ok)) { dialog, which ->
+                            logOut()
+                        }
+                        .setNegativeButton(getString(R.string.cancel)) { dialog, which -> }
+                        .show()
             }
 
         }
@@ -854,20 +889,23 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         return true
     }
 
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_option, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_notification)
-        {
+
+        if (item.itemId == R.id.action_notification) {
             if (drawer.isDrawerOpen(GravityCompat.START)) {
                 drawer.closeDrawer(GravityCompat.START)
             }
-            startActivity(Intent(this,NotificationActivity::class.java))
+            startActivity(Intent(this, NotificationActivity::class.java))
         }
-            return true
+
+
+        return true
         //open notification view
     }
     //endregion
@@ -956,7 +994,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             Log.d(TAG, "getLocationPermission-mLocationPermissionGranted-loadTasks")
             mLocationPermissionGranted = true
             loadTasks()
-            getCurrentActiveTask()
+//            getCurrentActiveTask()
             getCurrentCourierLocation()
             forceUpdate()
 
@@ -978,7 +1016,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                     Log.d(TAG, "onActivityResult-mLocationPermissionGranted-loadTasks")
 //                    LocationUpdatesService.shared!!.requestLocationUpdates()
                     loadTasks()
-                    getCurrentActiveTask()
+//                    getCurrentActiveTask()
                     getCurrentCourierLocation()
                     forceUpdate()
 
@@ -1000,6 +1038,31 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         }
         Log.d(TAG, "isLocationServiceRunning: location service is not running.")
         return false
+    }
+
+    private fun chooseLanguageWindow() {
+
+        var alert = AlertDialog.Builder(this)
+        alertDialog = alert.create()
+
+
+         lang = UserSessionManager.getInstance(AppController.getContext())
+            .getLanguage()
+        if (lang == AppConstants.ARABIC)
+            rbArabic!!.isChecked = true
+        else if (lang == AppConstants.ENGLISH)
+            rbEnglish!!.isChecked = true
+
+        alertDialog!!.setView(serviceCostView)
+
+
+    }
+
+    fun setNewLocale(mContext: AppCompatActivity, @LocaleManager.LocaleDef language: String) {
+        UserSessionManager.getInstance(this).setLanguage(language)
+        val intent = mContext.intent
+        mContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
+
     }
 
     //endregion

@@ -2,6 +2,7 @@ package com.kadabra.courier.api
 
 
 import com.kadabra.courier.model.Courier
+import com.kadabra.courier.model.Notification
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.utilities.AppConstants
 import retrofit2.Call
@@ -33,10 +34,22 @@ interface ApiServices {
     fun getAvaliableTasks(@Query("CourierID") courierId: Int)
             : Call<ApiResponse<ArrayList<Task>>>
 
-    @POST(AppConstants.URL_END_TAKS)
+    @GET(AppConstants.URL_GET_NOTIFICATION)
+    fun getAllCourierNotification(@Query("courierId") courierId: Int)
+            : Call<ApiResponse<ArrayList<Notification>>>
+
+    @GET(AppConstants.URL_GET_TASKS_HOSTORY)
+    fun getAllCourierTasksHistory(@Query("courierId") courierId: Int)
+            : Call<ApiResponse<ArrayList<Task>>>
+
+    @POST(AppConstants.URL_ACCEPT_TAKS)
     fun acceptTask(@Query("taskId") taskID: String)
             : Call<ApiResponse<Task>>
 
+
+    @POST(AppConstants.URL_UPDATE_NOTIFICATION)
+    fun updateReadNotification(@Query("notificationId") notificationId: String)
+            : Call<ApiResponse<Boolean>>
 
     @POST(AppConstants.URL_END_TAKS)
     fun endTask(@Query("taskId") taskID: String)

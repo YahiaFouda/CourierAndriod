@@ -35,7 +35,7 @@ public class AppController extends Application {
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        LocaleManager.setLocale(this);
+        LocaleManager.INSTANCE.setLocale(this);
     }
 
     public static synchronized AppController getInstance() {

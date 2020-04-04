@@ -24,10 +24,17 @@
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
 
-
+        <activity android:name=".task.TaskHistoryActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+           />
+        <activity android:name=".notifications.NotificationDetailsActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"/>
         <activity
-            android:name=".task.NotificationActivity"
-            android:screenOrientation="sensorPortrait"
+            android:name=".notifications.NotificationActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             android:showOnLockScreen="true" />
         <activity
             android:name=".recyclerview.RecyclerViewActivity"
@@ -51,7 +58,7 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".intro.SplashActivity"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -61,7 +68,7 @@
         </activity>
         <activity
             android:name=".login.LoginActivity"
-            android:launchMode="singleTop"
+            android:launchMode="singleInstance"
             android:screenOrientation="portrait" />
         <activity
             android:name=".main.MainActivity"

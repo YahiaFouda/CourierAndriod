@@ -15,7 +15,7 @@ public class MyContextWrapper extends ContextWrapper {
         super(base);
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static ContextWrapper wrap(Context context, Locale newLocale) {
         Resources res = context.getResources();
         Configuration configuration = res.getConfiguration();
@@ -29,7 +29,7 @@ public class MyContextWrapper extends ContextWrapper {
 
             context = context.createConfigurationContext(configuration);
 
-        } else if (VersionUtils.isAfter17()) {
+        } else if (VersionUtils.isAfter21()) {
             configuration.setLocale(newLocale);
             context = context.createConfigurationContext(configuration);
 

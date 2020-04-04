@@ -189,7 +189,7 @@ object FirebaseManager {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (currentTask in dataSnapshot.children) {
                     task = currentTask.getValue(Task::class.java)!!
-                    if (task.isActive && task.CourierID == courieId.toInt()) {
+                    if (task.isActive && task.CourierID == courieId.toInt()&&!task.TaskId.isNullOrEmpty()) {
                         task.TaskId = currentTask.key!!
                         AppConstants.CurrentAcceptedTask = task
                         listener.onSuccess(1)

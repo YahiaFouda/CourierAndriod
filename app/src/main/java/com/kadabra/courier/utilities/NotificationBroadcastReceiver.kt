@@ -1,12 +1,11 @@
 package com.kadabra.courier.utilities
 
-import android.app.Notification
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
 
-import com.kadabra.courier.task.NotificationActivity
+import com.kadabra.courier.notifications.NotificationActivity
 
 
 class NotificationBroadcastReceiver: BroadcastReceiver() {

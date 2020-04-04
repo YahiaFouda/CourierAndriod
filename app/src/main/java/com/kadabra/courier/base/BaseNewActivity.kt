@@ -1,5 +1,6 @@
 package com.kadabra.courier.base
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -89,6 +90,7 @@ open class BaseNewActivity : AppCompatActivity() {
         return if (Build.VERSION.SDK_INT >= 24) config.locales.get(0) else config.locale
     }
 
+    @SuppressLint("NewApi")
     private fun isApplicationBroughtToBackground(): Boolean {
         val am = this.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val tasks = am.getRunningTasks(1)
