@@ -38,6 +38,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.forEach
 import androidx.core.view.iterator
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.crashlytics.android.Crashlytics
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.*
@@ -602,6 +603,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         super.onCreate(savedInstanceState)
         // recovering the instance state
         setContentView(R.layout.activity_task)
+//        Crashlytics.getInstance().crash();
         Log.d(TAG, "onCreate")
         myReceiver = MyReceiver()
         FirebaseManager.setUpFirebase()
@@ -639,7 +641,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             if (mLocationPermissionGranted) {
                 Log.d(TAG, "onResume-mLocationPermissionGranted-loadTasks")
                 loadTasks()
-//                getCurrentActiveTask()
+                getCurrentActiveTask()
                 getCurrentCourierLocation()
                 forceUpdate()
             } else {
@@ -776,7 +778,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 LocationUpdatesService.shared!!.requestLocationUpdates()
                 mLocationPermissionGranted = true
                 loadTasks()
-//                getCurrentActiveTask()
+                getCurrentActiveTask()
                 getCurrentCourierLocation()
                 forceUpdate()
 
@@ -994,7 +996,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             Log.d(TAG, "getLocationPermission-mLocationPermissionGranted-loadTasks")
             mLocationPermissionGranted = true
             loadTasks()
-//            getCurrentActiveTask()
+            getCurrentActiveTask()
             getCurrentCourierLocation()
             forceUpdate()
 
@@ -1016,7 +1018,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                     Log.d(TAG, "onActivityResult-mLocationPermissionGranted-loadTasks")
 //                    LocationUpdatesService.shared!!.requestLocationUpdates()
                     loadTasks()
-//                    getCurrentActiveTask()
+                    getCurrentActiveTask()
                     getCurrentCourierLocation()
                     forceUpdate()
 

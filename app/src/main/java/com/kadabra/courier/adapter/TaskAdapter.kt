@@ -116,20 +116,21 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
     override fun getItemViewType(position: Int): Int {
 
 //        return position
-//        return if (AppConstants.CurrentAcceptedTask.TaskId == tasksList[position].TaskId) {
-//            Log.d("task", AppConstants.CurrentAcceptedTask.TaskId)
-//            2 // R.layout.task_layout_accepted
-//
-//        } else
-//            1//R.layout.task_layout
-        var task = tasksList[position]
-        return if (tasksList[position].Status == "In progress") {
-            AppConstants.CurrentAcceptedTask=task
+        return if (AppConstants.CurrentAcceptedTask.TaskId == tasksList[position].TaskId) {
             Log.d("task", AppConstants.CurrentAcceptedTask.TaskId)
             2 // R.layout.task_layout_accepted
 
         } else
             1//R.layout.task_layout
+
+//        var task = tasksList[position]
+//        return if (tasksList[position].Status == "In progress") {
+//            AppConstants.CurrentAcceptedTask=task
+//            Log.d("task", AppConstants.CurrentAcceptedTask.TaskId)
+//            2 // R.layout.task_layout_accepted
+//
+//        } else
+//            1//R.layout.task_layout
 
 //        notifyDataSetChanged()
     }
