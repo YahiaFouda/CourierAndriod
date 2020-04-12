@@ -67,10 +67,9 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
             holder.tvTaskName.text = task.TaskName
 
         if (task.Status == "In progress")
-            holder.tvStatus.text =context.getString(R.string.in_progress)
-
+            holder.tvStatus.text = context.getString(R.string.in_progress)
         else
-            holder.tvStatus.text =context.getString(R.string.new_task)
+            holder.tvStatus.text = context.getString(R.string.new_task)
 
 
         task.stopsmodel.forEach {
@@ -116,8 +115,10 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
     override fun getItemViewType(position: Int): Int {
 
 //        return position
-        return if (AppConstants.CurrentAcceptedTask.TaskId == tasksList[position].TaskId) {
+//        return if (AppConstants.CurrentAcceptedTask.TaskId == tasksList[position].TaskId) {
+        return if (tasksList[position].Status == "In progress") {
             Log.d("task", AppConstants.CurrentAcceptedTask.TaskId)
+            AppConstants.CurrentAcceptedTask = tasksList[position]
             2 // R.layout.task_layout_accepted
 
         } else

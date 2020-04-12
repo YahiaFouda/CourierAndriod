@@ -22,7 +22,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
-        tools:ignore="GoogleAppIndexingWarning">
+       >
 
         <activity android:name=".task.TaskHistoryActivity"
             android:screenOrientation="portrait"
@@ -68,7 +68,7 @@
         </activity>
         <activity
             android:name=".login.LoginActivity"
-            android:launchMode="singleInstance"
+            android:launchMode="singleTop"
             android:screenOrientation="portrait" />
         <activity
             android:name=".main.MainActivity"

@@ -1,7 +1,6 @@
 package com.kadabra.courier.task
 
 import android.Manifest
-import android.app.ActivityManager
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -28,20 +27,19 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.snackbar.Snackbar
+import com.google.maps.GeoApiContext
+import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.R
+import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.direction.FetchURL
 import com.kadabra.courier.direction.TaskLoadedCallback
-import com.kadabra.courier.utilities.AppConstants
-import kotlinx.android.synthetic.main.activity_location_details.*
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.material.snackbar.Snackbar
-import com.kadabra.courier.BuildConfig
-import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.location.LatLngInterpolator
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.location.MarkerAnimation
-import com.kadabra.courier.services.LocationService
+import com.kadabra.courier.utilities.AppConstants
 import com.reach.plus.admin.util.UserSessionManager
+import kotlinx.android.synthetic.main.activity_location_details.*
 
 
 class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
@@ -51,7 +49,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     //region Members
 
     private var TAG = TaskLocationsActivity.javaClass.simpleName
-    private var mLocationPermissionGranted = false
 
     private lateinit var map: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -64,6 +61,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private var isFirstTime = true
     private lateinit var destination: LatLng
     private var currentMarker: Marker? = null
+    private val mGeoApiContext: GeoApiContext? = null
 
     private val COLORS: IntArray = intArrayOf(
             R.color.colorPrimary,
@@ -172,22 +170,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     }
 
-//    private fun setUpMap() {
-//
-//        fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
-//
-//
-//            // Got last known location. In some rare situations this can be null.
-//            if (location != null) {
-//                lastLocation = location
-//                val currentLatLng = LatLng(location.latitude, location.longitude)
-//                placeMarkerOnMap(currentLatLng, getString(R.string.you_are_here))
-//
-//            }
-//        }
-//        return
-//
-//    }
+
 
     private fun placeMarkerOnMap(location: LatLng, title: String) {
         // 1
@@ -396,11 +379,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     override fun onStart() {
         super.onStart()
-//        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
-//            if (!checkPermissions()) {
-//                requestPermissions()
-//            }
-//        }
         if (!checkPermissions()) {
             requestPermissions()
         }
@@ -408,49 +386,9 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     public override fun onResume() {
         super.onResume()
-//        if (!locationUpdateState) {
-//            startLocationUpdates()
-//        }
+
     }
 
-//    override fun onRoutingCancelled() {
-//        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-//    }
-//
-//    override fun onRoutingStart() {
-//
-//    }
-//
-//    override fun onRoutingFailure(e: RouteException?) {
-//        if (e != null) {
-//            Toast.makeText(this, "Error: " + e.message, Toast.LENGTH_LONG).show()
-//        } else {
-//            Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-//
-//    override fun onRoutingSuccess(routes: ArrayList<Route>?, shourtestRouteIndex: Int) {
-//
-//        if (polylines!!.isNotEmpty()) {
-//            for (poly in polylines!!) {
-//                poly.remove()
-//            }
-//        }
-//
-//        polylines = ArrayList()
-//        for (i in routes!!.indices) {
-//            var colorIndex = i % COLORS.size
-//            var polyOptions = PolylineOptions()
-//            polyOptions.color(resources.getColor(COLORS[colorIndex]))
-//            polyOptions.width((10 + i * 3).toFloat())
-//            polyOptions.addAll(routes[i].points)
-//            var polyline = map.addPolyline(polyOptions)
-//            (polylines as ArrayList<Polyline>).add(polyline)
-//
-//        }
-//
-//
-//    }
 
     override fun onTaskDone(vararg values: Any?) {
         if (currentPolyline != null)
@@ -583,40 +521,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
 
-    private fun startLocationService() {
-        if (!isLocationServiceRunning()) {
-            val serviceIntent = Intent(this, LocationService::class.java)
-            //        this.startService(serviceIntent);
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-
-                this.startForegroundService(serviceIntent)
-            } else {
-                startService(serviceIntent)
-            }
-        }
-    }
-
-    private fun isLocationServiceRunning(): Boolean {
-        val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
-            if ("com.kadabra.courier.services.LocationService" == service.service.className) {
-                Log.d(TAG, "isLocationServiceRunning: location service is already running.")
-                return true
-            }
-        }
-        Log.d(TAG, "isLocationServiceRunning: location service is not running.")
-        return false
-    }
-
-    private fun checkMapServices(): Boolean {
-        if (isServicesOK()) {
-            if (isMapsEnabled()) {
-                return true
-            }
-        }
-        return false
-    }
 
 
     // Returns the current state of the permissions needed

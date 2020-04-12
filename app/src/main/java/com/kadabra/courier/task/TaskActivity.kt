@@ -3,14 +3,11 @@ package com.kadabra.courier.task
 import android.Manifest
 import android.app.ActivityManager
 import android.app.AlertDialog
-import android.app.PendingIntent.getActivity
 import android.content.*
 import android.content.pm.PackageManager
-import android.graphics.PorterDuff
 import android.location.Location
 import android.location.LocationManager
 import android.os.*
-import android.view.View.OnTouchListener
 import androidx.recyclerview.widget.GridLayoutManager
 import com.reach.plus.admin.util.UserSessionManager
 import com.kadabra.Networking.INetworkCallBack
@@ -36,9 +33,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.forEach
-import androidx.core.view.iterator
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.crashlytics.android.Crashlytics
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.*
@@ -50,9 +45,6 @@ import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.notifications.NotificationActivity
 import com.kadabra.courier.services.LocationUpdatesService
 import com.kadabra.courier.utilities.LocaleManager
-import kotlinx.android.synthetic.main.activity_login1.*
-import kotlinx.android.synthetic.main.activity_login1.rbArabic
-import kotlinx.android.synthetic.main.activity_login1.rbEnglish
 import kotlinx.android.synthetic.main.activity_task.avi
 import kotlinx.android.synthetic.main.activity_task.ivAccept
 import kotlinx.android.synthetic.main.activity_task.ivNoInternet
@@ -60,7 +52,6 @@ import kotlinx.android.synthetic.main.activity_task.refresh
 import kotlinx.android.synthetic.main.activity_task.rvTasks
 import kotlinx.android.synthetic.main.activity_task.tvEmptyData
 import kotlinx.android.synthetic.main.activity_task.tvTimer
-import kotlinx.android.synthetic.main.choose_language_layout.*
 import kotlin.collections.ArrayList
 
 
@@ -96,7 +87,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var ivLanguageBack: ImageView? = null
     private var rbArabic: RadioButton? = null
     private var rbEnglish: RadioButton? = null
-    private var lang=""
+    private var lang = ""
 
 
     //endregion
@@ -191,8 +182,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 getString(R.string.no_internet)
             )
 
-        ivAccept.visibility=View.GONE
-        rippleBackground.visibility=View.INVISIBLE
+        ivAccept.visibility = View.GONE
+        rippleBackground.visibility = View.INVISIBLE
         rippleBackground.stopRippleAnimation()
     }
 
@@ -279,8 +270,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     }
 
     private fun processTask() {
-        ivAccept.visibility=View.VISIBLE
-        rippleBackground.visibility=View.VISIBLE
+        ivAccept.visibility = View.VISIBLE
+        rippleBackground.visibility = View.VISIBLE
         rippleBackground.startRippleAnimation()
         isNewTaskReceived = true
         tvTimer.visibility = View.VISIBLE
@@ -394,7 +385,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                             if (taskList.size > 0) {
                                 Log.d(TAG, "onSuccess: taskList.size > 0: ")
                                 AppConstants.ALL_TASKS_DATA = taskList
-
                                 prepareTasks(taskList)
 
                                 if (AppConstants.FIRE_BASE_NEW_TASK) {
@@ -608,26 +598,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         myReceiver = MyReceiver()
         FirebaseManager.setUpFirebase()
         init()
-
 //        loadTasks()
-//        getCurrentActiveTask()
-//        getCurrentCourierLocation()
-//        forceUpdate()
-
-
-        // Check that the user hasn't revoked permissions by going to Settings.
-//        if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
-//            if (!checkPermissions()) {
-//                requestPermissions()
-//            }
-//        }
-//        else {
-//            if (!checkPermissions()) {
-//                requestPermissions()
-//            }
-//        }
-
-
     }
 
     override fun onResume() {
@@ -641,7 +612,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             if (mLocationPermissionGranted) {
                 Log.d(TAG, "onResume-mLocationPermissionGranted-loadTasks")
                 loadTasks()
-                getCurrentActiveTask()
+//                getCurrentActiveTask()
                 getCurrentCourierLocation()
                 forceUpdate()
             } else {
@@ -661,18 +632,11 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         )
 
 
-//
+        updateLanguage(AppConstants.CurrentLoginCourier.CourierId,UserSessionManager.getInstance(this).getLanguage())
     }
 
     override fun onStart() {
         super.onStart()
-        // Bind to the service. If the service is in foreground mode, this signals to the service
-        // that since this activity is in the foreground, the service can exit foreground mode.
-
-
-//            if (!checkPermissions()) {
-//                requestPermissions()
-//            }
 
 
         Log.d(TAG, "onStart")
@@ -685,19 +649,13 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
 
 
+
         if (AppConstants.endTask)
             AppConstants.endTask = false
-
-//        if (AppConstants.ALL_TASKS_DATA.size > 0)
-//            prepareTasks(AppConstants.ALL_TASKS_DATA)
 
         if (AppConstants.FIRE_BASE_LOGOUT)
             logOut()
 
-//        if (AppConstants.FIRE_BASE_NEW_TASK) {
-//            AppConstants.FIRE_BASE_NEW_TASK = false
-//            processTask()//new task is arrived but not accepted and the view is minimized and maximized so show tier and accept to accept
-//        }
 
     }
 
@@ -745,7 +703,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             }
 
 
-
         }
     }
 
@@ -778,7 +735,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 LocationUpdatesService.shared!!.requestLocationUpdates()
                 mLocationPermissionGranted = true
                 loadTasks()
-                getCurrentActiveTask()
+//                getCurrentActiveTask()
                 getCurrentCourierLocation()
                 forceUpdate()
 
@@ -996,7 +953,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             Log.d(TAG, "getLocationPermission-mLocationPermissionGranted-loadTasks")
             mLocationPermissionGranted = true
             loadTasks()
-            getCurrentActiveTask()
+//            getCurrentActiveTask()
             getCurrentCourierLocation()
             forceUpdate()
 
@@ -1018,7 +975,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                     Log.d(TAG, "onActivityResult-mLocationPermissionGranted-loadTasks")
 //                    LocationUpdatesService.shared!!.requestLocationUpdates()
                     loadTasks()
-                    getCurrentActiveTask()
+//                    getCurrentActiveTask()
                     getCurrentCourierLocation()
                     forceUpdate()
 
@@ -1048,7 +1005,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         alertDialog = alert.create()
 
 
-         lang = UserSessionManager.getInstance(AppController.getContext())
+        lang = UserSessionManager.getInstance(AppController.getContext())
             .getLanguage()
         if (lang == AppConstants.ARABIC)
             rbArabic!!.isChecked = true
@@ -1067,7 +1024,34 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
     }
 
-    //endregion
+    private fun updateLanguage(courierId:Int,languageType:String) {
+
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.updateCourierLanguage(courierId,languageType)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Boolean?>> {
+                override fun onFailed(error: String) {
+
+                }
+
+                override fun onSuccess(response: ApiResponse<Boolean?>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+
+                    } else {
+
+                    }
+
+                }
+            })
+
+        } else {
+
+        }
 
 
-}
+    }
+
+        //endregion
+
+
+    }

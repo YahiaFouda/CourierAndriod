@@ -30,16 +30,14 @@ import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
-import com.kadabra.courier.utilities.Alert.hideProgress
-import com.kadabra.courier.utilities.Alert.showProgress
 import com.kadabra.courier.utilities.AppController
+
 import com.kadabra.courier.utilities.LocaleManager
-import io.fabric.sdk.android.services.common.CommonUtils.hideKeyboard
 import kotlinx.android.synthetic.main.activity_login.avi
 import kotlinx.android.synthetic.main.activity_login.btnLogin
 import kotlinx.android.synthetic.main.activity_login.etPassword
 import kotlinx.android.synthetic.main.activity_login.etUsername
-import kotlinx.android.synthetic.main.activity_login1.*
+
 
 
 class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
@@ -63,7 +61,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     //region Events
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login1)
+        setContentView(R.layout.activity_login)
 
 
         FirebaseManager.setUpFirebase()
@@ -194,7 +192,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         if (NetworkManager().isNetworkAvailable(this)) {
 
             var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.logIn(userName, password)
+            var endPoint = request.logIn(userName, password,1)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
                 override fun onFailed(error: String) {
                     hideProgress()
@@ -445,6 +443,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         mContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
 
     }
+
+
     //endregion
 
 }

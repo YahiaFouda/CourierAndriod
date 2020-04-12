@@ -17,7 +17,6 @@ import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.utilities.MyContextWrapper
 import com.reach.plus.admin.util.UserSessionManager
-import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper
 import java.util.*
 import android.content.ComponentName
 import android.app.ActivityManager
@@ -63,7 +62,7 @@ open class BaseNewActivity : AppCompatActivity() {
         }
 
         val langContext = MyContextWrapper.wrap(base, Locale(lang))
-        super.attachBaseContext(CalligraphyContextWrapper.wrap(langContext))
+        super.attachBaseContext(langContext)
     }
 
     protected fun resetTitles() {

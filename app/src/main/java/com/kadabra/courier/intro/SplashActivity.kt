@@ -5,6 +5,11 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
+import com.kadabra.Networking.INetworkCallBack
+import com.kadabra.Networking.NetworkManager
+import com.kadabra.courier.R
+import com.kadabra.courier.api.ApiResponse
+import com.kadabra.courier.api.ApiServices
 import com.reach.plus.admin.util.UserSessionManager
 import com.kadabra.courier.exception.CrashActivity
 import com.kadabra.courier.exception.CrashHandeller
@@ -13,6 +18,9 @@ import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_splash.*
 import com.kadabra.courier.services.ExitAppService
+import com.kadabra.courier.utilities.Alert
+import com.kadabra.courier.utilities.Alert.hideProgress
+import java.lang.Exception
 
 
 class SplashActivity : AppCompatActivity() {
@@ -58,7 +66,8 @@ class SplashActivity : AppCompatActivity() {
 //region Helper Functions
     private fun init() {
 
-        CrashHandeller.deploy(this, CrashActivity::class.java)
+//        CrashHandeller.deploy(this, CrashActivity::class.java)
+
         rippleBackground.startRippleAnimation()
 
         Handler().postDelayed({
@@ -90,6 +99,7 @@ class SplashActivity : AppCompatActivity() {
 
 
     }
+
 
 
     override fun onBackPressed() {

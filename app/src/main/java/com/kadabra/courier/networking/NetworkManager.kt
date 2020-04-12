@@ -77,9 +77,12 @@ class NetworkManager {
         var s = endPoint.request().url
         endPoint.enqueue(object : Callback<U> {
             override fun onResponse(call: Call<U>?, response: retrofit2.Response<U>?) {
+
                 print(response?.body().toString())
                 Log.d("Mokhtar", response?.body().toString())
                 if (response!!.isSuccessful) {
+                    print(response?.body().toString())
+                    Log.d("Mokhtar", response?.body().toString())
                     callback.onSuccess(response.body()!!)
                 } else {
                     when (response.code()) {

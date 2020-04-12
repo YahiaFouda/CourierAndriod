@@ -8,6 +8,50 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:513841496056:android:9c482c88002f8678eb200d",
+        "android_client_info": {
+          "package_name": "com.kadabra.agent"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "513841496056-or37461oh12maneq9d0g0raoeio6ilvv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kadabra.agent",
+            "certificate_hash": "05d6c042885309620fc256607f1b30921810018b"
+          }
+        },
+        {
+          "client_id": "513841496056-3mu9ak6g7t8j2gbh7mt0omm5tsgrhejl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC70zswBrDCnFMJKiTylr1ptCX3GdarKXQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "513841496056-3mu9ak6g7t8j2gbh7mt0omm5tsgrhejl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "513841496056-6he1h35bi6n2br5ovddoen9hvdb8dhj1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.coniano.Courier"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:513841496056:android:838abe9a5d0eaaf1eb200d",
         "android_client_info": {
           "package_name": "com.kadabra.courier"
@@ -38,6 +82,13 @@
             {
               "client_id": "513841496056-3mu9ak6g7t8j2gbh7mt0omm5tsgrhejl.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "513841496056-6he1h35bi6n2br5ovddoen9hvdb8dhj1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.coniano.Courier"
+              }
             }
           ]
         }

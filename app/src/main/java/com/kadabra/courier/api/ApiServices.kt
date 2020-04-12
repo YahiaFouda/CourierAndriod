@@ -1,9 +1,7 @@
 package com.kadabra.courier.api
 
 
-import com.kadabra.courier.model.Courier
-import com.kadabra.courier.model.Notification
-import com.kadabra.courier.model.Task
+import com.kadabra.courier.model.*
 import com.kadabra.courier.utilities.AppConstants
 import retrofit2.Call
 import retrofit2.http.GET
@@ -17,8 +15,12 @@ import retrofit2.http.Query
 interface ApiServices {
 
     @GET(AppConstants.URL_LOGIN)
-    fun logIn(@Query("userName") userName: String, @Query("password") password: String)
+        fun logIn(@Query("userName") userName: String, @Query("password") password: String, @Query("deviceType") deviceType: Int)
             : Call<ApiResponse<Courier>>
+
+    @POST(AppConstants.URL_UPDATE_LANGUAGE)
+    fun updateCourierLanguage(@Query("courierId") courierId: Int, @Query("Lang") lang: String)
+            : Call<ApiResponse<Boolean?>>
 
 
     @POST(AppConstants.URL_LOG_OUT)
@@ -36,7 +38,7 @@ interface ApiServices {
 
     @GET(AppConstants.URL_GET_NOTIFICATION)
     fun getAllCourierNotification(@Query("courierId") courierId: Int)
-            : Call<ApiResponse<ArrayList<Notification>>>
+            : Call<ApiResponse<NotificationData>>
 
     @GET(AppConstants.URL_GET_TASKS_HOSTORY)
     fun getAllCourierTasksHistory(@Query("courierId") courierId: Int)
@@ -63,6 +65,11 @@ interface ApiServices {
     @GET(AppConstants.URL_GET_VERSION_CODE)
     fun forceUpdate(): Call<ApiResponse<String>>
 
+    @POST(AppConstants.URL_UPDATE_TASK_COURIER_FEES)
+    fun updateTaskCourierFees(
+        @Query("taskId") taskId: String,  @Query("Kilometers") kilometers: String
+    )
+            : Call<ApiResponse<Boolean?>>
 
 }
 

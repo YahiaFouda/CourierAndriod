@@ -53,10 +53,11 @@ object AppConstants {
     const val URL_LOGIN = "Login"
     const val URL_LOG_OUT = "Logout"
     const val URL_SET_USER_TOKEN = "SetCourierToken"
-
+    const val URL_UPDATE_LANGUAGE = "UpdateCourierLanguage"
     const val URL_GET_AVALIABLE_TAKS = "GetAvailableTask"
     const val URL_GET_NOTIFICATION = "GetAllCourierNotification"
     const val URL_GET_TASKS_HOSTORY = "GetHistoryOfCourier"
+    const val URL_UPDATE_TASK_COURIER_FEES = "UpdateTaskCourierFees"
 
 
     const val URL_ACCEPT_TAKS = "UpdateAcceptTask"
@@ -109,9 +110,6 @@ object AppConstants {
     var FIRE_BASE_EDIT_TASK = false
     var FIRE_BASE_DELETE_TASK = false
     var FIRE_BASE_REASSIGN_TASK = false
-
-
-
     var isCountDownTimerIsFinished = false
 
 

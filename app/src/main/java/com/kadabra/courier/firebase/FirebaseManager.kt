@@ -188,12 +188,20 @@ object FirebaseManager {
 
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (currentTask in dataSnapshot.children) {
-                    task = currentTask.getValue(Task::class.java)!!
-                    if (task.isActive && task.CourierID == courieId.toInt()&&!task.TaskId.isNullOrEmpty()) {
-                        task.TaskId = currentTask.key!!
-                        AppConstants.CurrentAcceptedTask = task
-                        listener.onSuccess(1)
-                    }
+                  try {
+                      task = currentTask.getValue(Task::class.java)!!
+                      if (task.isActive && task.CourierID == courieId.toInt()&&!task.TaskId.isNullOrEmpty()) {
+                          task.TaskId = currentTask.key!!
+                          AppConstants.CurrentAcceptedTask = task
+                          listener.onSuccess(1)
+                      }
+                  }
+                  catch (ex:java.lang.Exception)
+                  {
+                      Log.e(TAG,ex.message)
+                  }
+
+
                 }
             }
 
@@ -348,6 +356,10 @@ object FirebaseManager {
     private fun clearDb() {
         var applesQuery = dbCourierTaskHistory.setValue(null)
     }
+
+
+
+
 //endregion
 
 

@@ -32,13 +32,7 @@ class NotificatinService : FirebaseMessagingService() {
 
     fun sendToken(token: String) {
 
-//        val data = hashMapOf("token" to token)
-//        FirebaseFirestore.getInstance()
-//            .document("users/" + FirebaseAuth.getInstance().currentUser?.uid).set(data)
-//            .addOnSuccessListener {
-//            }.addOnFailureListener {
-//                Log.w(ContentValues.TAG, "Error sending token", it)
-//            }
+
 
     }
 

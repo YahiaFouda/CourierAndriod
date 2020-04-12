@@ -408,8 +408,8 @@ class LocationUpdatesService : Service() {
         /**
          * The desired interval for location updates. Inexact. Updates may be more or less frequent.
          */
-        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
-//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 5000
+//        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 60000 //1 minute
+        private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 30000
 
         /**
          * The fastest rate for active location updates. Updates will never be more frequent

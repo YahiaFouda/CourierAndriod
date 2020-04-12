@@ -16,6 +16,7 @@ import com.kadabra.courier.api.ApiResponse
 import com.kadabra.courier.api.ApiServices
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.model.Notification
+import com.kadabra.courier.model.NotificationData
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
@@ -29,7 +30,7 @@ import kotlinx.android.synthetic.main.activity_notification.tvEmptyData
 class NotificationActivity : BaseNewActivity() {
 
     private var TAG = this.javaClass.simpleName
-    private var notificationsList = ArrayList<Notification>()
+    private var notificationsList = NotificationData()
     private var adapter: NotificationAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,7 +66,7 @@ class NotificationActivity : BaseNewActivity() {
                 request.getAllCourierNotification(AppConstants.CurrentLoginCourier.CourierId)
             NetworkManager().request(
                 endPoint,
-                object : INetworkCallBack<ApiResponse<ArrayList<Notification>>> {
+                object : INetworkCallBack<ApiResponse<NotificationData>> {
                     override fun onFailed(error: String) {
                         Log.d(TAG, "onFailed: " + error)
                         refresh.isRefreshing = false
@@ -76,39 +77,37 @@ class NotificationActivity : BaseNewActivity() {
                         )
                     }
 
-                    override fun onSuccess(response: ApiResponse<ArrayList<Notification>>) {
+                    override fun onSuccess(response: ApiResponse<NotificationData>) {
                         Log.d(TAG, "onSuccess: Enter method")
                         if (response.Status == AppConstants.STATUS_SUCCESS) {
                             Log.d(
                                 TAG,
                                 "onSuccess: AppConstants.STATUS_SUCCESS: " + AppConstants.STATUS_SUCCESS
                             )
-                            refresh.isRefreshing = false
-                            tvEmptyData.visibility = View.INVISIBLE
+
                             notificationsList = response.ResponseObj!!
-                            Log.d(TAG, "onSuccess" + notificationsList.size.toString())
+                            Log.d(
+                                TAG,
+                                "onSuccess" + notificationsList.courierNotificationModels!!.size.toString()
+                            )
 
-
-                            if (notificationsList.size > 0) {
+                            var notificationsListData = notificationsList.courierNotificationModels
+                            if (notificationsListData!!.size > 0) {
                                 Log.d(TAG, "onSuccess: notificationsList.size > 0: ")
-                                var counter = 0
-                                notificationsList.forEach {
-                                    if (!it.isReaded) {
-                                        counter++
-                                    }
-                                }
-                                tvTotalNotifications.text = notificationsList.size.toString()
-                                tvTotalUnread.text = counter.toString()
 
-                                counter = 0
-                                prepareNotifications(notificationsList)
+                                tvTotalNotifications.text =  notificationsList.NoOfUnreadedNotifications.toString()
+//                                tvTotalUnread.text = notificationsList.NoOfUnreadedNotifications.toString()
+
+                                prepareNotifications(notificationsListData)
+                                refresh.isRefreshing = false
+                                tvEmptyData.visibility = View.INVISIBLE
                                 hideProgress()
                             } else {//no notifications
                                 Log.d(TAG, "no Notifications: ")
                                 refresh.isRefreshing = false
                                 tvEmptyData.visibility = View.VISIBLE
-                                notificationsList.clear()
-                                prepareNotifications(notificationsList)
+                                notificationsListData.clear()
+                                prepareNotifications(notificationsListData)
                             }
 
                         } else {
