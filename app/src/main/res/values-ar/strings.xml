@@ -3,6 +3,7 @@
     <string name="app_name">الساعى</string>
     <string name="Permission">الإذن</string>
     <string name="accept_task">قبول</string>
+    <string name="start_trip">بدء الرحلة </string>
     <string name="action_geolocate">اختر المكان</string>
     <string name="amount">الأجمالى</string>
     <string name="code">exit</string>
@@ -97,5 +98,13 @@
     <string name="completed">تم بنجاح</string>
     <string name="new_task">جديد</string>
     <string name="choose_language">اختر اللغة</string>
+    <string name="duration">Duration: </string>
+    <string name="distance">Distance: </string>
+    <string name="trip">"Trip # </string>
+    <string name="minutes">min</string>
+    <string name="km">km</string>
+    <string name="fastest_route">Fastest route now due to traffic conditions</string>
+    <string name="start">Start</string>
+
 
 </resources>

@@ -7,26 +7,14 @@ import android.content.*
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
-import android.os.*
-import androidx.recyclerview.widget.GridLayoutManager
-import com.reach.plus.admin.util.UserSessionManager
-import com.kadabra.Networking.INetworkCallBack
-import com.kadabra.Networking.NetworkManager
-import com.kadabra.courier.adapter.TaskAdapter
-import com.kadabra.courier.api.ApiResponse
-import com.kadabra.courier.api.ApiServices
-import com.kadabra.courier.login.LoginActivity
-import com.kadabra.courier.model.Courier
-import com.kadabra.courier.model.Task
-import com.kadabra.courier.utilities.Alert
-import com.kadabra.courier.utilities.AppConstants
-import com.kadabra.courier.utilities.AppController
-import kotlinx.android.synthetic.main.activity_task.*
-import com.kadabra.courier.R
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.*
 import android.util.Log
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
@@ -34,25 +22,34 @@ import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.forEach
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
+import com.kadabra.Networking.INetworkCallBack
+import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.BuildConfig
+import com.kadabra.courier.R
+import com.kadabra.courier.adapter.TaskAdapter
+import com.kadabra.courier.api.ApiResponse
+import com.kadabra.courier.api.ApiServices
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.firebase.FirebaseManager
+import com.kadabra.courier.login.LoginActivity
+import com.kadabra.courier.model.Courier
+import com.kadabra.courier.model.Task
+import com.kadabra.courier.model.TaskData
 import com.kadabra.courier.notifications.NotificationActivity
 import com.kadabra.courier.services.LocationUpdatesService
+import com.kadabra.courier.utilities.Alert
+import com.kadabra.courier.utilities.AppConstants
+import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.utilities.LocaleManager
-import kotlinx.android.synthetic.main.activity_task.avi
-import kotlinx.android.synthetic.main.activity_task.ivAccept
-import kotlinx.android.synthetic.main.activity_task.ivNoInternet
-import kotlinx.android.synthetic.main.activity_task.refresh
-import kotlinx.android.synthetic.main.activity_task.rvTasks
-import kotlinx.android.synthetic.main.activity_task.tvEmptyData
-import kotlinx.android.synthetic.main.activity_task.tvTimer
-import kotlin.collections.ArrayList
+import com.reach.plus.admin.util.UserSessionManager
+import kotlinx.android.synthetic.main.activity_task.*
 
 
 class TaskActivity : BaseNewActivity(), View.OnClickListener,
@@ -88,6 +85,9 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var rbArabic: RadioButton? = null
     private var rbEnglish: RadioButton? = null
     private var lang = ""
+    private lateinit var tvNotificationCounter: TextView
+    private lateinit var ivNotification: ImageView
+
 
 
     //endregion
@@ -132,6 +132,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         ivLanguageBack!!.setOnClickListener(this)
         rbArabic!!.setOnClickListener(this)
         rbEnglish!!.setOnClickListener(this)
+//        tvNotificationCounter.setOnClickListener(this)
+//        ivNotification.setOnClickListener(this)
 
         tvTimer.visibility = View.INVISIBLE
 
@@ -361,7 +363,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             var endPoint = request.getAvaliableTasks(AppConstants.CurrentLoginCourier.CourierId)
             NetworkManager().request(
                 endPoint,
-                object : INetworkCallBack<ApiResponse<ArrayList<Task>>> {
+                object : INetworkCallBack<ApiResponse<TaskData>> {
                     override fun onFailed(error: String) {
                         Log.d(TAG, "onFailed: " + error)
                         refresh.isRefreshing = false
@@ -372,7 +374,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                         )
                     }
 
-                    override fun onSuccess(response: ApiResponse<ArrayList<Task>>) {
+                    override fun onSuccess(response: ApiResponse<TaskData>) {
                         Log.d(TAG, "onSuccess: Enter method")
                         if (response.Status == AppConstants.STATUS_SUCCESS) {
                             Log.d(
@@ -380,8 +382,20 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                                 "onSuccess: AppConstants.STATUS_SUCCESS: " + AppConstants.STATUS_SUCCESS
                             )
 
-                            taskList = response.ResponseObj!!
+                            var taskData = response.ResponseObj!!
+                            AppConstants.CURRENTTOTALNOTIFICATIONS =
+                                taskData.NoOfUnreadedNotification
 
+                            if( taskData.NoOfUnreadedNotification>0)
+                            tvNotificationCounter.visibility=View.VISIBLE
+
+                            if( taskData.NoOfUnreadedNotification>99)
+                                tvNotificationCounter.text="99+"
+
+                            tvNotificationCounter.text =
+                                taskData.NoOfUnreadedNotification.toString()
+
+                            taskList = taskData.taskmodels!!
                             if (taskList.size > 0) {
                                 Log.d(TAG, "onSuccess: taskList.size > 0: ")
                                 AppConstants.ALL_TASKS_DATA = taskList
@@ -614,7 +628,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 loadTasks()
 //                getCurrentActiveTask()
                 getCurrentCourierLocation()
-                forceUpdate()
+//                forceUpdate()
             } else {
                 Log.d(TAG, "onResume-No perission")
                 getLocationPermission()
@@ -632,7 +646,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         )
 
 
-        updateLanguage(AppConstants.CurrentLoginCourier.CourierId,UserSessionManager.getInstance(this).getLanguage())
     }
 
     override fun onStart() {
@@ -656,6 +669,12 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         if (AppConstants.FIRE_BASE_LOGOUT)
             logOut()
 
+
+
+        updateLanguage(
+            AppConstants.CurrentLoginCourier.CourierId,
+            UserSessionManager.getInstance(this).getLanguage()
+        )
 
     }
 
@@ -701,7 +720,12 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 if (lang != AppConstants.ENGLISH)
                     setNewLocale(this, AppConstants.ENGLISH)
             }
-
+//            R.id.ivNotification,R.id.tvNotification -> {
+//                if (drawer.isDrawerOpen(GravityCompat.START)) {
+//                    drawer.closeDrawer(GravityCompat.START)
+//                }
+//                startActivity(Intent(this, NotificationActivity::class.java))
+//            }
 
         }
     }
@@ -737,7 +761,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 loadTasks()
 //                getCurrentActiveTask()
                 getCurrentCourierLocation()
-                forceUpdate()
+//                forceUpdate()
 
             }
 //                else {
@@ -851,6 +875,29 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_option, menu)
+
+        val menuItem = menu!!.findItem(R.id.action_notification)
+        var notificationView = menuItem.actionView
+        tvNotificationCounter =
+            notificationView.findViewById(R.id.tvNotification) as TextView
+        ivNotification =
+            notificationView.findViewById(R.id.ivNotification) as ImageView
+
+        tvNotificationCounter.text = AppConstants.CURRENTTOTALNOTIFICATIONS.toString()
+
+//        tvNotificationCounter.setOnClickListener {
+////            if (drawer.isDrawerOpen(GravityCompat.START)) {
+////                drawer.closeDrawer(GravityCompat.START)
+////            }
+////            startActivity(Intent(this, NotificationActivity::class.java))
+//        }
+
+        ivNotification.setOnClickListener {
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.closeDrawer(GravityCompat.START)
+            }
+            startActivity(Intent(this, NotificationActivity::class.java))
+        }
         return true
     }
 
@@ -955,7 +1002,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             loadTasks()
 //            getCurrentActiveTask()
             getCurrentCourierLocation()
-            forceUpdate()
+//            forceUpdate()
 
         } else {
             ActivityCompat.requestPermissions(
@@ -977,7 +1024,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                     loadTasks()
 //                    getCurrentActiveTask()
                     getCurrentCourierLocation()
-                    forceUpdate()
+//                    forceUpdate()
 
                 } else {
                     Log.d(TAG, "getLocationPermission-Request")
@@ -1024,11 +1071,11 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
     }
 
-    private fun updateLanguage(courierId:Int,languageType:String) {
+    private fun updateLanguage(courierId: Int, languageType: String) {
 
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.updateCourierLanguage(courierId,languageType)
+            var endPoint = request.updateCourierLanguage(courierId, languageType)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Boolean?>> {
                 override fun onFailed(error: String) {
 
@@ -1051,7 +1098,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
     }
 
-        //endregion
+    //endregion
 
 
-    }
+}

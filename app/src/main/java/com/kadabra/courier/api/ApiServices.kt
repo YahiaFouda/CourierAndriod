@@ -34,7 +34,7 @@ interface ApiServices {
 
     @GET(AppConstants.URL_GET_AVALIABLE_TAKS)
     fun getAvaliableTasks(@Query("CourierID") courierId: Int)
-            : Call<ApiResponse<ArrayList<Task>>>
+            : Call<ApiResponse<TaskData>>
 
     @GET(AppConstants.URL_GET_NOTIFICATION)
     fun getAllCourierNotification(@Query("courierId") courierId: Int)
@@ -67,7 +67,7 @@ interface ApiServices {
 
     @POST(AppConstants.URL_UPDATE_TASK_COURIER_FEES)
     fun updateTaskCourierFees(
-        @Query("taskId") taskId: String,  @Query("Kilometers") kilometers: String
+        @Query("taskId") taskId: String,  @Query("Kilometers") kilometers: Float
     )
             : Call<ApiResponse<Boolean?>>
 

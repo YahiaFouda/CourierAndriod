@@ -154,8 +154,6 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
                 //                if (NetworkManager().isNetworkAvailable(context)) {
                 val pos = adapterPosition
                 task = tasksList[pos]
-//                var stops = prepareTaskStops(task.stopsmodel)
-//                task.stopsmodel = stops
 
 
                 if (checkPermissions() && LocationHelper.shared.isGPSEnabled()) {
@@ -173,11 +171,7 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
                             context.getString(R.string.error_gps)
                         )
                 }
-//                } else
-//                    Alert.showMessage(
-//                        context,
-//                        context.getString(R.string.no_internet)
-//                    )
+
             }
 
 

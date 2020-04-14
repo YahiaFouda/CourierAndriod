@@ -42,16 +42,28 @@
         android:layout_alignParentBottom="true"
         android:elevation="1dp"
         android:background="@color/white"
+        android:visibility="gone"
         >
 
         <TextView
             android:id="@+id/tvExpectedTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
+            android:layout_marginStart="20dp"
             android:layout_marginTop="2dp"
-            android:text="32 min (17 km)"
-            android:textColor="@color/textColor"
+            android:text=""
+            android:textColor="@color/primary"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/tvExpectedDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/tvExpectedTime"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="2dp"
+            android:text="@string/minutes"
+            android:textColor="@color/black"
             android:textSize="18sp" />
         <TextView
             android:id="@+id/tvDetails"
@@ -59,8 +71,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:layout_below="@+id/tvExpectedTime"
-            android:layout_marginStart="5dp"
-            android:text="Fastest route now due to traffic conditions"
+            android:layout_marginStart="20dp"
+            android:text="@string/fastest_route"
             android:textColor="@color/textColor"
             android:textSize="16sp"
             />
@@ -70,9 +82,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tvDetails"
-            android:layout_marginStart="20dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginTop="20dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/rounded_button"
             android:text="Start"

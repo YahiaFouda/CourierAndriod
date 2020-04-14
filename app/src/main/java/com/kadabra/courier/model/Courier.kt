@@ -60,6 +60,8 @@ class Courier {
     var location: location? = null
     var isActive = false
     var haveTask=false
+    var startTask=false
+
     var city = ""
 
 

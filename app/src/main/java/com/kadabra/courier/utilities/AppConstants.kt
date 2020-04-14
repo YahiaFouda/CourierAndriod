@@ -82,11 +82,14 @@ object AppConstants {
     var CurrentLoginCourier: Courier = Courier()
     var CurrentSelectedTask: Task = Task()
     var CurrentAcceptedTask: Task = Task()
+
     var CurrentCourierLocation: location = location()
     var currentSelectedStop: Stop = Stop()
     var CurrentLocation: Location? = null
     var ALL_TASKS_DATA = ArrayList<Task>()
     var CurrentSelecedNotification = Notification()
+    var COURIERSTARTTASK=false
+    var CURRENTTOTALNOTIFICATIONS=0
 
     //endregion
 
@@ -99,6 +102,8 @@ object AppConstants {
     const val FIREBASE_LOCATION_LONG = "long"
     const val FIREBASE_IS_ACTIVE = "isActive"
     const val FIREBASE_HAVE_TASK = "haveTask"
+    const val FIREBASE_START_TASK = "startTask"
+
 
     //endregion
 

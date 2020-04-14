@@ -35,6 +35,7 @@ import com.kadabra.courier.api.ApiServices
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.model.Courier
+import com.kadabra.courier.model.Task
 import com.kadabra.courier.model.location
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.Alert
@@ -159,7 +160,10 @@ class LocationUpdatesService : Service() {
                     onNewLocation(locationResult!!.lastLocation)
                     isMockLocationEnabled = checkMockLocations(locationResult!!.lastLocation)
                     if (isMockLocationEnabled) {
-                        Alert.showMessage(AppController.getContext(),getString(R.string.error_mock_location))
+                        Alert.showMessage(
+                            AppController.getContext(),
+                            getString(R.string.error_mock_location)
+                        )
                         logOut()
                     }
                 } else
@@ -190,7 +194,7 @@ class LocationUpdatesService : Service() {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         Log.i(TAG, "Service started")
         val startedFromNotification = intent.getBooleanExtra(
-                EXTRA_STARTED_FROM_NOTIFICATION,
+            EXTRA_STARTED_FROM_NOTIFICATION,
             false
         )
 
@@ -448,6 +452,9 @@ class LocationUpdatesService : Service() {
                 )
             )
 
+//            checkCourierStartTask(AppConstants.CurrentAcceptedTask)
+
+
             if (getAddress(AppConstants.CurrentLoginCourier, lastLocation))
                 FirebaseManager.updateCourierCity(
                     AppConstants.CurrentLoginCourier.CourierId!!,
@@ -455,6 +462,7 @@ class LocationUpdatesService : Service() {
                 )
 
         }
+
         // COURIER DOSEN'T HAVE TASK
         else if (AppConstants.CurrentLoginCourier != null && AppConstants.CurrentLoginCourier.CourierId > 0) {
             FirebaseManager.updateCourierLocation(
@@ -474,6 +482,21 @@ class LocationUpdatesService : Service() {
         }
     }
 
+    private fun checkCourierStartTask(task: Task) {
+        if (NetworkManager().isNetworkAvailable(this)) {
+            FirebaseManager.isCourierStartTask(AppConstants.CurrentLoginCourier.CourierId.toString(),
+                object : FirebaseManager.IFbOperation {
+                    override fun onSuccess(code: Int) {
+                        FirebaseManager.updateCourierFeesTaskLocation(task)
+                    }
+
+                    override fun onFailure(message: String) {
+
+                    }
+                })
+        }
+
+    }
 
     private fun getAddress(courier: Courier, location: Location): Boolean {
         var detected = false
@@ -549,7 +572,10 @@ class LocationUpdatesService : Service() {
 
                             //stop  tracking service
                             removeLocationUpdates()
-                            FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId,false)
+                            FirebaseManager.updateCourierActive(
+                                AppConstants.CurrentLoginCourier.CourierId,
+                                false
+                            )
 //                            FirebaseManager.logOut()
 //                            UserSessionManager.getInstance(AppController.getContext())
 //                                .setUserData(null)

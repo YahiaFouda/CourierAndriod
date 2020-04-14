@@ -39,7 +39,9 @@ import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.services.LocationUpdatesService
 import com.reach.plus.admin.util.UserSessionManager
+import kotlinx.android.synthetic.main.activity_location_details.*
 import kotlinx.android.synthetic.main.activity_task_details.*
+import kotlinx.android.synthetic.main.activity_task_details.ivBack
 
 
 class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
@@ -100,7 +102,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 //                btnEndTask.isEnabled = false
             } else {
 //                btnEndTask.isEnabled = true
-                btnEndTask.text = getString(R.string.end_task)
+                btnEndTask.text = getString(R.string.start_trip)
             }
         }
 
@@ -136,11 +138,11 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         tvTask.text = task.TaskName
         tvTaskDescription.text = task.TaskDescription
 
-        if (task.Status == "In progress")
-            tvStatus.text =getString(R.string.in_progress)
 
+        if (task.Status == "In progress")
+            tvStatus.text = getString(R.string.in_progress)
         else
-            tvStatus.text =getString(R.string.new_task)
+            tvStatus.text = getString(R.string.new_task)
 
 
 
@@ -169,6 +171,10 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             tvStops.visibility = View.INVISIBLE
         }
 
+//        if (AppConstants.COURIERSTARTTASK)
+//            btnEndTask.text = getString(R.string.end_task)
+//        else
+//        btnEndTask.text = getString(R.string.start_trip)
 
     }
 
@@ -321,6 +327,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
                         FirebaseManager.endTask(task, AppConstants.CurrentLoginCourier.CourierId)
                         AppConstants.CurrentAcceptedTask = Task()
+                        AppConstants.CurrentSelectedTask = Task()
                         AppConstants.ALL_TASKS_DATA.remove(task) //removed when life cycle
                         hideProgress()
                         AppConstants.endTask = true
@@ -349,10 +356,77 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
     }
 
+    private fun startTrip(task: Task) {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.endTask(task.TaskId)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
+                override fun onFailed(error: String) {
+                    hideProgress()
+                    Alert.showMessage(
+                        this@TaskDetailsActivity,
+                        getString(R.string.error_login_server_unknown_error)
+                    )
+                }
+
+                override fun onSuccess(response: ApiResponse<Task>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+
+                        FirebaseManager.endTask(
+                            AppConstants.CurrentSelectedTask,
+                            AppConstants.CurrentLoginCourier.CourierId
+                        )
+
+                        AppConstants.CurrentAcceptedTask = Task()
+                        AppConstants.CurrentSelectedTask = Task()
+                        AppConstants.COURIERSTARTTASK = false
+                        AppConstants.ALL_TASKS_DATA.remove(AppConstants.CurrentSelectedTask) //removed when life cycle
+
+                        AppConstants.endTask = true
+                        //load new task or shoe empty tasks view
+                        hideProgress()
+                        AppConstants.COURIERSTARTTASK = true
+//                        finish()
+                        startActivity(
+                            Intent(
+                                this@TaskDetailsActivity,
+                                TaskLocationsActivity::class.java
+                            ).putExtra("startTask", true)
+                        )
+
+                    } else {
+                        hideProgress()
+                        Alert.showMessage(
+                            this@TaskDetailsActivity,
+                            getString(R.string.error_network)
+                        )
+                    }
+
+                }
+            })
+
+        } else {
+            hideProgress()
+            Alert.showMessage(
+                this@TaskDetailsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+
+
+    }
+
     private fun acceptTaskFirebase(task: Task, courierId: Int) {
         if (NetworkManager().isNetworkAvailable(this)) {
             FirebaseManager.createNewTask(task, courierId)
-            btnEndTask.text = getString(R.string.end_task)
+//            btnEndTask.text = getString(R.string.start_trip)
+            startActivity(
+                Intent(
+                    this@TaskDetailsActivity,
+                    TaskLocationsActivity::class.java
+                ).putExtra("startTask", true)
+            )
 
         } else {
 
@@ -474,7 +548,13 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                                 .show()
                         } else {//the same task end task
                             btnEndTask.text = getString(R.string.end_task)
-                            endTask(task.TaskId)
+//                            endTask(task.TaskId)
+                            startActivity(
+                                Intent(
+                                    this@TaskDetailsActivity,
+                                    TaskLocationsActivity::class.java
+                                ).putExtra("startTask", true)
+                            )
                         }
                     }
 

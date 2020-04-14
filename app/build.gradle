@@ -110,6 +110,8 @@ dependencies {
     // Google Maps Services (needed for directions)
     implementation 'com.google.maps:google-maps-services:0.2.9'
     implementation 'org.slf4j:slf4j-nop:1.7.25'
+    //badge icon
+    implementation 'com.nex3z:notification-badge:1.0.2'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'
