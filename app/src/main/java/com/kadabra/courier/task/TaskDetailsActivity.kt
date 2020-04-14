@@ -542,7 +542,9 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             acceptTask(AppConstants.CurrentAcceptedTask.TaskId)
 
                         }
-                    } else {
+                    }
+
+                    else {
                         if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions
                             Toast.makeText(this, getString(R.string.end_first), Toast.LENGTH_SHORT)
                                 .show()

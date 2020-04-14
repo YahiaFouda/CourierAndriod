@@ -10,6 +10,7 @@ import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
 import com.kadabra.courier.api.ApiResponse
 import com.kadabra.courier.api.ApiServices
+import com.kadabra.courier.base.BaseNewActivity
 import com.reach.plus.admin.util.UserSessionManager
 import com.kadabra.courier.exception.CrashActivity
 import com.kadabra.courier.exception.CrashHandeller
@@ -23,7 +24,7 @@ import com.kadabra.courier.utilities.Alert.hideProgress
 import java.lang.Exception
 
 
-class SplashActivity : AppCompatActivity() {
+class SplashActivity : BaseNewActivity() {
 
 
     //region Members
@@ -44,6 +45,7 @@ class SplashActivity : AppCompatActivity() {
         init()
 
     }
+
 
 
     override fun onRequestPermissionsResult(

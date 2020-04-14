@@ -1,6 +1,7 @@
 package com.kadabra.courier.login
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
@@ -16,8 +17,6 @@ import com.kadabra.courier.api.ApiServices
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.model.Courier
 import com.kadabra.courier.task.TaskActivity
-import com.kadabra.courier.utilities.Alert
-import com.kadabra.courier.utilities.AppConstants
 import kotlinx.android.synthetic.main.activity_login.*
 import android.net.Uri
 import android.provider.Settings
@@ -30,9 +29,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
 import com.kadabra.courier.base.BaseNewActivity
 import com.kadabra.courier.callback.ILocationListener
-import com.kadabra.courier.utilities.AppController
+import com.kadabra.courier.utilities.*
 
-import com.kadabra.courier.utilities.LocaleManager
 import kotlinx.android.synthetic.main.activity_login.avi
 import kotlinx.android.synthetic.main.activity_login.btnLogin
 import kotlinx.android.synthetic.main.activity_login.etPassword
@@ -77,6 +75,10 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
     }
 
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(LocalizationHelper.onAttach(base))
+    }
+
     override fun onClick(view: View?) {
 
         when (view!!.id) {
@@ -94,12 +96,19 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
             }
 
             R.id.rbArabic -> {
+
+                lang = UserSessionManager.getInstance(AppController.getContext())
+                    .getLanguage()
                 if(lang!=AppConstants.ARABIC)
-                setNewLocale(this,AppConstants.ARABIC)
+                {   LocalizationHelper.setLocale(application, AppConstants.ARABIC)
+                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))}
             }
             R.id.rbEnglish -> {
-                if(lang!=AppConstants.ENGLISH)
-                    setNewLocale(this,AppConstants.ENGLISH)
+                lang = UserSessionManager.getInstance(AppController.getContext())
+                    .getLanguage()
+                if (lang != AppConstants.ENGLISH)
+                {  LocalizationHelper.setLocale(application, AppConstants.ENGLISH)
+                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))}
             }
         }
     }
@@ -205,7 +214,10 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                 override fun onSuccess(response: ApiResponse<Courier>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS && response.ResponseObj != null) {
                         Log.d(TAG, "logIn - API - Success.$response")
-
+                        updateLanguage(
+                            AppConstants.CurrentLoginCourier.CourierId,lang
+                         //   UserSessionManager.getInstance(this@LoginActivity).getLanguage()
+                        )
                         courier = response.ResponseObj!!
                         AppConstants.CurrentLoginCourier = courier
                         var data = FirebaseManager.getCurrentUser()
@@ -444,7 +456,32 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
     }
 
+    private fun updateLanguage(courierId: Int, languageType: String) {
 
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.updateCourierLanguage(courierId, languageType)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Boolean?>> {
+                override fun onFailed(error: String) {
+
+                }
+
+                override fun onSuccess(response: ApiResponse<Boolean?>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+
+                    } else {
+
+                    }
+
+                }
+            })
+
+        } else {
+
+        }
+
+
+    }
     //endregion
 
 }

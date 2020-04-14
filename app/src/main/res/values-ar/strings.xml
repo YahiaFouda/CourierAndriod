@@ -31,7 +31,7 @@
     <string name="from">من:</string>
     <string name="kadabra">Kadabra</string>
     <string name="launch_activity">فتح البرنامج</string>
-    <string name="le">LE</string>
+    <string name="le">جنيه</string>
     <string name="loading">جار التحميل...</string>
     <string name="location_updated">تم تحديث الموقع:٪ 1 $ s</string>
     <string name="log_in">تسجيل الدخول</string>
@@ -98,13 +98,14 @@
     <string name="completed">تم بنجاح</string>
     <string name="new_task">جديد</string>
     <string name="choose_language">اختر اللغة</string>
-    <string name="duration">Duration: </string>
-    <string name="distance">Distance: </string>
-    <string name="trip">"Trip # </string>
-    <string name="minutes">min</string>
-    <string name="km">km</string>
-    <string name="fastest_route">Fastest route now due to traffic conditions</string>
-    <string name="start">Start</string>
+    <string name="duration">المدة الزمنية:</string>
+    <string name="distance">المسافة:</string>
+    <string name="trip">رحلة  #</string>
+    <string name="minutes">دقيقة</string>
+    <string name="km">كم</string>
+    <string name="fastest_route">أسرع مسار الآن بسبب أحوال حركة المرور</string>
+    <string name="start">بدء</string>
+    <string name="google_maps_key" translatable="false">مسافة:</string>
 
 
 </resources>

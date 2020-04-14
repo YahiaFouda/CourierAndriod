@@ -1,68 +1,56 @@
 package com.kadabra.courier.base
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.content.Context
-import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-
-import com.kadabra.courier.utilities.LocaleManager
-
 import android.content.pm.PackageManager.GET_META_DATA
 import android.content.res.Resources
 import android.os.Build
-import com.kadabra.courier.utilities.AppConstants
-import com.kadabra.courier.utilities.AppController
-import com.kadabra.courier.utilities.MyContextWrapper
-import com.reach.plus.admin.util.UserSessionManager
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.kadabra.courier.utilities.LocalizationHelper
 import java.util.*
-import android.content.ComponentName
-import android.app.ActivityManager
-
 
 
 open class BaseNewActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        resetTitles()
+//        resetTitles()
     }
 
     override fun attachBaseContext(base: Context) {
-        var lang = ""
-        try {
-//            var sss=UserSessionManager.getInstance(AppController.getContext()).getLanguage()
+//        var lang = ""
+//        try {
 //
-//            if (UserSessionManager.getInstance(AppController.getContext()).getLanguage() != AppConstants.ARABIC) {
-//                UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ENGLISH)
-//                lang = AppConstants.ENGLISH
-//            } else {
-//                lang = AppConstants.ARABIC
+//            var currentLanguage =
+//                UserSessionManager.getInstance(AppController.getContext()).getLanguage()
+//            when {
+//                currentLanguage.isNullOrEmpty() -> {
+//                    var locale = getLocale(this.resources)
+//                    lang = locale.language
+//
+////                    UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ARABIC)
+//                }
+//                currentLanguage == AppConstants.ARABIC -> lang = AppConstants.ARABIC
+//                currentLanguage == AppConstants.ENGLISH -> lang = AppConstants.ENGLISH
 //            }
+//
+//        } catch (e: Exception) {
+//            lang=AppConstants.ARABIC
+//            UserSessionManager.getInstance(AppController.getContext())
+//                    .setLanguage(AppConstants.ARABIC)
+//        }
+//
+//        val langContext = MyContextWrapper.wrap(base, Locale(lang))
+        // HERE4 I WILL GET ALL THE UN READED NOTIFICATIONS
 
-            var currentLanguage =
-                UserSessionManager.getInstance(AppController.getContext()).getLanguage()
-            when {
-                currentLanguage.isNullOrEmpty() -> {
-                    var locale = getLocale(this.resources)
-                    lang = locale.language
+//        val res: Resources = context.getResources()
+//        val configuration = res.configuration
+        super.attachBaseContext(LocalizationHelper.onAttach(base))
 
-//                    UserSessionManager.getInstance(AppController.getContext()).setLanguage(AppConstants.ARABIC)
-                }
-                currentLanguage == AppConstants.ARABIC -> lang = AppConstants.ARABIC
-                currentLanguage == AppConstants.ENGLISH -> lang = AppConstants.ENGLISH
-            }
-
-        } catch (e: Exception) {
-            lang=AppConstants.ARABIC
-            UserSessionManager.getInstance(AppController.getContext())
-                    .setLanguage(AppConstants.ARABIC)
-        }
-
-        val langContext = MyContextWrapper.wrap(base, Locale(lang))
-        super.attachBaseContext(langContext)
+//        super.attachBaseContext(base)
     }
 
     protected fun resetTitles() {

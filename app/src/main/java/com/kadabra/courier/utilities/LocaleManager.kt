@@ -71,7 +71,7 @@ object LocaleManager {
         Locale.setDefault(locale)
         val res = context.resources
         val config = Configuration(res.configuration)
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT >= 21)    {
             config.setLocale(locale)
             context = context.createConfigurationContext(config)
         } else {

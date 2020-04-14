@@ -44,10 +44,7 @@ import com.kadabra.courier.model.Task
 import com.kadabra.courier.model.TaskData
 import com.kadabra.courier.notifications.NotificationActivity
 import com.kadabra.courier.services.LocationUpdatesService
-import com.kadabra.courier.utilities.Alert
-import com.kadabra.courier.utilities.AppConstants
-import com.kadabra.courier.utilities.AppController
-import com.kadabra.courier.utilities.LocaleManager
+import com.kadabra.courier.utilities.*
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task.*
 
@@ -671,11 +668,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
 
 
-        updateLanguage(
-            AppConstants.CurrentLoginCourier.CourierId,
-            UserSessionManager.getInstance(this).getLanguage()
-        )
-
     }
 
     override fun onPause() {
@@ -713,19 +705,31 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 alertDialog!!.dismiss()
             }
             R.id.rbArabic -> {
+
+                lang = UserSessionManager.getInstance(AppController.getContext())
+                    .getLanguage()
                 if (lang != AppConstants.ARABIC)
-                    setNewLocale(this, AppConstants.ARABIC)
+                {
+                    updateLanguage(AppConstants.CurrentLoginCourier.CourierId,AppConstants.ARABIC)
+                    LocalizationHelper.setLocale(application, AppConstants.ARABIC)
+                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
+
+                }
+
             }
             R.id.rbEnglish -> {
+
+                lang = UserSessionManager.getInstance(AppController.getContext())
+                    .getLanguage()
                 if (lang != AppConstants.ENGLISH)
-                    setNewLocale(this, AppConstants.ENGLISH)
+                {
+                    updateLanguage(AppConstants.CurrentLoginCourier.CourierId,AppConstants.ENGLISH)
+                    LocalizationHelper.setLocale(application, AppConstants.ENGLISH)
+                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
+
+
             }
-//            R.id.ivNotification,R.id.tvNotification -> {
-//                if (drawer.isDrawerOpen(GravityCompat.START)) {
-//                    drawer.closeDrawer(GravityCompat.START)
-//                }
-//                startActivity(Intent(this, NotificationActivity::class.java))
-//            }
 
         }
     }
