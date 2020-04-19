@@ -27,7 +27,7 @@ object FirebaseManager {
     private var fireBaseUser: FirebaseUser? = null
     private var dbNameCourier = "courier"
     private var dbNameTaskHistory = "task_history"
-    private var dbNameCourierFeesTaskHistory = "courier_fees_task_history"
+
 
     private var courier = Courier()
     var exception = ""
@@ -52,7 +52,7 @@ object FirebaseManager {
         firebaseDatabase = FirebaseDatabase.getInstance()
         dbCourier = firebaseDatabase.getReference(dbNameCourier)
         dbCourierTaskHistory = firebaseDatabase.getReference(dbNameTaskHistory)
-        dbCourierFeesTaskHistory = firebaseDatabase.getReference(dbNameCourierFeesTaskHistory)
+
 
 //        clearDb()
 
@@ -148,7 +148,7 @@ object FirebaseManager {
             "name" to courier.name,
             "city" to courier.city,
             "location" to courier.location,
-            "isActive" to courier.isActive,
+            "active" to courier.isActive,
             "haveTask" to courier.haveTask,
             "startTask" to courier.startTask
         )
@@ -164,7 +164,8 @@ object FirebaseManager {
         if (AppConstants.CurrentLocation != null) {
             dbCourierTaskHistory.child(task.TaskId).setValue(task)
             updateTaskLocation(task)
-            updateCourierFeesTaskLocation(task)
+            updateCourierHaveTask(courierId, true)
+
         }
     }
 
@@ -185,14 +186,7 @@ object FirebaseManager {
         dbCourierFeesTaskHistory.child(current.TaskId).setValue(current)
     }
 
-    fun updateCourierFeesTaskLocation(task: Task) {
-        if (AppConstants.CurrentLocation != null) {
-            task.isActive=true
-            task.location.isGpsEnabled = LocationHelper.shared.isGPSEnabled()
-            dbCourierFeesTaskHistory.child(task.TaskId).child("locations").push()
-                .setValue(location())
-        }
-    }
+
 
     fun endTask(task: Task, courierId: Int) {
         updateCourierHaveTask(courierId, false)

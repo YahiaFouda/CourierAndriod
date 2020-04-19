@@ -25,6 +25,8 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
+import com.google.android.gms.common.api.GoogleApi
+import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.location.places.ui.PlacePicker.IntentBuilder
@@ -51,6 +53,7 @@ import com.kadabra.courier.location.LatLngInterpolator
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.location.MarkerAnimation
 import com.kadabra.courier.model.PolylineData
+import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
@@ -61,8 +64,7 @@ import kotlinx.android.synthetic.main.activity_task_details.*
 
 
 class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener, //TaskLoadedCallback,
-    GoogleMap.OnInfoWindowClickListener, GoogleMap.OnPolylineClickListener {
+    GoogleMap.OnMarkerClickListener, GoogleMap.OnPolylineClickListener {
 
 
     //region Members
@@ -151,23 +153,14 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 super.onLocationResult(p0)
 
                 lastLocation = p0.lastLocation
-                //todo move the marker position
+
 //                moveCamera(lastLocation!!)
                 if (isFirstTime) {
 
                     if (AppConstants.currentSelectedStop != null) { // destination stop
-//                        var selectedStopLocation = LatLng(
-//                            AppConstants.currentSelectedStop.Latitude!!,
-//                            AppConstants.currentSelectedStop.Longitude!!
-//                        )
-
-//                        placeMarkerOnMap(
-//                            selectedStopLocation,
-//                            AppConstants.currentSelectedStop.StopName
-//                        )
 
                         try {
-                            if (lastLocation != null&&!AppConstants.currentSelectedStop.StopID.isNullOrEmpty()) {
+                            if (lastLocation != null && !AppConstants.currentSelectedStop.StopID.isNullOrEmpty()) {
 
                                 destination = LatLng(
                                     AppConstants.currentSelectedStop.Latitude!!,
@@ -175,16 +168,17 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 )
 
 
-                                calculateDirections(
-                                    LatLng(
-                                        lastLocation!!.latitude,
-                                        lastLocation!!.longitude
-                                    ), destination
-                                )
-                            }
+                                if (lastLocation?.latitude != null && lastLocation?.longitude != null) {
+                                    calculateDirections(
+                                        LatLng(
+                                            lastLocation?.latitude!!,
+                                            lastLocation?.longitude!!
+                                        ), destination
+                                    )
 
-                            else ///clme from the details view
-
+                                    btnStart.text = getString(R.string.start_trip)
+                                }
+                            } else ///cme from the details view
                             {
 
                                 var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
@@ -200,31 +194,26 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                                 calculateTwoDirections(pickUp, dropOff)
 
-                                btnStart.text=getString(R.string.start_trip)
+                                btnStart.text = getString(R.string.start_trip)
                             }
 
                         } catch (ex: ExceptionInInitializerError) {
 
                         }
 
+
                     }
 
-//                    val builder = LatLngBounds.Builder()
-//                    builder.include(LatLng(lastLocation!!.latitude, lastLocation!!.longitude))
-//                    builder.include(LatLng(destination.latitude, destination.longitude))
-//                    map.moveCamera(
-//                        CameraUpdateFactory.newLatLngBounds(
-//                            builder.build(), 25, 25, 0
-//                        )
-//                    )
+
+
                     isFirstTime = false
-//                    builder.include(LatLng(destination.latitude, destination.longitude))
                     destination = LatLng(0.0, 0.0)
                 }
 
             }
         }
         createLocationRequest()
+
 
         if (intent.getBooleanExtra("startTask", false)) // courir start  journey from details view
         {
@@ -240,11 +229,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             )
 
             calculateDirections(pickUp, dropOff)
-            btnStart.text = getString(R.string.start_trip)
+//            btnStart.text = getString(R.string.start_trip)
 
         }
-        else (AppConstants.COURIERSTARTTASK)
-        btnStart.text = getString(R.string.end_task)
+
 
     }
 
@@ -327,6 +315,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         }
     }
 
+
     // places
     private fun loadPlacePicker() {
         val builder = IntentBuilder()
@@ -357,7 +346,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         map.mapType = GoogleMap.MAP_TYPE_TERRAIN //more map details
         map.uiSettings.isZoomControlsEnabled = true
         map.setOnMarkerClickListener(this)
-        map.setOnInfoWindowClickListener(this)
+//        map.setOnInfoWindowClickListener(this)
         map.setOnPolylineClickListener(this)
 
 
@@ -629,9 +618,9 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
 
-    override fun onInfoWindowClick(p0: Marker?) {
-//
-    }
+//    override fun onInfoWindowClick(p0: Marker?) {
+////
+//    }
 
     private fun calculateDirections(origin: LatLng, dest: LatLng) {
         Log.d(
@@ -1036,7 +1025,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
 
-                        startActivity(Intent(this@TaskLocationsActivity,TaskActivity::class.java))
+                        startActivity(Intent(this@TaskLocationsActivity, TaskActivity::class.java))
                         finish()
 
                     } else {

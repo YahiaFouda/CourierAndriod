@@ -100,7 +100,7 @@ object AppConstants {
     const val FIREBASE_LOCATION = "location"
     const val FIREBASE_LOCATION_LAT = "lat"
     const val FIREBASE_LOCATION_LONG = "long"
-    const val FIREBASE_IS_ACTIVE = "isActive"
+    const val FIREBASE_IS_ACTIVE = "active"
     const val FIREBASE_HAVE_TASK = "haveTask"
     const val FIREBASE_START_TASK = "startTask"
 

@@ -62,7 +62,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         setContentView(R.layout.activity_login)
 
 
-        FirebaseManager.setUpFirebase()
+//        FirebaseManager.setUpFirebase()
         init()
 
          lang = UserSessionManager.getInstance(AppController.getContext())

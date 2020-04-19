@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:clickable="true"
     android:focusableInTouchMode="true"
-    tools:context=".login.LoginActivity">bg
+    tools:context=".login.LoginActivity">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -101,7 +101,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
-                android:layout_centerInParent="true"
                 android:layout_marginTop="100dp"
                 android:gravity="center"
                 android:text="@string/welcome"
@@ -114,7 +113,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                android:layout_centerInParent="true"
                 android:layout_marginBottom="20dp"
                 android:gravity="center"
                 android:text="@string/beta_version"

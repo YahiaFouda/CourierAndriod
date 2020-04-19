@@ -87,7 +87,7 @@
             android:layout_marginTop="20dp"
             android:layout_marginBottom="10dp"
             android:background="@drawable/rounded_button"
-            android:text="Start"
+            android:text="@string/start_trip"
             android:textColor="@color/white"
             android:textSize="15sp" />
 

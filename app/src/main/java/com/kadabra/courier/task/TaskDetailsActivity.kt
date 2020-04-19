@@ -78,7 +78,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     //region Helper Functions
     private fun init() {
 
-        FirebaseManager.setUpFirebase()
+
 
         tvFrom.setOnClickListener(this)
         tvTo.setOnClickListener(this)
@@ -93,18 +93,25 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             getTaskDetails(task.TaskId)
         }
 
-        if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //
-            btnEndTask.text = getString(R.string.accept_task)
-        else {
-            if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {
-                btnEndTask.setBackgroundResource(R.drawable.rounded_button_gray)
-                btnEndTask.setTextColor(Color.parseColor("#000000"))
-//                btnEndTask.isEnabled = false
-            } else {
-//                btnEndTask.isEnabled = true
-                btnEndTask.text = getString(R.string.start_trip)
-            }
+//        if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //
+//            btnEndTask.text = getString(R.string.accept_task)
+//        else {
+////            if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {
+////                btnEndTask.setBackgroundResource(R.drawable.rounded_button_gray)
+////                btnEndTask.setTextColor(Color.parseColor("#000000"))
+//////                btnEndTask.isEnabled = false
+////            } else {
+////                btnEndTask.isEnabled = true
+//            btnEndTask.text = getString(R.string.start_trip)
+////            }
+//        }
+
+        if (AppConstants.CurrentSelectedTask.Status == "In progress") {
+            btnEndTask.setBackgroundResource(R.drawable.rounded_button_gray)
+            btnEndTask.setTextColor(Color.parseColor("#000000"))
+            btnEndTask.isEnabled = false
         }
+
 
     }
 
@@ -140,7 +147,12 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
 
         if (task.Status == "In progress")
+        {
             tvStatus.text = getString(R.string.in_progress)
+            btnEndTask.setBackgroundResource(R.drawable.rounded_button_gray)
+            btnEndTask.setTextColor(Color.parseColor("#000000"))
+            btnEndTask.isEnabled = false
+        }
         else
             tvStatus.text = getString(R.string.new_task)
 
@@ -280,8 +292,9 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
                 override fun onSuccess(response: ApiResponse<Task>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
-                        tvStatus.text = getString(R.string.in_progress)
-                        task.Status = getString(R.string.in_progress)
+                        tvStatus.text = task.Status//getString(R.string.in_progress)
+//                        task.Status = getString(R.string.in_progress)
+                        task.Status="In progress"
                         AppConstants.CurrentAcceptedTask = task
                         AppConstants.CurrentSelectedTask = task
                         acceptTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
@@ -356,66 +369,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
     }
 
-    private fun startTrip(task: Task) {
-        showProgress()
-        if (NetworkManager().isNetworkAvailable(this)) {
-            var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.endTask(task.TaskId)
-            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
-                override fun onFailed(error: String) {
-                    hideProgress()
-                    Alert.showMessage(
-                        this@TaskDetailsActivity,
-                        getString(R.string.error_login_server_unknown_error)
-                    )
-                }
 
-                override fun onSuccess(response: ApiResponse<Task>) {
-                    if (response.Status == AppConstants.STATUS_SUCCESS) {
-
-                        FirebaseManager.endTask(
-                            AppConstants.CurrentSelectedTask,
-                            AppConstants.CurrentLoginCourier.CourierId
-                        )
-
-                        AppConstants.CurrentAcceptedTask = Task()
-                        AppConstants.CurrentSelectedTask = Task()
-                        AppConstants.COURIERSTARTTASK = false
-                        AppConstants.ALL_TASKS_DATA.remove(AppConstants.CurrentSelectedTask) //removed when life cycle
-
-                        AppConstants.endTask = true
-                        //load new task or shoe empty tasks view
-                        hideProgress()
-                        AppConstants.COURIERSTARTTASK = true
-//                        finish()
-                        startActivity(
-                            Intent(
-                                this@TaskDetailsActivity,
-                                TaskLocationsActivity::class.java
-                            ).putExtra("startTask", true)
-                        )
-
-                    } else {
-                        hideProgress()
-                        Alert.showMessage(
-                            this@TaskDetailsActivity,
-                            getString(R.string.error_network)
-                        )
-                    }
-
-                }
-            })
-
-        } else {
-            hideProgress()
-            Alert.showMessage(
-                this@TaskDetailsActivity,
-                getString(R.string.no_internet)
-            )
-        }
-
-
-    }
 
     private fun acceptTaskFirebase(task: Task, courierId: Int) {
         if (NetworkManager().isNetworkAvailable(this)) {
@@ -479,8 +433,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             Context.BIND_AUTO_CREATE
         )
 
-        if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty())
-            loadTaskDetails(AppConstants.CurrentSelectedTask)
+//        if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty())
+//            loadTaskDetails(AppConstants.CurrentSelectedTask)
     }
 
     override fun onResume() {
@@ -522,43 +476,43 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             R.id.btnEndTask -> {
 
                 if (NetworkManager().isNetworkAvailable(this)) {
-                    if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) // create new task on fb
-                    {
-                        if (!checkPermissions()) {
-                            requestPermissions()
-                        } else {
-                            AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
-                            AppConstants.CurrentAcceptedTask.isActive = true
-                            AppConstants.CurrentAcceptedTask.CourierID =
-                                AppConstants.CurrentLoginCourier.CourierId
-                            var isGpsEnabled = LocationHelper.shared.isGPSEnabled()
-                            if (AppConstants.CurrentLocation != null)
-                                AppConstants.CurrentAcceptedTask.location =
-                                    location(
-                                        AppConstants.CurrentLocation!!.latitude.toString(),
-                                        AppConstants.CurrentLocation!!.longitude.toString(),
-                                        isGpsEnabled
-                                    )
-                            acceptTask(AppConstants.CurrentAcceptedTask.TaskId)
+//                    if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) // create new task on fb
+//                    {
+                    if (!checkPermissions()) {
+                        requestPermissions()
+                    } else {
+                        AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
+                        AppConstants.CurrentAcceptedTask.isActive = true
+                        AppConstants.CurrentAcceptedTask.CourierID =
+                            AppConstants.CurrentLoginCourier.CourierId
+                        var isGpsEnabled = LocationHelper.shared.isGPSEnabled()
+                        if (AppConstants.CurrentLocation != null)
+                            AppConstants.CurrentAcceptedTask.location =
+                                location(
+                                    AppConstants.CurrentLocation!!.latitude.toString(),
+                                    AppConstants.CurrentLocation!!.longitude.toString(),
+                                    isGpsEnabled
+                                )
+                        acceptTask(AppConstants.CurrentAcceptedTask.TaskId)
 
-                        }
                     }
+//                    }
 
-                    else {
-                        if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions
-                            Toast.makeText(this, getString(R.string.end_first), Toast.LENGTH_SHORT)
-                                .show()
-                        } else {//the same task end task
-                            btnEndTask.text = getString(R.string.end_task)
-//                            endTask(task.TaskId)
-                            startActivity(
-                                Intent(
-                                    this@TaskDetailsActivity,
-                                    TaskLocationsActivity::class.java
-                                ).putExtra("startTask", true)
-                            )
-                        }
-                    }
+//                    else {
+//                        if (AppConstants.CurrentSelectedTask.TaskId != AppConstants.CurrentAcceptedTask.TaskId) {//not the opened task prevent any actions
+//                            Toast.makeText(this, getString(R.string.end_first), Toast.LENGTH_SHORT)
+//                                .show()
+//                        } else {//the same task end task
+//                            btnEndTask.text = getString(R.string.end_task)
+////                            endTask(task.TaskId)
+//                            startActivity(
+//                                Intent(
+//                                    this@TaskDetailsActivity,
+//                                    TaskLocationsActivity::class.java
+//                                ).putExtra("startTask", true)
+//                            )
+//                        }
+//                    }
 
                 } else {
                     Alert.showMessage(

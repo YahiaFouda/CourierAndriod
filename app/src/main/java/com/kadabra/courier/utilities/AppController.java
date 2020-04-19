@@ -6,6 +6,7 @@ import android.content.res.Configuration;
 
 import androidx.annotation.NonNull;
 
+import com.kadabra.courier.firebase.FirebaseManager;
 
 
 public class AppController extends Application {
@@ -16,6 +17,7 @@ public class AppController extends Application {
         super.onCreate();
 //        Fabric.with(this, new Crashlytics());
         mContext = this;
+        FirebaseManager.INSTANCE.setUpFirebase();
 
     }
 

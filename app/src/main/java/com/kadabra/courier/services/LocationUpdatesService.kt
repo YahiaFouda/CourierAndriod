@@ -452,7 +452,7 @@ class LocationUpdatesService : Service() {
                 )
             )
 
-//            checkCourierStartTask(AppConstants.CurrentAcceptedTask)
+
 
 
             if (getAddress(AppConstants.CurrentLoginCourier, lastLocation))
@@ -482,21 +482,7 @@ class LocationUpdatesService : Service() {
         }
     }
 
-    private fun checkCourierStartTask(task: Task) {
-        if (NetworkManager().isNetworkAvailable(this)) {
-            FirebaseManager.isCourierStartTask(AppConstants.CurrentLoginCourier.CourierId.toString(),
-                object : FirebaseManager.IFbOperation {
-                    override fun onSuccess(code: Int) {
-                        FirebaseManager.updateCourierFeesTaskLocation(task)
-                    }
 
-                    override fun onFailure(message: String) {
-
-                    }
-                })
-        }
-
-    }
 
     private fun getAddress(courier: Courier, location: Location): Boolean {
         var detected = false

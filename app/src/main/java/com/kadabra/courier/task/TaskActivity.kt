@@ -607,7 +607,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 //        Crashlytics.getInstance().crash();
         Log.d(TAG, "onCreate")
         myReceiver = MyReceiver()
-        FirebaseManager.setUpFirebase()
+//        FirebaseManager.setUpFirebase()
         init()
 //        loadTasks()
     }

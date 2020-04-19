@@ -23,7 +23,7 @@ abstract class BActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
         super.onCreate(savedInstanceState, persistentState)
-        FirebaseManager.setUpFirebase()
+//        FirebaseManager.setUpFirebase()
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager?
 
         try {
