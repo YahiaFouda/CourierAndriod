@@ -20,6 +20,7 @@ import com.kadabra.courier.model.NotificationData
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
+import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_notification.*
 import kotlinx.android.synthetic.main.activity_notification.avi
 import kotlinx.android.synthetic.main.activity_notification.ivNoInternet
@@ -35,15 +36,9 @@ class NotificationActivity : BaseNewActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //        int flags = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
-        //                | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
-        //                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
-        //
-        //        getWindow().addFlags(flags);
-
         setContentView(R.layout.activity_notification)
-
-//        loadAllNotifications()
+        var total = UserSessionManager.getInstance(this@NotificationActivity).getTotalNotification()
+        tvTotalNotifications.text = total.toString()
 
         refresh.setOnRefreshListener {
             loadAllNotifications()
@@ -86,6 +81,7 @@ class NotificationActivity : BaseNewActivity() {
                             )
 
                             notificationsList = response.ResponseObj!!
+
                             Log.d(
                                 TAG,
                                 "onSuccess" + notificationsList.courierNotificationModels!!.size.toString()
@@ -97,7 +93,8 @@ class NotificationActivity : BaseNewActivity() {
 
                                 tvTotalNotifications.text =  notificationsList.NoOfUnreadedNotifications.toString()
 //                                tvTotalUnread.text = notificationsList.NoOfUnreadedNotifications.toString()
-
+                                UserSessionManager.getInstance(this@NotificationActivity)
+                                    .setTotalNotification(notificationsList.NoOfUnreadedNotifications)
                                 prepareNotifications(notificationsListData)
                                 refresh.isRefreshing = false
                                 tvEmptyData.visibility = View.INVISIBLE

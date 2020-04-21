@@ -558,17 +558,6 @@ class LocationUpdatesService : Service() {
 
                             //stop  tracking service
                             removeLocationUpdates()
-                            FirebaseManager.updateCourierActive(
-                                AppConstants.CurrentLoginCourier.CourierId,
-                                false
-                            )
-//                            FirebaseManager.logOut()
-//                            UserSessionManager.getInstance(AppController.getContext())
-//                                .setUserData(null)
-//                            UserSessionManager.getInstance(AppController.getContext())
-//                                .setIsLogined(false)
-//                            UserSessionManager.getInstance(AppController.getContext())
-//                                .setFirstTime(false)
                             UserSessionManager.getInstance(AppController.getContext()).logout()
                             shared.removeLocationUpdates()
 

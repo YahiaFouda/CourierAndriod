@@ -5,6 +5,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
 import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.StorageTask
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.Task
@@ -19,7 +21,8 @@ object FirebaseManager {
     private lateinit var dbCourier: DatabaseReference
     private lateinit var dbCourierTaskHistory: DatabaseReference
     private lateinit var dbCourierFeesTaskHistory: DatabaseReference
-
+     lateinit var mStorageRef: StorageReference
+    private val mUploadTask: StorageTask<*>? = null
 
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var auth: FirebaseAuth
@@ -27,6 +30,9 @@ object FirebaseManager {
     private var fireBaseUser: FirebaseUser? = null
     private var dbNameCourier = "courier"
     private var dbNameTaskHistory = "task_history"
+
+
+
 
 
     private var courier = Courier()
@@ -52,6 +58,7 @@ object FirebaseManager {
         firebaseDatabase = FirebaseDatabase.getInstance()
         dbCourier = firebaseDatabase.getReference(dbNameCourier)
         dbCourierTaskHistory = firebaseDatabase.getReference(dbNameTaskHistory)
+
 
 
 //        clearDb()
@@ -176,6 +183,12 @@ object FirebaseManager {
                 .setValue(task.location)
         }
     }
+    fun updateTaskScreenShot(taskId: String, imagePath:String) {
+        if (AppConstants.CurrentLocation != null) {
+            dbCourierTaskHistory.child(taskId).child("task_picture_path")
+                .setValue(imagePath)
+        }
+    }
 
     fun createCourierFeesTaskLocation(task: Task) {
         var current = Task()
@@ -193,6 +206,31 @@ object FirebaseManager {
         dbCourierTaskHistory.child(task.TaskId).child("active")
             .setValue(false)
     }
+
+    fun updateTaskLocationOneShot(task:Task)
+    {
+//        val map: MutableMap<String, Any> = HashMap()
+//        map["/courier/" + task.CourierID.toString() + "/location/"] = "Albert Einstein"
+//        map["/task_historey/" + task.TaskId.toString() + "/score/"] = 23
+//        map["/user_detail_profile/" + currentUserId.toString() + "/claps/"] = 45
+//        map["/user_detail_profile/" + currentUserId.toString() + "/comments/"] = 8
+//        fbDbRefRoot.updateChildren(map)
+    }
+
+   fun updateTaskListOneShot(taskList:ArrayList<Task>)
+    {
+        val map: MutableMap<String, Any> = HashMap()
+        taskList.forEach {
+            updateTaskLocation(it)
+        }
+//
+//        map["/courier/" + task.CourierID.toString() + "/location/"] = "Albert Einstein"
+//        map["/task_historey/" + task.TaskId.toString() + "/score/"] = 23
+//        map["/user_detail_profile/" + currentUserId.toString() + "/claps/"] = 45
+//        map["/user_detail_profile/" + currentUserId.toString() + "/comments/"] = 8
+//        fbDbRefRoot.updateChildren(map)
+    }
+
 
 
     fun getCurrentActiveTask(courieId: String, listener: IFbOperation) {

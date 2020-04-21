@@ -25,13 +25,12 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
-import com.google.android.gms.common.api.GoogleApi
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.location.places.ui.PlacePicker.IntentBuilder
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMap.SnapshotReadyCallback
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
@@ -52,19 +51,21 @@ import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.location.LatLngInterpolator
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.location.MarkerAnimation
+import com.kadabra.courier.model.CalculateFees
 import com.kadabra.courier.model.PolylineData
 import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
+import com.kadabra.courier.utilities.Screenshot
+import com.kadabra.courier.utilities.UtilHelper
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_location_details.*
-import kotlinx.android.synthetic.main.activity_location_details.ivBack
-import kotlinx.android.synthetic.main.activity_task_details.*
+import java.io.OutputStream
 
 
 class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
-    GoogleMap.OnMarkerClickListener, GoogleMap.OnPolylineClickListener {
+    GoogleMap.OnMarkerClickListener, GoogleMap.OnPolylineClickListener, View.OnClickListener {
 
 
     //region Members
@@ -87,8 +88,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private val mTripMarkers = ArrayList<Marker>()
     private var mSelectedMarker: Marker? = null
     private var totalKilometers: Float = 0F
-
+    private var acceptedTaskslist = ArrayList<Task>()
+    private lateinit var polyline: Polyline
+    var isACcepted = false
+    private lateinit var directionResult: DirectionsResult
     //endregion
+
 
     companion object {
 
@@ -98,37 +103,56 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     }
 
+    override fun onClick(view: View?) {
+        when (view?.id) {
+            R.id.ivBack -> {
+                AppConstants.currentSelectedStop = Stop()
+                finish()
+            }
+
+            R.id.fab -> {
+                loadPlacePicker()
+            }
+
+            R.id.btnStart -> {
+//                if (!AppConstants.COURIERSTARTTASK) {
+                isACcepted = isStartedTask(AppConstants.CurrentSelectedTask)
+                if (!isACcepted) { // not started yet
+                    btnStart.text = getString(R.string.start_task)
+                    var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
+                    var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
+                    var pickUp = LatLng(
+                        firstStop.Latitude!!,
+                        firstStop.Longitude!!
+                    )
+                    var dropOff = LatLng(
+                        lastStop.Latitude!!,
+                        lastStop.Longitude!!
+                    )
+
+                    if (NetworkManager().isNetworkAvailable(this)) {
+                        calculateTwoDirections(pickUp, dropOff)
+                    } else
+                        Alert.showMessage(
+                            this@TaskLocationsActivity,
+                            getString(R.string.no_internet)
+                        )
+
+                } else {
+                    btnStart.text = getString(R.string.end_task)
+                    endTask(AppConstants.CurrentSelectedTask)
+                }
+            }
+        }
+    }
+
+
     //region Helper Function
     private fun init() {
 
-        ivBack.setOnClickListener {
-            finish()
-        }
-
-        fab.setOnClickListener {
-            loadPlacePicker()
-        }
-        btnStart.setOnClickListener {
-            // start the trip
-            if (!AppConstants.COURIERSTARTTASK) {
-//                calculateTotalDirections()
-
-                var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
-                var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
-                var pickUp = LatLng(
-                    firstStop.Latitude!!,
-                    firstStop.Longitude!!
-                )
-                var dropOff = LatLng(
-                    lastStop.Latitude!!,
-                    lastStop.Longitude!!
-                )
-
-                calculateTwoDirections(pickUp, dropOff)
-                startTrip(AppConstants.CurrentSelectedTask, totalKilometers)
-            } else
-                endTask(AppConstants.CurrentSelectedTask)
-        }
+        ivBack.setOnClickListener(this)
+        fab.setOnClickListener(this)
+        btnStart.setOnClickListener(this)
 
         polylines = ArrayList()
 
@@ -154,53 +178,56 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                 lastLocation = p0.lastLocation
 
-//                moveCamera(lastLocation!!)
                 if (isFirstTime) {
 
-                    if (AppConstants.currentSelectedStop != null) { // destination stop
+                    if (AppConstants.currentSelectedStop != null && !AppConstants.currentSelectedStop.StopID.isNullOrEmpty()) { // destination stop
+                        btnStart.visibility = View.GONE
+                        if (lastLocation != null && !AppConstants.currentSelectedStop.StopID.isNullOrEmpty()) {
 
-                        try {
-                            if (lastLocation != null && !AppConstants.currentSelectedStop.StopID.isNullOrEmpty()) {
-
-                                destination = LatLng(
-                                    AppConstants.currentSelectedStop.Latitude!!,
-                                    AppConstants.currentSelectedStop.Longitude!!
-                                )
+                            destination = LatLng(
+                                AppConstants.currentSelectedStop.Latitude!!,
+                                AppConstants.currentSelectedStop.Longitude!!
+                            )
 
 
-                                if (lastLocation?.latitude != null && lastLocation?.longitude != null) {
+                            if (lastLocation?.latitude != null && lastLocation?.longitude != null) {
+                                if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
                                     calculateDirections(
                                         LatLng(
                                             lastLocation?.latitude!!,
                                             lastLocation?.longitude!!
                                         ), destination
                                     )
+                                } else
+                                    Alert.showMessage(
+                                        this@TaskLocationsActivity,
+                                        getString(R.string.no_internet)
+                                    )
 
-                                    btnStart.text = getString(R.string.start_trip)
-                                }
-                            } else ///cme from the details view
-                            {
 
-                                var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
-                                var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
-                                var pickUp = LatLng(
-                                    firstStop.Latitude!!,
-                                    firstStop.Longitude!!
-                                )
-                                var dropOff = LatLng(
-                                    lastStop.Latitude!!,
-                                    lastStop.Longitude!!
-                                )
-
-                                calculateTwoDirections(pickUp, dropOff)
-
-                                btnStart.text = getString(R.string.start_trip)
                             }
-
-                        } catch (ex: ExceptionInInitializerError) {
-
                         }
 
+                    } else if (intent.getBooleanExtra(
+                            "startTask",
+                            true
+                        )
+                    ) // Courier  start  journey from details view
+                    {
+                        btnStart.visibility = View.VISIBLE
+                        var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
+                        var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
+                        var pickUp = LatLng(
+                            firstStop.Latitude!!,
+                            firstStop.Longitude!!
+                        )
+                        var dropOff = LatLng(
+                            lastStop.Latitude!!,
+                            lastStop.Longitude!!
+                        )
+
+                        calculateDirections(pickUp, dropOff)
+                        btnStart.text = getString(R.string.start_task)
 
                     }
 
@@ -213,25 +240,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             }
         }
         createLocationRequest()
-
-
-        if (intent.getBooleanExtra("startTask", false)) // courir start  journey from details view
-        {
-            var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
-            var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
-            var pickUp = LatLng(
-                firstStop.Latitude!!,
-                firstStop.Longitude!!
-            )
-            var dropOff = LatLng(
-                lastStop.Latitude!!,
-                lastStop.Longitude!!
-            )
-
-            calculateDirections(pickUp, dropOff)
-//            btnStart.text = getString(R.string.start_trip)
-
-        }
 
 
     }
@@ -335,31 +343,36 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_location_details)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+
+        try {
+            acceptedTaskslist = UserSessionManager.getInstance(this)?.getStartedTasks()!!
+        } catch (ex: Exception) {
+            acceptedTaskslist = ArrayList()
+        }
+
+        isACcepted = isStartedTask(AppConstants.CurrentSelectedTask)
         init()
 
 
     }
 
+
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
+        map.clear()
         map.isMyLocationEnabled = true
         map.mapType = GoogleMap.MAP_TYPE_TERRAIN //more map details
         map.uiSettings.isZoomControlsEnabled = true
         map.setOnMarkerClickListener(this)
-//        map.setOnInfoWindowClickListener(this)
         map.setOnPolylineClickListener(this)
-
-
 
 
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
 
-
             // Got last known location. In some rare situations this can be null.
             if (location != null) {
                 lastLocation = location
-
-
             }
         }
 
@@ -374,6 +387,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     override fun onBackPressed() {
         super.onBackPressed()
         erasePolyLinesFromMap()
+        AppConstants.currentSelectedStop = Stop()
         finish()
     }
 
@@ -440,21 +454,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     }
 
-//
-//    override fun onTaskDone(vararg values: Any?) {
-//        if (currentPolyline != null)
-//            currentPolyline!!.remove()
-//        currentPolyline = map.addPolyline(values[0] as PolylineOptions)
-//
-//        map.animateCamera(
-//            CameraUpdateFactory.newLatLngZoom(
-//                LatLng(
-//                    currentPolyline!!.points.get(0).latitude,
-//                    currentPolyline!!.points.get(0).longitude
-//                ), 8f
-//            )
-//        )
-//    }
 
     private fun erasePolyLinesFromMap() {
         for (polyline in polylines) {
@@ -463,22 +462,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         polylines = ArrayList()
     }
 
-    private fun getUrl(origin: LatLng, dest: LatLng, directionMode: String): String {
-        // Origin of route
-        val str_origin = "origin=" + origin.latitude + "," + origin.longitude
-        // Destination of route
-        val str_dest = "destination=" + dest.latitude + "," + dest.longitude
-        // Mode
-        val mode = "mode=$directionMode"
-        // Building the parameters to the web service
-        val parameters = "$str_origin&$str_dest&$mode"
-        // Output format
-        val output = "json"
-        // Building the url to the web service
-        return "https://maps.googleapis.com/maps/api/directions/$output?$parameters&key=" + getString(
-            R.string.google_maps_key
-        )
-    }
 
     private fun animateCamera(latLng: LatLng) {
 
@@ -623,6 +606,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 //    }
 
     private fun calculateDirections(origin: LatLng, dest: LatLng) {
+//Alert.showProgress(this)
         Log.d(
             TAG,
             "calculateDirections: calculating directions."
@@ -653,10 +637,20 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         TAG,
                         "onResult: successfully retrieved directions."
                     )
+                    val meters = result!!.routes[0].legs[0].distance.inMeters
+//                    if(meters>=1000)
+//                      totalKilometers=  meters  /1000.0f
+//                    else
+                    totalKilometers = conevrtMetersToKilometers(meters)
+
+                    Log.d("DISTANCE1", result!!.routes[0].legs[0].distance.inMeters.toString())
+                    Log.d("DISTANCE1", totalKilometers.toString())
                     addPolylinesToMap(result!!)
+//                    Alert.hideProgress()
                 }
 
                 override fun onFailure(e: Throwable) {
+//                    Alert.hideProgress()
                     Log.e(
                         TAG,
                         "calculateDirections: Failed to get directions: " + e.message
@@ -709,6 +703,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                             "onResult: successfully retrieved directions."
                         )
 
+
                         totalKilometers += result!!.routes[0].legs[0].distance.inMeters / 1000
                     }
 
@@ -725,6 +720,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
     private fun calculateTwoDirections(origin: LatLng, dest: LatLng): Float {
+        Alert.showProgress(this)
         Log.d(
             TAG,
             "calculateDirections: calculating directions."
@@ -751,16 +747,26 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 //                Log.d(TAG, "calculateDirections: duration: " + result.routes[0].legs[0].duration);
 //                Log.d(TAG, "calculateDirections: distance: " + result.routes[0].legs[0].distance);
 //                Log.d(TAG, "calculateDirections: geocodedWayPoints: " + result.geocodedWaypoints[0].toString());
+                    directionResult = result!!
                     Log.d(
                         TAG,
                         "onResult: successfully retrieved directions."
                     )
-                    totalKilometers += result!!.routes[0].legs[0].distance.inMeters / 1000
+                    var meters = result!!.routes[0].legs[0].distance.inMeters
+                    totalKilometers = conevrtMetersToKilometers(meters)
 
+//                    totalKilometers += result!!.routes[0].legs[0].distance.inMeters / 1000
+                    if (totalKilometers > 0.0)
+                        startTrip(AppConstants.CurrentSelectedTask, totalKilometers)
+                    else {
+                        Alert.hideProgress()
+                        Alert.showMessage(this@TaskLocationsActivity, "press start again.")
+                    }
 
                 }
 
                 override fun onFailure(e: Throwable) {
+                    Alert.hideProgress()
                     Log.e(
                         TAG,
                         "calculateDirections: Failed to get directions: " + e.message
@@ -773,6 +779,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
     private fun addPolylinesToMap(result: DirectionsResult) {
+
         Handler(Looper.getMainLooper()).post {
             Log.d(
                 TAG,
@@ -804,7 +811,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         )
                     )
                 }
-                val polyline: Polyline =
+                polyline =
                     map.addPolyline(PolylineOptions().addAll(newDecodedPath)) // add marker
                 polyline.color = ContextCompat.getColor(this, R.color.colorPrimary)
                 polyline.isClickable = true
@@ -819,7 +826,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     setTripDirectionData(PolylineData(polyline, route.legs[0]))
                     rlBottom.visibility = View.VISIBLE
                 }
-//                mSelectedMarker!!.setVisible(false)
             }
         }
     }
@@ -884,13 +890,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun resetMap() {
         if (map != null) {
             map.clear()
-//            if (mClusterManager != null) {
-//                mClusterManager.clearItems()
-//            }
-//            if (mClusterMarkers.size > 0) {
-//                mClusterMarkers.clear()
-//                mClusterMarkers = java.util.ArrayList<ClusterMarker>()
-//            }
             if (mPolyLinesData.size > 0) {
                 mPolyLinesData.clear()
                 mPolyLinesData = java.util.ArrayList()
@@ -900,7 +899,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     private fun resetSelectedMarker() {
         if (mSelectedMarker != null) {
-            mSelectedMarker!!.setVisible(true)
+            mSelectedMarker!!.isVisible = true
             mSelectedMarker = null
             removeTripMarkers()
         }
@@ -931,33 +930,39 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
     private fun startTrip(task: Task, totalKilometers: Float) {
-
         if (NetworkManager().isNetworkAvailable(this)) {
-            if (!task.TaskId.isNullOrEmpty() && totalKilometers.toInt() > 0) {
+
+            if (!task.TaskId.isNullOrEmpty()) {
                 var request = NetworkManager().create(ApiServices::class.java)
                 var endPoint = request.updateTaskCourierFees(task.TaskId, totalKilometers)
                 NetworkManager().request(
                     endPoint,
-                    object : INetworkCallBack<ApiResponse<Boolean?>> {
+                    object : INetworkCallBack<ApiResponse<CalculateFees>> {
                         override fun onFailed(error: String) {
-
+                            Alert.hideProgress()
                             Alert.showMessage(
                                 this@TaskLocationsActivity,
                                 getString(R.string.error_login_server_unknown_error)
                             )
                         }
 
-                        override fun onSuccess(response: ApiResponse<Boolean?>) {
+                        override fun onSuccess(response: ApiResponse<CalculateFees>) {
                             if (response.Status == AppConstants.STATUS_SUCCESS) {
-
+//                                zoomRoute(polyline.points)
+                                captureScreen(map, AppConstants.CurrentSelectedTask.TaskId)
                                 AppConstants.CurrentAcceptedTask = task
                                 AppConstants.CurrentSelectedTask = task
 
                                 startTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
+
                                 AppConstants.COURIERSTARTTASK = true
+                                acceptedTaskslist.add(AppConstants.CurrentAcceptedTask)
+                                UserSessionManager.getInstance(this@TaskLocationsActivity)
+                                    .setStartedTasks(acceptedTaskslist)
+                                Alert.hideProgress()
                                 btnStart.text = getString(R.string.end_task)
                             } else {
-
+                                Alert.hideProgress()
                                 Alert.showMessage(
                                     this@TaskLocationsActivity,
                                     getString(R.string.error_network)
@@ -969,7 +974,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             }
 
         } else {
-
+            Alert.hideProgress()
             Alert.showMessage(
                 this@TaskLocationsActivity,
                 getString(R.string.no_internet)
@@ -996,13 +1001,13 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
     private fun endTask(task: Task) {
-
+        Alert.showProgress(this)
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(ApiServices::class.java)
             var endPoint = request.endTask(task.TaskId)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
                 override fun onFailed(error: String) {
-
+                    Alert.hideProgress()
                     Alert.showMessage(
                         this@TaskLocationsActivity,
                         getString(R.string.error_login_server_unknown_error)
@@ -1024,12 +1029,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
-
+                        Alert.hideProgress()
                         startActivity(Intent(this@TaskLocationsActivity, TaskActivity::class.java))
                         finish()
 
                     } else {
-
+                        Alert.hideProgress()
                         Alert.showMessage(
                             this@TaskLocationsActivity,
                             getString(R.string.error_network)
@@ -1040,7 +1045,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             })
 
         } else {
-
+            Alert.hideProgress()
             Alert.showMessage(
                 this@TaskLocationsActivity,
                 getString(R.string.no_internet)
@@ -1050,4 +1055,33 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     }
 
+    private fun isStartedTask(task: Task): Boolean {
+        var exist = false
+        acceptedTaskslist.forEach {
+            if (it.TaskId == task.TaskId) {
+                exist = true
+            }
+        }
+        return exist
+    }
+
+
+    private fun conevrtMetersToKilometers(meters: Long): Float {
+        var kilometers = 0F
+        kilometers = (meters * 0.001).toFloat()
+
+        return kilometers
+    }
+
+    fun captureScreen(mMap: GoogleMap, taskId: String) {
+//        var bit=Screenshot.takeScreenshotOfRootView(rlParent)
+//        UtilHelper.uploadFile(bit,taskId)
+        val callback =
+            SnapshotReadyCallback { snapshot ->
+
+                val bitmap = snapshot
+                UtilHelper.uploadFile(bitmap, taskId)
+            }
+        mMap.snapshot(callback)
+    }
 }

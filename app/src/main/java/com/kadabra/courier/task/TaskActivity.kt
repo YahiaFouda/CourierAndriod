@@ -46,7 +46,12 @@ import com.kadabra.courier.notifications.NotificationActivity
 import com.kadabra.courier.services.LocationUpdatesService
 import com.kadabra.courier.utilities.*
 import com.reach.plus.admin.util.UserSessionManager
+import kotlinx.android.synthetic.main.activity_notification.*
 import kotlinx.android.synthetic.main.activity_task.*
+import kotlinx.android.synthetic.main.activity_task.avi
+import kotlinx.android.synthetic.main.activity_task.ivNoInternet
+import kotlinx.android.synthetic.main.activity_task.refresh
+import kotlinx.android.synthetic.main.activity_task.tvEmptyData
 
 
 class TaskActivity : BaseNewActivity(), View.OnClickListener,
@@ -84,8 +89,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var lang = ""
     private lateinit var tvNotificationCounter: TextView
     private lateinit var ivNotification: ImageView
-
-
+    var total = 0
 
     //endregion
 
@@ -120,6 +124,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private fun init() {
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
 
+         total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
+
         serviceCostView = View.inflate(this, R.layout.choose_language_layout, null)
         ivLanguageBack = serviceCostView!!.findViewById<ImageView>(R.id.ivBackLanguage)
         rbArabic = serviceCostView!!.findViewById<RadioButton>(R.id.rbArabic)
@@ -129,8 +135,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         ivLanguageBack!!.setOnClickListener(this)
         rbArabic!!.setOnClickListener(this)
         rbEnglish!!.setOnClickListener(this)
-//        tvNotificationCounter.setOnClickListener(this)
-//        ivNotification.setOnClickListener(this)
 
         tvTimer.visibility = View.INVISIBLE
 
@@ -140,8 +144,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             loadTasks()
 
         }
-
-
 
         setSupportActionBar(toolbar)
         this.title = ""//getString(R.string.beta_version)
@@ -208,18 +210,14 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                         if (response.Status == AppConstants.STATUS_SUCCESS) {
                             //stop  tracking service
                             AppConstants.FIRE_BASE_LOGOUT = false
-                            FirebaseManager.updateCourierActive(
-                                AppConstants.CurrentLoginCourier.CourierId,
-                                false
-                            )
-//                            FirebaseManager.logOut()
 
                             UserSessionManager.getInstance(this@TaskActivity).logout()
-//                            UserSessionManager.getInstance(this@TaskActivity).setUserData(Courier())
-//                            UserSessionManager.getInstance(this@TaskActivity).setIsLogined(false)
-//                            UserSessionManager.getInstance(this@TaskActivity).setFirstTime(false)
-
-                            startActivity(Intent(this@TaskActivity, LoginActivity::class.java))
+                            startActivity(
+                                Intent(
+                                    this@TaskActivity,
+                                    LoginActivity::class.java
+                                )
+                            )
                             if (countDownTimer != null)
                                 countDownTimer!!.cancel()
                             cancelVibrate()
@@ -383,11 +381,15 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                             AppConstants.CURRENTTOTALNOTIFICATIONS =
                                 taskData.NoOfUnreadedNotification
 
-                            if( taskData.NoOfUnreadedNotification>0)
-                            tvNotificationCounter.visibility=View.VISIBLE
+                            UserSessionManager.getInstance(this@TaskActivity)
+                                .setTotalNotification(taskData.NoOfUnreadedNotification)
 
-                            if( taskData.NoOfUnreadedNotification>99)
-                                tvNotificationCounter.text="99+"
+                            if (taskData.NoOfUnreadedNotification > 0)
+                                tvNotificationCounter.visibility = View.VISIBLE
+
+                            if (taskData.NoOfUnreadedNotification > 99)
+                                tvNotificationCounter.text = "99+"
+
 
                             tvNotificationCounter.text =
                                 taskData.NoOfUnreadedNotification.toString()
@@ -604,12 +606,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         super.onCreate(savedInstanceState)
         // recovering the instance state
         setContentView(R.layout.activity_task)
-//        Crashlytics.getInstance().crash();
         Log.d(TAG, "onCreate")
         myReceiver = MyReceiver()
-//        FirebaseManager.setUpFirebase()
         init()
-//        loadTasks()
+
     }
 
     override fun onResume() {
@@ -667,7 +667,6 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             logOut()
 
 
-
     }
 
     override fun onPause() {
@@ -708,9 +707,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
                 lang = UserSessionManager.getInstance(AppController.getContext())
                     .getLanguage()
-                if (lang != AppConstants.ARABIC)
-                {
-                    updateLanguage(AppConstants.CurrentLoginCourier.CourierId,AppConstants.ARABIC)
+                if (lang != AppConstants.ARABIC) {
+                    updateLanguage(AppConstants.CurrentLoginCourier.CourierId, AppConstants.ARABIC)
                     LocalizationHelper.setLocale(application, AppConstants.ARABIC)
                     startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
 
@@ -721,9 +719,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
                 lang = UserSessionManager.getInstance(AppController.getContext())
                     .getLanguage()
-                if (lang != AppConstants.ENGLISH)
-                {
-                    updateLanguage(AppConstants.CurrentLoginCourier.CourierId,AppConstants.ENGLISH)
+                if (lang != AppConstants.ENGLISH) {
+                    updateLanguage(AppConstants.CurrentLoginCourier.CourierId, AppConstants.ENGLISH)
                     LocalizationHelper.setLocale(application, AppConstants.ENGLISH)
                     startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
                 }
@@ -751,15 +748,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         Log.i(TAG, "onRequestPermissionResult")
         if (requestCode == AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION && grantResults.isNotEmpty()
         ) {
-//            if (grantResults.size <= 0) {
-//                // If user interaction was interrupted, the permission request is cancelled and you
-//                // receive empty arrays.
-//                Log.i(TAG, "User interaction was cancelled.")
-//            } else
+
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission was granted.
                 Log.d(TAG, "onRequestPermissionsResult-mLocationPermissionGranted-loadTasks")
-//                if(!isLocationServiceRunning())
                 LocationUpdatesService.shared!!.requestLocationUpdates()
                 mLocationPermissionGranted = true
                 loadTasks()
@@ -768,92 +760,18 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 //                forceUpdate()
 
             }
-//                else {
-//                if (UserSessionManager.getInstance(this).requestingLocationUpdates()) {
-//                    if (!checkPermissions()) {
-//                        requestPermissions()
-//                    }
-//                }
-//            }
+
         }
-//        if (!LocationHelper.shared.isGPSEnabled())
-//            Snackbar.make(
-//                    findViewById(R.id.rlParent),
-//                    R.string.permission_denied_explanation,
-//                    Snackbar.LENGTH_INDEFINITE
-//            )
-//                    .setAction(R.string.settings) {
-//                        // Build intent that displays the App settings screen.
-//                        val intent = Intent()
-//                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-//                        val uri = Uri.fromParts(
-//                                "package",
-//                                BuildConfig.APPLICATION_ID, null
-//                        )
-//                        intent.data = uri
-//                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//                        startActivity(intent)
-//                    }
-//                    .show()
+
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-//            R.id.nav_tasks -> {
-//                startActivity(Intent(this,NotificationActivity::class.java))
-//            }
-//            R.id.nav_Notification -> {
-//                startActivity(Intent(this,NotificationActivity::class.java))
-//            }
+
             R.id.nav_task_history -> {
                 startActivity(Intent(this, TaskHistoryActivity::class.java))
-
-
             }
-            R.id.nav_Settings -> {
-                if (!isNewTaskReceived) {
-//                    var currentLanguage = UserSessionManager.getInstance(this).getLanguage()
-//
-////                    var view=findViewById<item>( R.id.nav_Settings)
-//                    languageMenu = PopupMenu(this, ivAccept)
-//                    languageMenu.menuInflater.inflate(R.menu.menu_language, languageMenu.menu)
-//
-//                    languageMenu.setOnMenuItemClickListener {
-//                        if (it.itemId == R.id.arabic) {
-//                            if (currentLanguage != AppConstants.ARABIC) {
-//                                UserSessionManager.getInstance(AppController.getContext())
-//                                    .setLanguage(AppConstants.ARABIC)
-////
-//                                val intent = baseContext.packageManager.getLaunchIntentForPackage(
-//                                    baseContext.packageName
-//                                )
-//                                intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//                                startActivity(intent)
-//                            }
-//
-//
-//                        } else if (it.itemId == R.id.english) {
-//                            if (currentLanguage != AppConstants.ENGLISH) {
-//                                UserSessionManager.getInstance(AppController.getContext())
-//                                    .setLanguage(AppConstants.ENGLISH)
-////                        setNewLocale(this, AppConstants.ENGLISH)
-//                                val intent = baseContext.packageManager.getLaunchIntentForPackage(
-//                                    baseContext.packageName
-//                                )
-//                                intent!!.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//                                startActivity(intent)
-//                            }
-//
-//
-//                        }
-//                        true
-//                    }
-//                    languageMenu.show()
 
-                    alertDialog!!.show()
-                }
-
-            }
             R.id.nav_Call -> {
                 val intent = Intent(Intent.ACTION_DIAL)
                 startActivity(intent)
@@ -886,15 +804,16 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             notificationView.findViewById(R.id.tvNotification) as TextView
         ivNotification =
             notificationView.findViewById(R.id.ivNotification) as ImageView
+        try {
+            total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
+            tvNotificationCounter.text = total.toString()
+        } catch (ex: Exception) {
+            total = 0
+            tvNotificationCounter.text = total.toString()
+        }
+        tvNotificationCounter.text = total.toString()
+//        tvNotificationCounter.text = AppConstants.CURRENTTOTALNOTIFICATIONS.toString()
 
-        tvNotificationCounter.text = AppConstants.CURRENTTOTALNOTIFICATIONS.toString()
-
-//        tvNotificationCounter.setOnClickListener {
-////            if (drawer.isDrawerOpen(GravityCompat.START)) {
-////                drawer.closeDrawer(GravityCompat.START)
-////            }
-////            startActivity(Intent(this, NotificationActivity::class.java))
-//        }
 
         ivNotification.setOnClickListener {
             if (drawer.isDrawerOpen(GravityCompat.START)) {

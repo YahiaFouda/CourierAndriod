@@ -8,18 +8,18 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:513841496056:android:9c482c88002f8678eb200d",
+        "mobilesdk_app_id": "1:513841496056:android:6afae91081681efeeb200d",
         "android_client_info": {
           "package_name": "com.kadabra.agent"
         }
       },
       "oauth_client": [
         {
-          "client_id": "513841496056-or37461oh12maneq9d0g0raoeio6ilvv.apps.googleusercontent.com",
+          "client_id": "513841496056-3h8tu3nlbr17unodf7tdfel0fk6bv3pv.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.kadabra.agent",
-            "certificate_hash": "05d6c042885309620fc256607f1b30921810018b"
+            "certificate_hash": "ba24a5cb6f82b1299998065a3cd333a9169ded74"
           }
         },
         {
@@ -28,6 +28,9 @@
         }
       ],
       "api_key": [
+        {
+          "current_key": "AIzaSyBZV0BuNzXjVdoPdCavt0PH8IdYY_Oz3MA"
+        },
         {
           "current_key": "AIzaSyC70zswBrDCnFMJKiTylr1ptCX3GdarKXQ"
         }
@@ -59,6 +62,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "513841496056-7unhtnrq459q5ccvond64d0vau7r710t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kadabra.courier",
+            "certificate_hash": "ba24a5cb6f82b1299998065a3cd333a9169ded74"
+          }
+        },
+        {
           "client_id": "513841496056-dlpt3h7iorpv5o5gr3co5dtd0o6hmi1t.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -72,6 +83,9 @@
         }
       ],
       "api_key": [
+        {
+          "current_key": "AIzaSyBZV0BuNzXjVdoPdCavt0PH8IdYY_Oz3MA"
+        },
         {
           "current_key": "AIzaSyC70zswBrDCnFMJKiTylr1ptCX3GdarKXQ"
         }

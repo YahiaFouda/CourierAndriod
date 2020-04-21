@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.model.Courier
+import com.kadabra.courier.model.Notification
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.utilities.AppConstants
 
@@ -15,6 +17,7 @@ class UserSessionManager(val context: Context) {
     private val sharedPreferences: SharedPreferences
     private val sharedPrefName = UserSessionManager::class.java.name + "_shared_preferences"
     val KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates"
+    var acceptedList=ArrayList<Task>()
 
     init {
         sharedPreferences = context.getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE)
@@ -25,7 +28,10 @@ class UserSessionManager(val context: Context) {
     companion object {
         var sUserSessionManager: UserSessionManager? = null
         private val USER_OBJECT = UserSessionManager::class.java.name + "_user_object"
-        private val USER_Task = UserSessionManager::class.java.name + "_user_task"
+        private val USER_NOTIFICATION = UserSessionManager::class.java.name + "_user_notification"
+        private val USER_ACCEPTEDTASKS = UserSessionManager::class.java.name + "_user_acceptedtasks"
+
+
 
 
 
@@ -95,18 +101,51 @@ class UserSessionManager(val context: Context) {
         return gson.fromJson(json, type)
     }
 
-    fun setAcceptedTask(task: Task?) {
+    fun setNotification(notificationList: ArrayList<Notification>) {
         val gson = Gson()
-        val json = gson.toJson(task)
-        editor.putString(USER_Task, json)
+        val json = gson.toJson(notificationList)
+        editor.putString(USER_NOTIFICATION, json)
         editor.commit()
     }
 
-    fun getAcceptedTask(): Task? {
+    fun getNotification(): ArrayList<Notification> {
         val gson = Gson()
-        val json = sharedPreferences.getString(USER_Task, null) ?: return null
+        val json = sharedPreferences.getString(USER_NOTIFICATION, null)
 
-        val type = object : TypeToken<Task>() {
+        val type = object : TypeToken<ArrayList<Notification>>() {
+        }.type
+
+        return gson.fromJson(json, type)
+    }
+    fun setTotalNotification(total: Int) {
+        val gson = Gson()
+        val json = gson.toJson(total)
+        editor.putString(USER_NOTIFICATION, json)
+        editor.commit()
+    }
+
+    fun getTotalNotification(): Int {
+        val gson = Gson()
+        val json = sharedPreferences.getString(USER_NOTIFICATION, "0")
+
+        val type = object : TypeToken<Int>() {
+        }.type
+
+        return gson.fromJson(json, type)
+    }
+
+    fun setStartedTasks(taskList: ArrayList<Task>?) {
+        val gson = Gson()
+        val json = gson.toJson(taskList)
+        editor.putString(USER_ACCEPTEDTASKS, json)
+        editor.commit()
+    }
+
+    fun getStartedTasks(): ArrayList<Task>? {
+        val gson = Gson()
+        val json = sharedPreferences.getString(USER_ACCEPTEDTASKS, null)
+
+        val type = object : TypeToken<ArrayList<Task>>() {
         }.type
 
         return gson.fromJson(json, type)
@@ -126,6 +165,7 @@ class UserSessionManager(val context: Context) {
         setIsLogined(false)
         setUserData(Courier())
         setRequestingLocationUpdates(false)
+        FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId,false)
         editor.clear()
         editor.commit()
         setLanguage(currentLang)
