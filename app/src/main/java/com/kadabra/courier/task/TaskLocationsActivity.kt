@@ -192,6 +192,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                             if (lastLocation?.latitude != null && lastLocation?.longitude != null) {
                                 if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
+                                    map.uiSettings.setAllGesturesEnabled(false)
+                                    map.uiSettings.isScrollGesturesEnabled = false
                                     calculateDirections(
                                         LatLng(
                                             lastLocation?.latitude!!,
@@ -611,7 +613,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 //    }
 
     private fun calculateDirections(origin: LatLng, dest: LatLng) {
-        Alert.showProgress(this)
+//        Alert.showProgress(this)
         Log.d(
             TAG,
             "calculateDirections: calculating directions."
@@ -1086,6 +1088,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                 val bitmap = snapshot
                 UtilHelper.uploadFile(bitmap, taskId)
+                map.uiSettings.setAllGesturesEnabled(true)
+                map.uiSettings.isScrollGesturesEnabled = true
             }
         mMap.snapshot(callback)
     }
