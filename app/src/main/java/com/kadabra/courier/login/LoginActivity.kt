@@ -185,11 +185,15 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     private fun validateData(): Boolean {
         var userName = etUsername.text.toString().trim()
         if (userName.isNullOrEmpty()) {
+            AnimateScroll.scrollToView(scroll, tvBetaVersion)
+            etUsername.requestFocus()
             Alert.showMessage(this, getString(R.string.error_user_name))
             return false
         }
 
         if (etPassword.text.toString().trim().isNullOrEmpty()) {
+            AnimateScroll.scrollToView(scroll, tvBetaVersion)
+            etPassword.requestFocus()
             Alert.showMessage(this, getString(R.string.error_password))
             return false
         }

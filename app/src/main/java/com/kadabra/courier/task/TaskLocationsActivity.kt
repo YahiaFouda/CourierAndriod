@@ -214,21 +214,26 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         )
                     ) // Courier  start  journey from details view
                     {
-                        btnStart.visibility = View.VISIBLE
-                        var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
-                        var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
-                        var pickUp = LatLng(
-                            firstStop.Latitude!!,
-                            firstStop.Longitude!!
-                        )
-                        var dropOff = LatLng(
-                            lastStop.Latitude!!,
-                            lastStop.Longitude!!
-                        )
+                        if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
+                            btnStart.visibility = View.VISIBLE
+                            var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
+                            var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
+                            var pickUp = LatLng(
+                                firstStop.Latitude!!,
+                                firstStop.Longitude!!
+                            )
+                            var dropOff = LatLng(
+                                lastStop.Latitude!!,
+                                lastStop.Longitude!!
+                            )
 
-                        calculateDirections(pickUp, dropOff)
-                        btnStart.text = getString(R.string.start_task)
-
+                            calculateDirections(pickUp, dropOff)
+                            btnStart.text = getString(R.string.start_task)
+                        } else
+                            Alert.showMessage(
+                                this@TaskLocationsActivity,
+                                getString(R.string.no_internet)
+                            )
                     }
 
 
@@ -606,7 +611,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 //    }
 
     private fun calculateDirections(origin: LatLng, dest: LatLng) {
-//Alert.showProgress(this)
+        Alert.showProgress(this)
         Log.d(
             TAG,
             "calculateDirections: calculating directions."

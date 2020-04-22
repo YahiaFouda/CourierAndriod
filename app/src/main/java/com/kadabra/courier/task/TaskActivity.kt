@@ -609,7 +609,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         Log.d(TAG, "onCreate")
         myReceiver = MyReceiver()
         init()
-
+//        forceUpdate()
     }
 
     override fun onResume() {
@@ -642,6 +642,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
         )
 
+        forceUpdate()
 
     }
 
