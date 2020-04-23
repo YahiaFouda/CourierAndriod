@@ -4,17 +4,14 @@ import android.Manifest
 import android.app.AlertDialog
 import android.content.*
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.location.Location
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.GridLayoutManager
@@ -41,7 +38,6 @@ import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.services.LocationUpdatesService
 import com.reach.plus.admin.util.UserSessionManager
-import kotlinx.android.synthetic.main.activity_location_details.*
 import kotlinx.android.synthetic.main.activity_task_details.*
 import kotlinx.android.synthetic.main.activity_task_details.ivBack
 
@@ -60,8 +56,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private var myReceiver: MyReceiver? = null
     private var inProgress = "In progress"
     private var alertDialog: AlertDialog? = null
-    private var acceptedTaskslist = ArrayList<Task>()
-    var isACcepted=false
+    var isStarted = false
     private val mServiceConnection = object : ServiceConnection {
 
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -98,10 +93,11 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         }
 
 
-        if (AppConstants.CurrentSelectedTask.Status == inProgress) {
-            btnEndTask.text = getString(R.string.end_task)
-        }
-
+//        if (AppConstants.CurrentSelectedTask.Status == inProgress)
+//            btnEndTask.text = getString(R.string.end_task)
+//
+//        if (AppConstants.CurrentSelectedTask.IsStarted)
+//            btnEndTask.text = getString(R.string.start_task)
 
     }
 
@@ -137,10 +133,21 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
 
         if (task.Status == inProgress) {
-            tvStatus.text = getString(R.string.in_progress)
-            btnEndTask.text = getString(R.string.end_task)
-        } else
+            if (task.IsStarted) {
+                tvStatus.text = getString(R.string.in_progress)
+                btnEndTask.text = getString(R.string.end_task)
+            } else {
+                tvStatus.text = getString(R.string.in_progress)
+                btnEndTask.text = getString(R.string.start_task)
+            }
+
+        }
+
+
+        else {
             tvStatus.text = getString(R.string.new_task)
+            btnEndTask.text = getString(R.string.accept_task)
+        }
 
 
 
@@ -394,30 +401,10 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         setContentView(R.layout.activity_task_details)
         myReceiver = MyReceiver()
         init()
-try{
-    acceptedTaskslist = UserSessionManager.getInstance(this)?.getStartedTasks()!!
-}
-catch(ex:Exception)
-{
-    acceptedTaskslist = ArrayList()
-}
-
-
-
-
 
 
     }
 
-    private fun isStartedTask(task: Task): Boolean {
-        var exist = false
-        acceptedTaskslist.forEach {
-            if (it.TaskId == task.TaskId) {
-                exist = true
-            }
-        }
-        return exist
-    }
 
     override fun onStart() {
         super.onStart()
@@ -445,7 +432,6 @@ catch(ex:Exception)
 
 
     }
-
 
 
     override fun onPause() {
@@ -481,51 +467,45 @@ catch(ex:Exception)
                     } else {
                         if (AppConstants.CurrentSelectedTask.Status == inProgress) //end task
                         {
-                            try{
-                                acceptedTaskslist = UserSessionManager.getInstance(this)?.getStartedTasks()!!
+                            isStarted =
+                                AppConstants.CurrentSelectedTask.IsStarted//isStartedTask(AppConstants.CurrentSelectedTask)
 
-                            }
-                            catch(ex:Exception)
-                            {
-                                acceptedTaskslist = ArrayList()
-                            }
-
-                            isACcepted = isStartedTask(AppConstants.CurrentSelectedTask)
-
-                            val builder = AlertDialog.Builder(this@TaskDetailsActivity)
-                            if(!isACcepted)
-                            {
-                                builder.setTitle(getString(R.string.start_task))
-                                builder.setMessage(getString(R.string.msg_end_task))
-                            }
-                            else
-                            {
-                                builder.setTitle(getString(R.string.end_task))
-                                builder.setMessage(getString(R.string.msg_end))
-                            }
-
-                            builder.setPositiveButton(getString(R.string.ok)) { dialogInterface, i ->
-                                if (!isACcepted) {
-                                    startActivity(
-                                        Intent(
-                                            this@TaskDetailsActivity,
-                                            TaskLocationsActivity::class.java
-                                        ).putExtra("startTask", true)
-                                    )
-                                } else
-                                    endTask(AppConstants.CurrentSelectedTask)
-//                                finish()
-                            }
-                            builder.setNegativeButton(getString(R.string.cancel)) { dialog, which ->
-                                alertDialog?.dismiss()
-                            }
-                            alertDialog = builder.create()
-                            alertDialog?.show()
-//                            if (!this@TaskDetailsActivity.isFinishing) {
-//                                alertDialog?.show()
+//                            val builder = AlertDialog.Builder(this@TaskDetailsActivity)
+//                            if(!isACcepted) // new
+//                            {
+//                                builder.setTitle(getString(R.string.start_task))
+//                                builder.setMessage(getString(R.string.msg_end_task))
 //                            }
 
+//                            builder.setPositiveButton(getString(R.string.ok)) { dialogInterface, i ->
+//                                if (!isStarted) {
+//                                    startActivity(
+//                                        Intent(
+//                                            this@TaskDetailsActivity,
+//                                            TaskLocationsActivity::class.java
+//                                        ).putExtra("startTask", true)
+//                                    )
+//                                } else
+//                                    endTask(AppConstants.CurrentSelectedTask)
+////                                finish()
+//                            }
+//                            builder.setNegativeButton(getString(R.string.cancel)) { dialog, which ->
+//                                alertDialog?.dismiss()
+//                            }
+//                            alertDialog = builder.create()
+//                            alertDialog?.show()
+//
 
+                            if (!isStarted) {
+                                startActivity(
+                                    Intent(
+                                        this@TaskDetailsActivity,
+                                        TaskLocationsActivity::class.java
+                                    ).putExtra("startTask", true)
+                                )
+
+                            } else
+                                endTask(AppConstants.CurrentSelectedTask)
                         } else //accept task
                         {
                             AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
@@ -739,13 +719,13 @@ catch(ex:Exception)
     }
 
     private fun endTask(task: Task) {
-Alert.showProgress(this)
+        Alert.showProgress(this)
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(ApiServices::class.java)
             var endPoint = request.endTask(task.TaskId)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
                 override fun onFailed(error: String) {
-Alert.hideProgress()
+                    Alert.hideProgress()
                     Alert.showMessage(
                         this@TaskDetailsActivity,
                         getString(R.string.error_login_server_unknown_error)
@@ -767,7 +747,7 @@ Alert.hideProgress()
                         Alert.hideProgress()
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
-                        startActivity(Intent(this@TaskDetailsActivity,TaskActivity::class.java))
+                        startActivity(Intent(this@TaskDetailsActivity, TaskActivity::class.java))
                         finish()
 
 

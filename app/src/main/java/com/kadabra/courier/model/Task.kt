@@ -61,6 +61,10 @@ class Task {
     @set:Exclude
     @get:Exclude
     var Status = ""
+    @Exclude
+    @set:Exclude
+    @get:Exclude
+    var IsStarted = false
 
 
     constructor() {}

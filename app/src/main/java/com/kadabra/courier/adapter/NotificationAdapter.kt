@@ -1,26 +1,16 @@
 package com.kadabra.courier.adapter
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.kadabra.courier.model.Stop
 import com.kadabra.courier.model.Notification
 import com.kadabra.courier.utilities.AppConstants
-import android.widget.FrameLayout
-import android.view.animation.AnimationUtils
-import androidx.core.app.ActivityCompat
-import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
-import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.notifications.NotificationDetailsActivity
-import com.kadabra.courier.utilities.Alert
 
 
 /**
@@ -103,7 +93,7 @@ var notification=NotificationsList[position]
                 //                if (NetworkManager().isNetworkAvailable(context)) {
                 val pos = adapterPosition
                 notification = NotificationsList[pos]
-               AppConstants.CurrentSelecedNotification=notification
+               AppConstants.CurrentSelectedNotification=notification
                 context.startActivity(Intent(context, NotificationDetailsActivity::class.java))
 
 

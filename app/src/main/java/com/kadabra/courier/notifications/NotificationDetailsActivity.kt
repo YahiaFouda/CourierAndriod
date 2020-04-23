@@ -1,9 +1,7 @@
 package com.kadabra.courier.notifications
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import com.kadabra.Networking.INetworkCallBack
 import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
@@ -30,8 +28,8 @@ class NotificationDetailsActivity : BaseNewActivity() {
 
         loadData()
 
-        if (!AppConstants.CurrentSelecedNotification.isReaded)
-            updateNotificationRead(AppConstants.CurrentSelecedNotification.notificationId)
+        if (!AppConstants.CurrentSelectedNotification.isReaded)
+            updateNotificationRead(AppConstants.CurrentSelectedNotification.notificationId)
 
         ivBack.setOnClickListener {
             finish()
@@ -98,7 +96,7 @@ class NotificationDetailsActivity : BaseNewActivity() {
 
 
     fun loadData() {
-        var notification = AppConstants.CurrentSelecedNotification
+        var notification = AppConstants.CurrentSelectedNotification
         tvTitle.text = notification.notificationTitle
         tvSubject.text = notification.notificationContent
         tvDate.text = notification.notificationDate

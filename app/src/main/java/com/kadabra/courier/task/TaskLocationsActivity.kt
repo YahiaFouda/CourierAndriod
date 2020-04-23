@@ -88,10 +88,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private val mTripMarkers = ArrayList<Marker>()
     private var mSelectedMarker: Marker? = null
     private var totalKilometers: Float = 0F
-    private var acceptedTaskslist = ArrayList<Task>()
     private lateinit var polyline: Polyline
     var isACcepted = false
     private lateinit var directionResult: DirectionsResult
+    private lateinit var mapFragment:SupportMapFragment
     //endregion
 
 
@@ -116,7 +116,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
             R.id.btnStart -> {
 //                if (!AppConstants.COURIERSTARTTASK) {
-                isACcepted = isStartedTask(AppConstants.CurrentSelectedTask)
+                isACcepted =
+                    AppConstants.CurrentSelectedTask.IsStarted//isStartedTask(AppConstants.CurrentSelectedTask)
                 if (!isACcepted) { // not started yet
                     btnStart.text = getString(R.string.start_task)
                     var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
@@ -132,6 +133,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                     if (NetworkManager().isNetworkAvailable(this)) {
                         calculateTwoDirections(pickUp, dropOff)
+                        AppConstants.CurrentSelectedTask.IsStarted=true
                     } else
                         Alert.showMessage(
                             this@TaskLocationsActivity,
@@ -158,7 +160,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
+         mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -194,6 +196,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
                                     map.uiSettings.setAllGesturesEnabled(false)
                                     map.uiSettings.isScrollGesturesEnabled = false
+                                    map.getUiSettings().setZoomGesturesEnabled(false)
+                                    mapFragment.view?.isClickable=false
+                                    mapFragment.view?.isFocusable=false
+
                                     calculateDirections(
                                         LatLng(
                                             lastLocation?.latitude!!,
@@ -352,13 +358,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
 
-        try {
-            acceptedTaskslist = UserSessionManager.getInstance(this)?.getStartedTasks()!!
-        } catch (ex: Exception) {
-            acceptedTaskslist = ArrayList()
-        }
-
-        isACcepted = isStartedTask(AppConstants.CurrentSelectedTask)
+        isACcepted =
+            AppConstants.CurrentSelectedTask.IsStarted// isStartedTask(AppConstants.CurrentSelectedTask)
         init()
 
 
@@ -963,9 +964,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 startTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
 
                                 AppConstants.COURIERSTARTTASK = true
-                                acceptedTaskslist.add(AppConstants.CurrentAcceptedTask)
-                                UserSessionManager.getInstance(this@TaskLocationsActivity)
-                                    .setStartedTasks(acceptedTaskslist)
                                 Alert.hideProgress()
                                 btnStart.text = getString(R.string.end_task)
                             } else {
@@ -1062,16 +1060,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     }
 
-    private fun isStartedTask(task: Task): Boolean {
-        var exist = false
-        acceptedTaskslist.forEach {
-            if (it.TaskId == task.TaskId) {
-                exist = true
-            }
-        }
-        return exist
-    }
-
 
     private fun conevrtMetersToKilometers(meters: Long): Float {
         var kilometers = 0F
@@ -1090,6 +1078,11 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 UtilHelper.uploadFile(bitmap, taskId)
                 map.uiSettings.setAllGesturesEnabled(true)
                 map.uiSettings.isScrollGesturesEnabled = true
+                map.getUiSettings().setZoomGesturesEnabled(true)
+
+
+                mapFragment.view?.isClickable=true
+                mapFragment.view?.isFocusable=true
             }
         mMap.snapshot(callback)
     }

@@ -87,7 +87,7 @@ object AppConstants {
     var currentSelectedStop: Stop = Stop()
     var CurrentLocation: Location? = null
     var ALL_TASKS_DATA = ArrayList<Task>()
-    var CurrentSelecedNotification = Notification()
+    var CurrentSelectedNotification = Notification()
     var COURIERSTARTTASK=false
     var CURRENTTOTALNOTIFICATIONS=0
 
