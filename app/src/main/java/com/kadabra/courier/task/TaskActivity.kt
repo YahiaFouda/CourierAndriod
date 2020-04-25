@@ -805,15 +805,15 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             notificationView.findViewById(R.id.tvNotification) as TextView
         ivNotification =
             notificationView.findViewById(R.id.ivNotification) as ImageView
-        try {
-            total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
-            tvNotificationCounter.text = total.toString()
-        } catch (ex: Exception) {
-            total = 0
-            tvNotificationCounter.text = total.toString()
-        }
+//        try {
+//            total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
+//            tvNotificationCounter.text = total.toString()
+//        } catch (ex: Exception) {
+//            total = 0
+//            tvNotificationCounter.text = total.toString()
+//        }
         tvNotificationCounter.text = total.toString()
-//        tvNotificationCounter.text = AppConstants.CURRENTTOTALNOTIFICATIONS.toString()
+
 
 
         ivNotification.setOnClickListener {

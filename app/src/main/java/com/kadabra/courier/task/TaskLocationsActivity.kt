@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
+import android.graphics.Color
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
@@ -92,6 +93,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     var isACcepted = false
     private lateinit var directionResult: DirectionsResult
     private lateinit var mapFragment:SupportMapFragment
+//    private lateinit var bitmapScreenShot: Bitmap
     //endregion
 
 
@@ -194,11 +196,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                             if (lastLocation?.latitude != null && lastLocation?.longitude != null) {
                                 if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
-                                    map.uiSettings.setAllGesturesEnabled(false)
-                                    map.uiSettings.isScrollGesturesEnabled = false
-                                    map.getUiSettings().setZoomGesturesEnabled(false)
-                                    mapFragment.view?.isClickable=false
-                                    mapFragment.view?.isFocusable=false
+
 
                                     calculateDirections(
                                         LatLng(
@@ -223,6 +221,13 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     ) // Courier  start  journey from details view
                     {
                         if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
+
+                            map.uiSettings.setAllGesturesEnabled(false)
+                            map.uiSettings.isScrollGesturesEnabled = false
+                            map.uiSettings.isZoomGesturesEnabled = false
+                            mapFragment.view?.isClickable=false
+                            mapFragment.view?.isFocusable=false
+
                             btnStart.visibility = View.VISIBLE
                             var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
                             var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
@@ -835,6 +840,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     rlBottom.visibility = View.VISIBLE
                 }
             }
+//            bitmapScreenShot= getScreenShot(rlParent)
         }
     }
 
@@ -956,7 +962,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                         override fun onSuccess(response: ApiResponse<CalculateFees>) {
                             if (response.Status == AppConstants.STATUS_SUCCESS) {
-//                                zoomRoute(polyline.points)
+//                                UtilHelper.uploadFile(bitmapScreenShot, task.TaskId)
                                 captureScreen(map, AppConstants.CurrentSelectedTask.TaskId)
                                 AppConstants.CurrentAcceptedTask = task
                                 AppConstants.CurrentSelectedTask = task
@@ -1069,21 +1075,18 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
     fun captureScreen(mMap: GoogleMap, taskId: String) {
-//        var bit=Screenshot.takeScreenshotOfRootView(rlParent)
-//        UtilHelper.uploadFile(bit,taskId)
         val callback =
             SnapshotReadyCallback { snapshot ->
 
-                val bitmap = snapshot
-                UtilHelper.uploadFile(bitmap, taskId)
+                UtilHelper.uploadFile(snapshot, taskId)
                 map.uiSettings.setAllGesturesEnabled(true)
                 map.uiSettings.isScrollGesturesEnabled = true
-                map.getUiSettings().setZoomGesturesEnabled(true)
-
-
+                map.uiSettings.isZoomGesturesEnabled = true
                 mapFragment.view?.isClickable=true
                 mapFragment.view?.isFocusable=true
             }
         mMap.snapshot(callback)
     }
+
+
 }
