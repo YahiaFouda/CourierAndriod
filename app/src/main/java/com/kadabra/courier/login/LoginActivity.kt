@@ -24,6 +24,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 
 import com.google.android.material.snackbar.Snackbar
 import com.kadabra.courier.BuildConfig
@@ -59,6 +60,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     //region Events
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
         setContentView(R.layout.activity_login)
 
 
