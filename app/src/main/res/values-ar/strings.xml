@@ -84,6 +84,7 @@
     <string name="courier_power_by_kadabra">Powered by kadabra</string>
     <string name="status">الحالة</string>
     <string name="in_progress">قيد التنفيذ</string>
+    <string name="started">بدأت</string>
     <string name="nav_call">الأتصال بعميل</string>
     <string name="nav_logout">تسجيل خروج</string>
     <string name="nav_notification">تنبيهات</string>

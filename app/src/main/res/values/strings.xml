@@ -108,6 +108,8 @@
     <string name="notification_details">Notification Details</string>
     <string name="tasks_history">Tasks History</string>
     <string name="in_progress">In Progress</string>
+    <string name="started">Started</string>
+
     <string name="new_task">New</string>
     <string name="completed">Completed</string>
     <string name="total_completed">Total Completed</string>

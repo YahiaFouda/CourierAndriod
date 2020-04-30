@@ -14,6 +14,6 @@ class CalculateFees {
     var message: String? = null
     @SerializedName("ResponseObj")
     @Expose
-    var responseObj: Any? = null
+    var responseObj: Task? = null
 
 }

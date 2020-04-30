@@ -124,7 +124,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private fun init() {
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
 
-         total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
+        total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
 
         serviceCostView = View.inflate(this, R.layout.choose_language_layout, null)
         ivLanguageBack = serviceCostView!!.findViewById<ImageView>(R.id.ivBackLanguage)
@@ -380,19 +380,19 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                             var taskData = response.ResponseObj!!
                             AppConstants.CURRENTTOTALNOTIFICATIONS =
                                 taskData.NoOfUnreadedNotification
-
+                            total = taskData.NoOfUnreadedNotification
                             UserSessionManager.getInstance(this@TaskActivity)
                                 .setTotalNotification(taskData.NoOfUnreadedNotification)
 
-                            if (taskData.NoOfUnreadedNotification > 0)
-                                tvNotificationCounter.visibility = View.VISIBLE
-
-                            if (taskData.NoOfUnreadedNotification > 99)
-                                tvNotificationCounter.text = "99+"
-
-
-                            tvNotificationCounter.text =
-                                taskData.NoOfUnreadedNotification.toString()
+//                            if (taskData.NoOfUnreadedNotification > 0)
+//                                tvNotificationCounter.visibility = View.VISIBLE
+//
+//                            if (taskData.NoOfUnreadedNotification > 99)
+//                                tvNotificationCounter.text = "99+"
+//
+//
+//                            tvNotificationCounter.text =
+//                                taskData.NoOfUnreadedNotification.toString()
 
                             taskList = taskData.taskmodels!!
                             if (taskList.size > 0) {
@@ -805,13 +805,14 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             notificationView.findViewById(R.id.tvNotification) as TextView
         ivNotification =
             notificationView.findViewById(R.id.ivNotification) as ImageView
-//        try {
-//            total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
-//            tvNotificationCounter.text = total.toString()
-//        } catch (ex: Exception) {
-//            total = 0
-//            tvNotificationCounter.text = total.toString()
-//        }
+
+        if (total > 0)
+            tvNotificationCounter.visibility = View.VISIBLE
+//
+//        if (total > 99)
+//            tvNotificationCounter.text = "99+"
+
+
         tvNotificationCounter.text = total.toString()
 
 

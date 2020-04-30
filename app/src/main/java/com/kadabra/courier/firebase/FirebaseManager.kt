@@ -374,9 +374,9 @@ object FirebaseManager {
     }
 
 
-    private fun clearDb() {
+     fun clearDb() {
         var applesQuery = dbCourierTaskHistory.setValue(null)
-        var applesQuery1 = dbCourierFeesTaskHistory.setValue(null)
+//        var applesQuery1 = dbCourierFeesTaskHistory.setValue(null)
     }
 
 

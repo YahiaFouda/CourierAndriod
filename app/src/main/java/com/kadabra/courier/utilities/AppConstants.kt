@@ -104,6 +104,9 @@ object AppConstants {
     const val FIREBASE_HAVE_TASK = "haveTask"
     const val FIREBASE_START_TASK = "startTask"
 
+    var IN_PROGRESS="In progress"
+    var NEW="New"
+    var COMPLETED="Completed"
 
     //endregion
 

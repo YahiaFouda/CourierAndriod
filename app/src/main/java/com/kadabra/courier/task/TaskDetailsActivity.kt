@@ -54,7 +54,6 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private var lastLocation: Location? = null
     private var mBound = false
     private var myReceiver: MyReceiver? = null
-    private var inProgress = "In progress"
     private var alertDialog: AlertDialog? = null
     var isStarted = false
     private val mServiceConnection = object : ServiceConnection {
@@ -131,24 +130,22 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         tvTask.text = task.TaskName
         tvTaskDescription.text = task.TaskDescription
 
-
-        if (task.Status == inProgress) {
-            if (task.IsStarted) {
-                tvStatus.text = getString(R.string.in_progress)
+        if (task.Status == AppConstants.NEW) {
+            tvStatus.text = getString(R.string.new_task)
+            btnEndTask.text = getString(R.string.accept_task)
+        } else if (task.Status == AppConstants.IN_PROGRESS) {
+            if (task.IsStarted) //task is started
+            {
+                tvStatus.text = getString(R.string.started)
                 btnEndTask.text = getString(R.string.end_task)
-            } else {
+            }
+            else //task is not started yet
+            {
                 tvStatus.text = getString(R.string.in_progress)
                 btnEndTask.text = getString(R.string.start_task)
             }
 
         }
-
-
-        else {
-            tvStatus.text = getString(R.string.new_task)
-            btnEndTask.text = getString(R.string.accept_task)
-        }
-
 
 
         if (task.Amount!! > 0)
@@ -283,7 +280,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
                         tvStatus.text = task.Status//getString(R.string.in_progress)
 //                        task.Status = getString(R.string.in_progress)
-                        task.Status = inProgress
+                        task.Status = AppConstants.IN_PROGRESS
                         AppConstants.CurrentAcceptedTask = task
                         AppConstants.CurrentSelectedTask = task
                         acceptTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
@@ -460,41 +457,18 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 showDropOffLocation()
             }
             R.id.btnEndTask -> {
-
+                Alert.showMessage(
+                    this@TaskDetailsActivity,
+                   "CLICKED"
+                )
                 if (NetworkManager().isNetworkAvailable(this)) {
                     if (!checkPermissions()) {
                         requestPermissions()
                     } else {
-                        if (AppConstants.CurrentSelectedTask.Status == inProgress) //end task
+                        if (AppConstants.CurrentSelectedTask.Status == AppConstants.IN_PROGRESS) //end task
                         {
                             isStarted =
-                                AppConstants.CurrentSelectedTask.IsStarted//isStartedTask(AppConstants.CurrentSelectedTask)
-
-//                            val builder = AlertDialog.Builder(this@TaskDetailsActivity)
-//                            if(!isACcepted) // new
-//                            {
-//                                builder.setTitle(getString(R.string.start_task))
-//                                builder.setMessage(getString(R.string.msg_end_task))
-//                            }
-
-//                            builder.setPositiveButton(getString(R.string.ok)) { dialogInterface, i ->
-//                                if (!isStarted) {
-//                                    startActivity(
-//                                        Intent(
-//                                            this@TaskDetailsActivity,
-//                                            TaskLocationsActivity::class.java
-//                                        ).putExtra("startTask", true)
-//                                    )
-//                                } else
-//                                    endTask(AppConstants.CurrentSelectedTask)
-////                                finish()
-//                            }
-//                            builder.setNegativeButton(getString(R.string.cancel)) { dialog, which ->
-//                                alertDialog?.dismiss()
-//                            }
-//                            alertDialog = builder.create()
-//                            alertDialog?.show()
-//
+                                AppConstants.CurrentSelectedTask.IsStarted
 
                             if (!isStarted) {
                                 startActivity(

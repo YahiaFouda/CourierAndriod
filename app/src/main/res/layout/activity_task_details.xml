@@ -118,7 +118,8 @@
                         android:text="@string/amount"
                         android:textColor="@color/link"
                         android:textSize="20sp"
-                        android:layout_marginLeft="5dp" />
+                        android:layout_marginLeft="5dp"
+                        android:visibility="gone"/>
 
                     <TextView
                         android:id="@+id/tvFrom"
@@ -171,7 +172,7 @@
                         android:id="@+id/tvStops"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/tvTaskAmount"
+                        android:layout_below="@+id/tvTaskDescription"
                         android:layout_marginLeft="2dp"
                         android:layout_marginTop="20dp"
                         android:gravity="center"

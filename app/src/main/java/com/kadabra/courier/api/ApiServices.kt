@@ -69,7 +69,7 @@ interface ApiServices {
     fun updateTaskCourierFees(
         @Query("taskId") taskId: String,  @Query("Kilometers") kilometers: Float
     )
-            : Call<ApiResponse<CalculateFees>>
+            : Call<ApiResponse<Task>>
 
 }
 

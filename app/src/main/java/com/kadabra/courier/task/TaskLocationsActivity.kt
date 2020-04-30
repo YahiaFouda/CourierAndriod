@@ -1,15 +1,13 @@
 package com.kadabra.courier.task
 
 import android.Manifest
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Color
+import android.graphics.*
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
@@ -92,7 +90,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private lateinit var polyline: Polyline
     var isACcepted = false
     private lateinit var directionResult: DirectionsResult
-    private lateinit var mapFragment:SupportMapFragment
+    private lateinit var mapFragment: SupportMapFragment
 //    private lateinit var bitmapScreenShot: Bitmap
     //endregion
 
@@ -135,7 +133,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                     if (NetworkManager().isNetworkAvailable(this)) {
                         calculateTwoDirections(pickUp, dropOff)
-                        AppConstants.CurrentSelectedTask.IsStarted=true
+//                        AppConstants.CurrentSelectedTask.IsStarted = true
                     } else
                         Alert.showMessage(
                             this@TaskLocationsActivity,
@@ -162,7 +160,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-         mapFragment = supportFragmentManager
+        mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -196,13 +194,13 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                             if (lastLocation?.latitude != null && lastLocation?.longitude != null) {
                                 if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
-
-
+                                    Log.d(TAG, "location")
+//                                    isFirstTime = false
                                     calculateDirections(
                                         LatLng(
                                             lastLocation?.latitude!!,
                                             lastLocation?.longitude!!
-                                        ), destination
+                                        ), destination, true
                                     )
                                 } else
                                     Alert.showMessage(
@@ -212,22 +210,24 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
                             }
+
                         }
 
-                    } else if (intent.getBooleanExtra(
+                    } else if (intent.getBooleanExtra(  // starting task
                             "startTask",
                             true
-                        )
+                        ) && !AppConstants.CurrentSelectedTask.IsStarted
                     ) // Courier  start  journey from details view
                     {
+                        AppConstants.currentSelectedStop = Stop()
                         if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
-
+//////////////////////////////////////////////////// prevent interact with map untill snapshot for map is taken ////////////////////////////////////////////////////
                             map.uiSettings.setAllGesturesEnabled(false)
                             map.uiSettings.isScrollGesturesEnabled = false
                             map.uiSettings.isZoomGesturesEnabled = false
-                            mapFragment.view?.isClickable=false
-                            mapFragment.view?.isFocusable=false
-
+                            mapFragment.view?.isClickable = false
+                            mapFragment.view?.isFocusable = false
+///////////////////////////////////////////////////////////////////////////////////////////////
                             btnStart.visibility = View.VISIBLE
                             var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
                             var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
@@ -240,7 +240,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 lastStop.Longitude!!
                             )
 
-                            calculateDirections(pickUp, dropOff)
+                            calculateDirections(pickUp, dropOff, false)
                             btnStart.text = getString(R.string.start_task)
                         } else
                             Alert.showMessage(
@@ -365,6 +365,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
         isACcepted =
             AppConstants.CurrentSelectedTask.IsStarted// isStartedTask(AppConstants.CurrentSelectedTask)
+
         init()
 
 
@@ -618,7 +619,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 ////
 //    }
 
-    private fun calculateDirections(origin: LatLng, dest: LatLng) {
+    private fun calculateDirections(origin: LatLng, dest: LatLng, isStop: Boolean) {
 //        Alert.showProgress(this)
         Log.d(
             TAG,
@@ -658,7 +659,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                     Log.d("DISTANCE1", result!!.routes[0].legs[0].distance.inMeters.toString())
                     Log.d("DISTANCE1", totalKilometers.toString())
-                    addPolylinesToMap(result!!)
+                    addPolylinesToMap(result!!, isStop)
 //                    Alert.hideProgress()
                 }
 
@@ -791,7 +792,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
 
-    private fun addPolylinesToMap(result: DirectionsResult) {
+    private fun addPolylinesToMap(result: DirectionsResult, isStop: Boolean) {
 
         Handler(Looper.getMainLooper()).post {
             Log.d(
@@ -824,20 +825,37 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         )
                     )
                 }
-                polyline =
-                    map.addPolyline(PolylineOptions().addAll(newDecodedPath)) // add marker
-                polyline.color = ContextCompat.getColor(this, R.color.colorPrimary)
-                polyline.isClickable = true
-                mPolyLinesData.add(PolylineData(polyline, route.legs[0]))
+
+//                if (isStop)  //draw  directions alternatives for stop
+//                {
+//                    map.clear()
+//                    polyline =
+//                        map.addPolyline(PolylineOptions().addAll(newDecodedPath)) // add marker
+//                    polyline.color = ContextCompat.getColor(this, R.color.colorPrimary)
+//                    polyline.isClickable = true
+//                    mPolyLinesData.add(PolylineData(polyline, route.legs[0]))
+//
+//                }
                 // highlight the fastest route and adjust camera
                 val tempDuration =
                     route.legs[0].duration.inSeconds.toDouble()
                 if (tempDuration < duration) {
+
+//                    if (!isStop) {
+                    map.clear()
+                    polyline =
+                        map.addPolyline(PolylineOptions().addAll(newDecodedPath)) // add marker
+                    polyline.color = ContextCompat.getColor(this, R.color.colorPrimary)
+                    polyline.isClickable = true
+                    mPolyLinesData.add(PolylineData(polyline, route.legs[0]))
+//                    }
+
                     duration = tempDuration
                     onPolylineClick(polyline)
                     zoomRoute(polyline.points)
                     setTripDirectionData(PolylineData(polyline, route.legs[0]))
                     rlBottom.visibility = View.VISIBLE
+//                    isFirstTime = true
                 }
             }
 //            bitmapScreenShot= getScreenShot(rlParent)
@@ -862,16 +880,23 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     )
 
                 setTripDirectionData(polylineData)
+                var name = ""
+                if (!AppConstants.currentSelectedStop.StopName.isNullOrEmpty())
+                    name = AppConstants.currentSelectedStop.StopName
+                else
+                    name = AppConstants.CurrentSelectedTask.TaskName
 
+                var snippetData =
+                    getString(R.string.distance) + " " + polylineData.leg.distance + " " + (getString(
+                        R.string.duration
+                    ) + " " + polylineData.leg.duration)
                 val marker: Marker = map.addMarker(
                     MarkerOptions()
                         .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location))
                         .position(endLocation)
-                        .title("[" + getString(R.string.trip) + " " + index + "] - " + AppConstants.currentSelectedStop.StopName)
+                        .title("[" + getString(R.string.trip) + " " + index + "] - " + name)
                         .snippet(
-                            getString(R.string.duration) + " " + polylineData.leg.duration + " " + (getString(
-                                R.string.distance
-                            ) + " " + polylineData.leg.distance)
+                            snippetData
                         )
 
 
@@ -892,13 +917,22 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         for (latLngPoint in lstLatLngRoute) boundsBuilder.include(
             latLngPoint
         )
-        val routePadding = 50
+        val routePadding = 150
         val latLngBounds = boundsBuilder.build()
+
         map.animateCamera(
             CameraUpdateFactory.newLatLngBounds(latLngBounds, routePadding),
             600,
             null
         )
+
+
+//        var cu = CameraUpdateFactory.newLatLngBounds(latLngBounds, routePadding)
+//        map.moveCamera(
+//            CameraUpdateFactory.zoomTo(16f)
+//        )
+
+
     }
 
     private fun resetMap() {
@@ -951,7 +985,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 var endPoint = request.updateTaskCourierFees(task.TaskId, totalKilometers)
                 NetworkManager().request(
                     endPoint,
-                    object : INetworkCallBack<ApiResponse<CalculateFees>> {
+                    object : INetworkCallBack<ApiResponse<Task>> {
                         override fun onFailed(error: String) {
                             Alert.hideProgress()
                             Alert.showMessage(
@@ -960,15 +994,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                             )
                         }
 
-                        override fun onSuccess(response: ApiResponse<CalculateFees>) {
+                        override fun onSuccess(response: ApiResponse<Task>) {
                             if (response.Status == AppConstants.STATUS_SUCCESS) {
-//                                UtilHelper.uploadFile(bitmapScreenShot, task.TaskId)
-                                captureScreen(map, AppConstants.CurrentSelectedTask.TaskId)
+                                var task = response.ResponseObj!!
+                                captureScreen(map, task.TaskId)
+                                task.IsStarted=true
                                 AppConstants.CurrentAcceptedTask = task
                                 AppConstants.CurrentSelectedTask = task
-
                                 startTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
-
+                                Log.d(TAG, "START TASK READY TO END")
                                 AppConstants.COURIERSTARTTASK = true
                                 Alert.hideProgress()
                                 btnStart.text = getString(R.string.end_task)
@@ -1032,6 +1066,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                             AppConstants.CurrentSelectedTask,
                             AppConstants.CurrentLoginCourier.CourierId
                         )
+                        FirebaseManager.updateCourierStartTask(
+                            AppConstants.CurrentLoginCourier.CourierId,
+                            false
+                        )
 
                         AppConstants.CurrentAcceptedTask = Task()
                         AppConstants.CurrentSelectedTask = Task()
@@ -1082,11 +1120,34 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 map.uiSettings.setAllGesturesEnabled(true)
                 map.uiSettings.isScrollGesturesEnabled = true
                 map.uiSettings.isZoomGesturesEnabled = true
-                mapFragment.view?.isClickable=true
-                mapFragment.view?.isFocusable=true
+                mapFragment.view?.isClickable = true
+                mapFragment.view?.isFocusable = true
             }
         mMap.snapshot(callback)
     }
 
+    fun takeScreenshot(activity: Activity): Bitmap {
+        var view = activity.getWindow().getDecorView();
+        view.setDrawingCacheEnabled(true);
+        view.buildDrawingCache();
+        var bitmap = view.getDrawingCache();
+        var rect = Rect();
+        activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);
+        var statusBarHeight = rect.top;
+        var width = activity.getWindowManager().getDefaultDisplay().getWidth();
+        var height = activity.getWindowManager().getDefaultDisplay().getHeight();
+        var bitmap2 = Bitmap.createBitmap(
+            bitmap, 0, statusBarHeight, width,
+            height - statusBarHeight
+        );
+        view.destroyDrawingCache();
+        return bitmap2;
 
+//      var rootView = window.decorView.findViewById(android.R.id.content) as View
+//   var screenView = rootView.getRootView();
+//       screenView.setDrawingCacheEnabled(true);
+//       var bitmap = Bitmap.createBitmap(screenView.getDrawingCache());
+//       screenView.setDrawingCacheEnabled(false);
+//       return bitmap;
+    }
 }

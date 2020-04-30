@@ -13,20 +13,25 @@ import com.kadabra.courier.R
 
 object Alert {
 
-    lateinit var mLoadingDialog: Dialog
+    var mLoadingDialog: Dialog? = null
 
     fun showProgress(context: Context) {
-        mLoadingDialog = Dialog(context)
-        mLoadingDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        mLoadingDialog.setContentView(R.layout.progress_bar)
-        mLoadingDialog.window!!.setLayout(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT)
-        mLoadingDialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        mLoadingDialog.setCancelable(false)
-        mLoadingDialog.show()
+        if (mLoadingDialog == null) {
+            mLoadingDialog = Dialog(context)
+            mLoadingDialog?.requestWindowFeature(Window.FEATURE_NO_TITLE)
+            mLoadingDialog?.setContentView(R.layout.progress_bar)
+            mLoadingDialog?.window!!.setLayout(
+                RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT
+            )
+            mLoadingDialog?.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            mLoadingDialog?.setCancelable(false)
+        }
+        mLoadingDialog?.show()
     }
 
     fun hideProgress() {
-        mLoadingDialog.hide()
+        mLoadingDialog?.hide()
     }
 
     fun showMessage(context: Context, message: String) {
@@ -35,11 +40,11 @@ object Alert {
 
     fun showAlertMessage(context: Context, title: String, message: String) {
         AlertDialog.Builder(context)
-                .setTitle(title)
-                .setMessage(message)
-                .setIcon(R.mipmap.ic_launcher)
-                .setPositiveButton("ok", null)
-                .show()
+            .setTitle(title)
+            .setMessage(message)
+            .setIcon(R.mipmap.ic_launcher)
+            .setPositiveButton("ok", null)
+            .show()
 
     }
 

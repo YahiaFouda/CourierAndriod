@@ -14,6 +14,7 @@ import com.kadabra.courier.base.BaseNewActivity
 import com.reach.plus.admin.util.UserSessionManager
 import com.kadabra.courier.exception.CrashActivity
 import com.kadabra.courier.exception.CrashHandeller
+import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
@@ -36,16 +37,12 @@ class SplashActivity : BaseNewActivity() {
         super.onCreate(savedInstanceState)
         setContentView(com.kadabra.courier.R.layout.activity_splash)
 
-//     if (!isTaskRoot) {
-//        finish()
-//        return
-//    }
+//        FirebaseManager.clearDb()
 
         startService(Intent(baseContext, ExitAppService::class.java))
         init()
 
     }
-
 
 
     override fun onRequestPermissionsResult(
@@ -101,7 +98,6 @@ class SplashActivity : BaseNewActivity() {
 
 
     }
-
 
 
     override fun onBackPressed() {
