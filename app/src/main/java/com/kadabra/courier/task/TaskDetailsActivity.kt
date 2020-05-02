@@ -451,16 +451,14 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     override fun onClick(view: View?) {
         when (view!!.id) {
             R.id.tvFrom -> {
+
                 showPickUpLocation()
             }
             R.id.tvTo -> {
                 showDropOffLocation()
             }
             R.id.btnEndTask -> {
-                Alert.showMessage(
-                    this@TaskDetailsActivity,
-                   "CLICKED"
-                )
+            btnEndTask.isEnabled=false
                 if (NetworkManager().isNetworkAvailable(this)) {
                     if (!checkPermissions()) {
                         requestPermissions()
@@ -506,6 +504,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                         getString(R.string.no_internet)
                     )
                 }
+
+                btnEndTask.isEnabled=true
             }
 
             R.id.ivBack -> {

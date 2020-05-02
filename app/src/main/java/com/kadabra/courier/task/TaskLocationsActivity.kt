@@ -91,6 +91,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     var isACcepted = false
     private lateinit var directionResult: DirectionsResult
     private lateinit var mapFragment: SupportMapFragment
+    var waypoints: java.util.ArrayList<LatLng> = java.util.ArrayList()
 //    private lateinit var bitmapScreenShot: Bitmap
     //endregion
 
@@ -200,7 +201,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                         LatLng(
                                             lastLocation?.latitude!!,
                                             lastLocation?.longitude!!
-                                        ), destination, true
+                                        ), destination, true, true
                                     )
                                 } else
                                     Alert.showMessage(
@@ -219,6 +220,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         ) && !AppConstants.CurrentSelectedTask.IsStarted
                     ) // Courier  start  journey from details view
                     {
+                        map.isMyLocationEnabled = false
                         AppConstants.currentSelectedStop = Stop()
                         if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
 //////////////////////////////////////////////////// prevent interact with map untill snapshot for map is taken ////////////////////////////////////////////////////
@@ -239,8 +241,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 lastStop.Latitude!!,
                                 lastStop.Longitude!!
                             )
-
-                            calculateDirections(pickUp, dropOff, false)
+                            waypoints = ArrayList()
+                            AppConstants.CurrentAcceptedTask.stopsmodel.forEach {
+                                if (it.StopTypeID == 3)
+                                    waypoints.add(LatLng(it.Latitude!!, it.Longitude!!))
+                            }
+                            calculateDirections(pickUp, dropOff, false, false)
                             btnStart.text = getString(R.string.start_task)
                         } else
                             Alert.showMessage(
@@ -390,7 +396,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             }
         }
 
+        map.setOnMyLocationClickListener {
 
+            false
+        }
     }
 
     override fun onMarkerClick(p0: Marker?): Boolean {
@@ -615,12 +624,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
 
-//    override fun onInfoWindowClick(p0: Marker?) {
-////
-//    }
-
-    private fun calculateDirections(origin: LatLng, dest: LatLng, isStop: Boolean) {
-//        Alert.showProgress(this)
+    private fun calculateDirections(
+        origin: LatLng,
+        dest: LatLng,
+        isStop: Boolean,
+        showAlternatives: Boolean
+    ) {
         Log.d(
             TAG,
             "calculateDirections: calculating directions."
@@ -630,37 +639,43 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             dest.longitude
         )
         val directions = DirectionsApiRequest(mGeoApiContext)
-        directions.alternatives(true)
+        directions.alternatives(showAlternatives)
+
         directions.origin(
             com.google.maps.model.LatLng(
                 origin.latitude,
                 origin.longitude
             )
         )
-        Log.d(
-            TAG,
-            "calculateDirections: destination: $destination"
-        )
+        Log.d(TAG, "calculateDirections: destination: $destination")
+
+//        if (waypoints.size > 0)
+//            waypoints.forEach { directions.waypoints(com.google.maps.model.LatLng(it.latitude,it.longitude)) }
+
+
         directions.destination(destination)
             .setCallback(object : PendingResult.Callback<DirectionsResult?> {
                 override fun onResult(result: DirectionsResult?) { //                Log.d(TAG, "calculateDirections: routes: " + result.routes[0].toString());
-//                Log.d(TAG, "calculateDirections: duration: " + result.routes[0].legs[0].duration);
-//                Log.d(TAG, "calculateDirections: distance: " + result.routes[0].legs[0].distance);
+                    Log.d(
+                        TAG,
+                        "calculateDirections: duration: " + result!!.routes[0].legs[0].duration
+                    );
+                    Log.d(
+                        TAG,
+                        "calculateDirections: distance: " + result!!.routes[0].legs[0].distance
+                    );
 //                Log.d(TAG, "calculateDirections: geocodedWayPoints: " + result.geocodedWaypoints[0].toString());
                     Log.d(
                         TAG,
                         "onResult: successfully retrieved directions."
                     )
                     val meters = result!!.routes[0].legs[0].distance.inMeters
-//                    if(meters>=1000)
-//                      totalKilometers=  meters  /1000.0f
-//                    else
                     totalKilometers = conevrtMetersToKilometers(meters)
-
+                    Log.d("DISTANCE1_result", result!!.routes[0].legs[0].toString())
                     Log.d("DISTANCE1", result!!.routes[0].legs[0].distance.inMeters.toString())
                     Log.d("DISTANCE1", totalKilometers.toString())
                     addPolylinesToMap(result!!, isStop)
-//                    Alert.hideProgress()
+
                 }
 
                 override fun onFailure(e: Throwable) {
@@ -826,19 +841,11 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     )
                 }
 
-//                if (isStop)  //draw  directions alternatives for stop
-//                {
-//                    map.clear()
-//                    polyline =
-//                        map.addPolyline(PolylineOptions().addAll(newDecodedPath)) // add marker
-//                    polyline.color = ContextCompat.getColor(this, R.color.colorPrimary)
-//                    polyline.isClickable = true
-//                    mPolyLinesData.add(PolylineData(polyline, route.legs[0]))
-//
-//                }
+
                 // highlight the fastest route and adjust camera
                 val tempDuration =
                     route.legs[0].duration.inSeconds.toDouble()
+
                 if (tempDuration < duration) {
 
 //                    if (!isStop) {
@@ -855,7 +862,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     zoomRoute(polyline.points)
                     setTripDirectionData(PolylineData(polyline, route.legs[0]))
                     rlBottom.visibility = View.VISIBLE
-//                    isFirstTime = true
                 }
             }
 //            bitmapScreenShot= getScreenShot(rlParent)
@@ -864,12 +870,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     override fun onPolylineClick(polyline: Polyline?) {
         var index = 0
+        var name = ""
         for (polylineData in mPolyLinesData) {
             index++
             Log.d(
                 TAG,
                 "onPolylineClick: toString: $polylineData"
             )
+
+
             if (polyline!!.id == polylineData.polyline.id) {
                 polylineData.polyline.color = ContextCompat.getColor(this, R.color.primary_dark)
                 polylineData.polyline.setZIndex(1F)
@@ -880,7 +889,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     )
 
                 setTripDirectionData(polylineData)
-                var name = ""
+
                 if (!AppConstants.currentSelectedStop.StopName.isNullOrEmpty())
                     name = AppConstants.currentSelectedStop.StopName
                 else
@@ -890,11 +899,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     getString(R.string.distance) + " " + polylineData.leg.distance + " " + (getString(
                         R.string.duration
                     ) + " " + polylineData.leg.duration)
+
                 val marker: Marker = map.addMarker(
                     MarkerOptions()
                         .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location))
                         .position(endLocation)
-                        .title("[" + getString(R.string.trip) + " " + index + "] - " + name)
+                        .title(/*"[" + getString(R.string.trip) + " " + index + "] - " +*/ name)
                         .snippet(
                             snippetData
                         )
@@ -998,14 +1008,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                             if (response.Status == AppConstants.STATUS_SUCCESS) {
                                 var task = response.ResponseObj!!
                                 captureScreen(map, task.TaskId)
-                                task.IsStarted=true
+                                task.IsStarted = true
                                 AppConstants.CurrentAcceptedTask = task
                                 AppConstants.CurrentSelectedTask = task
+                                AppConstants.COURIERSTARTTASK = true
                                 startTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
                                 Log.d(TAG, "START TASK READY TO END")
-                                AppConstants.COURIERSTARTTASK = true
                                 Alert.hideProgress()
                                 btnStart.text = getString(R.string.end_task)
+                                map.isMyLocationEnabled = true
                             } else {
                                 Alert.hideProgress()
                                 Alert.showMessage(

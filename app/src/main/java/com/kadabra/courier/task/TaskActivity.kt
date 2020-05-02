@@ -127,9 +127,9 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
 
         serviceCostView = View.inflate(this, R.layout.choose_language_layout, null)
-        ivLanguageBack = serviceCostView!!.findViewById<ImageView>(R.id.ivBackLanguage)
-        rbArabic = serviceCostView!!.findViewById<RadioButton>(R.id.rbArabic)
-        rbEnglish = serviceCostView!!.findViewById<RadioButton>(R.id.rbEnglish)
+        ivLanguageBack = serviceCostView!!.findViewById(R.id.ivBackLanguage)
+        rbArabic = serviceCostView!!.findViewById(R.id.rbArabic)
+        rbEnglish = serviceCostView!!.findViewById(R.id.rbEnglish)
 
         ivAccept.setOnClickListener(this)
         ivLanguageBack!!.setOnClickListener(this)
@@ -608,6 +608,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         setContentView(R.layout.activity_task)
         Log.d(TAG, "onCreate")
         myReceiver = MyReceiver()
+        FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId, true)
         init()
 //        forceUpdate()
     }

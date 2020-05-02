@@ -35,7 +35,7 @@ class SplashActivity : BaseNewActivity() {
     //region Events
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(com.kadabra.courier.R.layout.activity_splash)
+        setContentView(R.layout.activity_splash)
 
 //        FirebaseManager.clearDb()
 
