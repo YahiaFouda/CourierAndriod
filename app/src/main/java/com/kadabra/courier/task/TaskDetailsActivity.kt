@@ -138,8 +138,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             {
                 tvStatus.text = getString(R.string.started)
                 btnEndTask.text = getString(R.string.end_task)
-            }
-            else //task is not started yet
+            } else //task is not started yet
             {
                 tvStatus.text = getString(R.string.in_progress)
                 btnEndTask.text = getString(R.string.start_task)
@@ -458,7 +457,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 showDropOffLocation()
             }
             R.id.btnEndTask -> {
-            btnEndTask.isEnabled=false
+                btnEndTask.isEnabled = false
                 if (NetworkManager().isNetworkAvailable(this)) {
                     if (!checkPermissions()) {
                         requestPermissions()
@@ -505,7 +504,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                     )
                 }
 
-                btnEndTask.isEnabled=true
+                btnEndTask.isEnabled = true
             }
 
             R.id.ivBack -> {
@@ -523,7 +522,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
     override fun onBackPressed() {
         super.onBackPressed()
-        alertDialog!!.dismiss()
+        if (alertDialog!! != null)
+            alertDialog!!.dismiss()
         finish()
     }
 

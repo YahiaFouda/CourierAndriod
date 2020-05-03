@@ -7,10 +7,26 @@ public class PolylineData {
 
     private Polyline polyline;
     private DirectionsLeg leg;
+    private Stop stop;
+
 
     public PolylineData(Polyline polyline, DirectionsLeg leg) {
         this.polyline = polyline;
         this.leg = leg;
+    }
+    public PolylineData(Polyline polyline, DirectionsLeg leg,Stop stop) {
+        this.polyline = polyline;
+        this.leg = leg;
+        this.stop = stop;
+
+    }
+
+    public Stop getStop() {
+        return stop;
+    }
+
+    public void setStop(Stop stop) {
+        this.stop = stop;
     }
 
     public Polyline getPolyline() {
@@ -34,6 +50,7 @@ public class PolylineData {
         return "PolylineData{" +
                 "polyline=" + polyline +
                 ", leg=" + leg +
+                ", stop=" + stop +
                 '}';
     }
 }

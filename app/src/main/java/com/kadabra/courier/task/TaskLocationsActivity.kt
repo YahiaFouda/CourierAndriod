@@ -1,7 +1,6 @@
 package com.kadabra.courier.task
 
 import android.Manifest
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -50,17 +49,13 @@ import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.location.LatLngInterpolator
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.location.MarkerAnimation
-import com.kadabra.courier.model.CalculateFees
-import com.kadabra.courier.model.PolylineData
-import com.kadabra.courier.model.Stop
-import com.kadabra.courier.model.Task
+import com.kadabra.courier.model.*
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
-import com.kadabra.courier.utilities.Screenshot
 import com.kadabra.courier.utilities.UtilHelper
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_location_details.*
-import java.io.OutputStream
+import java.lang.Exception
 
 
 class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
@@ -87,12 +82,18 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private val mTripMarkers = ArrayList<Marker>()
     private var mSelectedMarker: Marker? = null
     private var totalKilometers: Float = 0F
+    private var totalDuration: Float = 0F
+    var totalDistance = 0L
+    var totalSeconds = 0L
+
     private lateinit var polyline: Polyline
     var isACcepted = false
     private lateinit var directionResult: DirectionsResult
     private lateinit var mapFragment: SupportMapFragment
     var waypoints: java.util.ArrayList<LatLng> = java.util.ArrayList()
-//    private lateinit var bitmapScreenShot: Bitmap
+    var pickUpStop = Stop()
+    var dropOffStop = Stop()
+    var meters = 0L
     //endregion
 
 
@@ -224,11 +225,11 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         AppConstants.currentSelectedStop = Stop()
                         if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
 //////////////////////////////////////////////////// prevent interact with map untill snapshot for map is taken ////////////////////////////////////////////////////
-                            map.uiSettings.setAllGesturesEnabled(false)
-                            map.uiSettings.isScrollGesturesEnabled = false
-                            map.uiSettings.isZoomGesturesEnabled = false
-                            mapFragment.view?.isClickable = false
-                            mapFragment.view?.isFocusable = false
+//                            map.uiSettings.setAllGesturesEnabled(false)
+//                            map.uiSettings.isScrollGesturesEnabled = false
+//                            map.uiSettings.isZoomGesturesEnabled = false
+//                            mapFragment.view?.isClickable = false
+//                            mapFragment.view?.isFocusable = false
 ///////////////////////////////////////////////////////////////////////////////////////////////
                             btnStart.visibility = View.VISIBLE
                             var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
@@ -242,10 +243,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 lastStop.Longitude!!
                             )
                             waypoints = ArrayList()
-                            AppConstants.CurrentAcceptedTask.stopsmodel.forEach {
-                                if (it.StopTypeID == 3)
-                                    waypoints.add(LatLng(it.Latitude!!, it.Longitude!!))
-                            }
+
                             calculateDirections(pickUp, dropOff, false, false)
                             btnStart.text = getString(R.string.start_task)
                         } else
@@ -383,7 +381,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         map.clear()
         map.isMyLocationEnabled = true
         map.mapType = GoogleMap.MAP_TYPE_TERRAIN //more map details
-        map.uiSettings.isZoomControlsEnabled = true
+        map.uiSettings.isZoomControlsEnabled = false
         map.setOnMarkerClickListener(this)
         map.setOnPolylineClickListener(this)
 
@@ -402,8 +400,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         }
     }
 
-    override fun onMarkerClick(p0: Marker?): Boolean {
-
+    override fun onMarkerClick(marker: Marker?): Boolean {
+        try {
+            var stop = marker?.tag as Stop
+            Log.d("Stop", stop.StopName)
+            marker.title = stop.StopName
+            marker.showInfoWindow()
+        } catch (ex: Exception) {
+            Log.e("Stop Error", ex.message)
+        }
         return false
     }
 
@@ -649,31 +654,48 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         )
         Log.d(TAG, "calculateDirections: destination: $destination")
 
-//        if (waypoints.size > 0)
-//            waypoints.forEach { directions.waypoints(com.google.maps.model.LatLng(it.latitude,it.longitude)) }
+        if (!isStop) {
+            AppConstants.CurrentAcceptedTask.stopsmodel.forEach {
+
+                if (it.StopTypeID == 3) {
+                    directions.waypoints(
+                        com.google.maps.model.LatLng(
+                            it.Latitude!!,
+                            it.Longitude!!
+                        )
+                    )
+
+                }
+
+            }
+            directions.optimizeWaypoints(true)
+        }
+
 
 
         directions.destination(destination)
             .setCallback(object : PendingResult.Callback<DirectionsResult?> {
-                override fun onResult(result: DirectionsResult?) { //                Log.d(TAG, "calculateDirections: routes: " + result.routes[0].toString());
-                    Log.d(
-                        TAG,
-                        "calculateDirections: duration: " + result!!.routes[0].legs[0].duration
-                    );
-                    Log.d(
-                        TAG,
-                        "calculateDirections: distance: " + result!!.routes[0].legs[0].distance
-                    );
-//                Log.d(TAG, "calculateDirections: geocodedWayPoints: " + result.geocodedWaypoints[0].toString());
-                    Log.d(
-                        TAG,
-                        "onResult: successfully retrieved directions."
-                    )
-                    val meters = result!!.routes[0].legs[0].distance.inMeters
+                override fun onResult(result: DirectionsResult?) {
+
+                    result!!.routes[0].legs.forEach {
+                        Log.d(
+                            TAG,
+                            "LEG: duration: " + it.duration
+                        );
+                        Log.d(
+                            TAG,
+                            "LEG: distance: " + it.distance
+                        );
+                        Log.d("LEG DATA", it.toString())
+
+                        meters += it.distance.inMeters
+                        totalDistance += it.distance.inMeters
+                        totalSeconds += it.duration.inSeconds
+
+
+                    }
                     totalKilometers = conevrtMetersToKilometers(meters)
-                    Log.d("DISTANCE1_result", result!!.routes[0].legs[0].toString())
-                    Log.d("DISTANCE1", result!!.routes[0].legs[0].distance.inMeters.toString())
-                    Log.d("DISTANCE1", totalKilometers.toString())
+
                     addPolylinesToMap(result!!, isStop)
 
                 }
@@ -688,65 +710,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             })
     }
 
-    private fun calculateTotalDirections(): Float {
-        var totalTime = 0
-        var totalKm = 0F
-        Log.d(
-            TAG,
-            "calculateDirections: calculating directions."
-        )
-
-        for (i in AppConstants.CurrentSelectedTask.stopsmodel) {
-
-        }
-
-        AppConstants.CurrentSelectedTask.stopsmodel.forEach {
-
-            var origin = LatLng(it.Latitude!!, it.Longitude!!)
-            var dest = LatLng(it.Latitude!!, it.Longitude!!)
-
-            val destination = com.google.maps.model.LatLng(
-                dest.latitude,
-                dest.longitude
-            )
-            val directions = DirectionsApiRequest(mGeoApiContext)
-            directions.alternatives(true)
-            directions.origin(
-                com.google.maps.model.LatLng(
-                    origin.latitude,
-                    origin.longitude
-                )
-            )
-            Log.d(
-                TAG,
-                "calculateDirections: destination: $destination"
-            )
-            directions.destination(destination)
-                .setCallback(object : PendingResult.Callback<DirectionsResult?> {
-                    override fun onResult(result: DirectionsResult?) { //                Log.d(TAG, "calculateDirections: routes: " + result.routes[0].toString());
-//                Log.d(TAG, "calculateDirections: duration: " + result.routes[0].legs[0].duration);
-//                Log.d(TAG, "calculateDirections: distance: " + result.routes[0].legs[0].distance);
-//                Log.d(TAG, "calculateDirections: geocodedWayPoints: " + result.geocodedWaypoints[0].toString());
-                        Log.d(
-                            TAG,
-                            "onResult: successfully retrieved directions."
-                        )
-
-
-                        totalKilometers += result!!.routes[0].legs[0].distance.inMeters / 1000
-                    }
-
-                    override fun onFailure(e: Throwable) {
-                        Log.e(
-                            TAG,
-                            "calculateDirections: Failed to get directions: " + e.message
-                        )
-                    }
-                })
-
-        }
-        return totalKm
-    }
 
     private fun calculateTwoDirections(origin: LatLng, dest: LatLng): Float {
         Alert.showProgress(this)
@@ -759,32 +722,58 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             dest.longitude
         )
         val directions = DirectionsApiRequest(mGeoApiContext)
-        directions.alternatives(true)
+        directions.alternatives(false)
+
         directions.origin(
             com.google.maps.model.LatLng(
                 origin.latitude,
                 origin.longitude
             )
         )
-        Log.d(
-            TAG,
-            "calculateDirections: destination: $destination"
-        )
+
+        if (AppConstants.CurrentAcceptedTask.stopsmodel.size > 0) {
+            AppConstants.CurrentAcceptedTask.stopsmodel.forEach {
+
+                if (it.StopTypeID == 3) {
+                    directions.waypoints(
+                        com.google.maps.model.LatLng(
+                            it.Latitude!!,
+                            it.Longitude!!
+                        )
+                    )
+
+                }
+
+            }
+            directions.optimizeWaypoints(true)
+        }
+
         directions.destination(destination)
             .setCallback(object : PendingResult.Callback<DirectionsResult?> {
-                override fun onResult(result: DirectionsResult?) { //                Log.d(TAG, "calculateDirections: routes: " + result.routes[0].toString());
-//                Log.d(TAG, "calculateDirections: duration: " + result.routes[0].legs[0].duration);
-//                Log.d(TAG, "calculateDirections: distance: " + result.routes[0].legs[0].distance);
-//                Log.d(TAG, "calculateDirections: geocodedWayPoints: " + result.geocodedWaypoints[0].toString());
+                override fun onResult(result: DirectionsResult?) {
                     directionResult = result!!
                     Log.d(
                         TAG,
                         "onResult: successfully retrieved directions."
                     )
-                    var meters = result!!.routes[0].legs[0].distance.inMeters
-                    totalKilometers = conevrtMetersToKilometers(meters)
+                    result!!.routes[0].legs.forEach {
+                        Log.d(
+                            TAG,
+                            "LEG: duration: " + it.duration
+                        );
+                        Log.d(
+                            TAG,
+                            "LEG: distance: " + it.distance
+                        );
+                        Log.d("LEG DATA", it.toString())
 
-//                    totalKilometers += result!!.routes[0].legs[0].distance.inMeters / 1000
+                        meters += it.distance.inMeters
+                        totalDistance += it.distance.inMeters
+                        totalSeconds += it.duration.inSeconds
+
+
+                    }
+                    totalKilometers = conevrtMetersToKilometers(meters)
                     if (totalKilometers > 0.0)
                         startTrip(AppConstants.CurrentSelectedTask, totalKilometers)
                     else {
@@ -816,17 +805,14 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             )
             if (mPolyLinesData.size > 0) {
                 for (polylineData in mPolyLinesData) {
-                    polylineData.getPolyline().remove()
+                    polylineData.polyline.remove()
                 }
                 mPolyLinesData.clear()
                 mPolyLinesData = java.util.ArrayList<PolylineData>()
             }
             var duration = 999999999.0
+
             for (route in result.routes) {
-                Log.d(
-                    TAG,
-                    "run: leg: " + route.legs[0].toString()
-                )
                 val decodedPath =
                     PolylineEncoding.decode(route.overviewPolyline.encodedPath)
                 val newDecodedPath: MutableList<LatLng> =
@@ -847,38 +833,117 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     route.legs[0].duration.inSeconds.toDouble()
 
                 if (tempDuration < duration) {
-
-//                    if (!isStop) {
                     map.clear()
+                    map.mapType = GoogleMap.MAP_TYPE_TERRAIN
                     polyline =
                         map.addPolyline(PolylineOptions().addAll(newDecodedPath)) // add marker
                     polyline.color = ContextCompat.getColor(this, R.color.colorPrimary)
                     polyline.isClickable = true
                     mPolyLinesData.add(PolylineData(polyline, route.legs[0]))
-//                    }
 
                     duration = tempDuration
-                    onPolylineClick(polyline)
+//                    onPolylineClick(polyline)
+                    if (isStop) {
+                        var stop = AppConstants.currentSelectedStop
+                        val marker: Marker = map.addMarker(
+                            MarkerOptions()
+                                .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location))
+                                .position(LatLng(stop.Latitude!!, stop.Longitude!!))
+                                .title(/*"[" + getString(R.string.trip) + " " + index + "] - " +*/
+                                    stop.StopName
+                                )
+                        )
+                        mTripMarkers.add(marker)
+                        marker.tag = stop
+                        marker.showInfoWindow()
+                    }
                     zoomRoute(polyline.points)
-                    setTripDirectionData(PolylineData(polyline, route.legs[0]))
+                    if (isStop)
+                        setTripDirectionData(PolylineData(polyline, route.legs[0]))
+                    else
+                        setTotalTripDirectionData()
                     rlBottom.visibility = View.VISIBLE
                 }
+
             }
-//            bitmapScreenShot= getScreenShot(rlParent)
+            if (!isStop)
+                setTripStopsMarker(AppConstants.CurrentSelectedTask)
         }
+    }
+
+
+    private fun setTripStopsMarker(task: Task) {
+        task.stopsmodel.forEach {
+            when (it.StopTypeID) {
+                1 -> {
+                    val marker: Marker = map.addMarker(
+                        MarkerOptions()
+                            .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location_start))
+                            .position(LatLng(it.Latitude!!, it.Longitude!!))
+                            .title(it.StopName)
+
+
+                    )
+                    mTripMarkers.add(marker)
+                    marker.tag = it
+                    Log.d("MARKER DATA", it.StopName)
+                    marker.showInfoWindow()
+                }
+                2 -> {
+                    val marker: Marker = map.addMarker(
+                        MarkerOptions()
+                            .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location))
+                            .position(LatLng(it.Latitude!!, it.Longitude!!))
+                            .title(it.StopName)
+                    )
+                    mTripMarkers.add(marker)
+                    marker.tag = it
+                    Log.d("MARKER DATA", it.StopName)
+                    marker.showInfoWindow()
+                }
+                3 -> {
+//                    val marker: Marker = map.addMarker(
+//                        MarkerOptions()
+//                            .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location_stops))
+//                            .position(LatLng(it.Latitude!!, it.Longitude!!))
+//                            .title(it.StopName)
+//                    )
+//                    mTripMarkers.add(marker)
+//                    marker.tag = it
+//                    Log.d("MARKER DATA",it.StopName)
+//                    marker.showInfoWindow()
+
+                    val marker: Marker = map.addMarker(
+                        MarkerOptions()
+                            .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location_stops))
+                            .position(LatLng(it.Latitude!!, it.Longitude!!))
+                            .title(it.StopName)
+                    )
+                    mTripMarkers.add(marker)
+                    marker.tag = it
+                    Log.d("MARKER DATA", it.StopName)
+                    Log.d("Latitude", it.Latitude.toString())
+                    Log.d("Longitude", it.Longitude.toString())
+
+
+                    marker.showInfoWindow()
+                }
+            }
+        }
+
+
     }
 
     override fun onPolylineClick(polyline: Polyline?) {
         var index = 0
         var name = ""
+
         for (polylineData in mPolyLinesData) {
             index++
             Log.d(
                 TAG,
                 "onPolylineClick: toString: $polylineData"
             )
-
-
             if (polyline!!.id == polylineData.polyline.id) {
                 polylineData.polyline.color = ContextCompat.getColor(this, R.color.primary_dark)
                 polylineData.polyline.setZIndex(1F)
@@ -948,6 +1013,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun resetMap() {
         if (map != null) {
             map.clear()
+            map.mapType = GoogleMap.MAP_TYPE_TERRAIN
             if (mPolyLinesData.size > 0) {
                 mPolyLinesData.clear()
                 mPolyLinesData = java.util.ArrayList()
@@ -981,9 +1047,17 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
     private fun setTripDirectionData(polylineData: PolylineData) {
+
         tvExpectedTime.text = polylineData.leg.duration.toString()
         tvExpectedDistance.text =
             "( " + polylineData.leg.distance.toString() + "  )"
+    }
+
+    private fun setTotalTripDirectionData() {
+        var data = prepareTripData()
+        tvExpectedTime.text = data.toString()
+        tvExpectedDistance.text =
+            "( " + data.distance + " Km" + "  )"
     }
 
 
@@ -1128,37 +1202,43 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             SnapshotReadyCallback { snapshot ->
 
                 UtilHelper.uploadFile(snapshot, taskId)
-                map.uiSettings.setAllGesturesEnabled(true)
-                map.uiSettings.isScrollGesturesEnabled = true
-                map.uiSettings.isZoomGesturesEnabled = true
-                mapFragment.view?.isClickable = true
-                mapFragment.view?.isFocusable = true
+//                map.uiSettings.setAllGesturesEnabled(true)
+//                map.uiSettings.isScrollGesturesEnabled = true
+//                map.uiSettings.isZoomGesturesEnabled = true
+//                mapFragment.view?.isClickable = true
+//                mapFragment.view?.isFocusable = true
             }
         mMap.snapshot(callback)
     }
 
-    fun takeScreenshot(activity: Activity): Bitmap {
-        var view = activity.getWindow().getDecorView();
-        view.setDrawingCacheEnabled(true);
-        view.buildDrawingCache();
-        var bitmap = view.getDrawingCache();
-        var rect = Rect();
-        activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);
-        var statusBarHeight = rect.top;
-        var width = activity.getWindowManager().getDefaultDisplay().getWidth();
-        var height = activity.getWindowManager().getDefaultDisplay().getHeight();
-        var bitmap2 = Bitmap.createBitmap(
-            bitmap, 0, statusBarHeight, width,
-            height - statusBarHeight
-        );
-        view.destroyDrawingCache();
-        return bitmap2;
 
-//      var rootView = window.decorView.findViewById(android.R.id.content) as View
-//   var screenView = rootView.getRootView();
-//       screenView.setDrawingCacheEnabled(true);
-//       var bitmap = Bitmap.createBitmap(screenView.getDrawingCache());
-//       screenView.setDrawingCacheEnabled(false);
-//       return bitmap;
+    fun locationIsInRange(currentLocation: Location, distLocation: Location): Boolean {
+        var distanceInKiloMeters = (currentLocation.distanceTo(distLocation)) / 1000
+        return distanceInKiloMeters <= 1
     }
+
+
+    fun calculateDistance(totalDistance: Long): Double {
+        var dist = totalDistance / 1000.0
+        Log.d("distance", "Calculated distance:" + dist);
+        return dist
+
+    }
+
+    fun prepareTripData(): TripData {
+        var days = totalSeconds / 86400
+        var hours = (totalSeconds - days * 86400) / 3600
+        var minutes = (totalSeconds - days * 86400 - hours * 3600) / 60
+        var seconds = totalSeconds - days * 86400 - hours * 3600 - minutes * 60
+        var distance = calculateDistance(totalDistance)
+        var durationData = TripData(days, hours, minutes, seconds, distance)
+
+        Log.d(
+            "duration",
+            "$days days $hours hours $minutes mins$seconds seconds"
+        );
+
+        return durationData
+    }
+
 }
