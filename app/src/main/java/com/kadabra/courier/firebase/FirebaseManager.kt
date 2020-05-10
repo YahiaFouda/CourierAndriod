@@ -1,10 +1,15 @@
 package com.kadabra.courier.firebase
 
+import android.graphics.Bitmap
+import android.media.MediaPlayer
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
 import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.StorageTask
 import com.kadabra.courier.location.LocationHelper
@@ -12,6 +17,9 @@ import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.Task
 import com.kadabra.courier.model.location
 import com.kadabra.courier.utilities.AppConstants
+import com.kadabra.courier.utilities.AppController
+import com.kadabra.courier.utilities.UtilHelper
+import java.io.ByteArrayOutputStream
 
 
 object FirebaseManager {
@@ -21,7 +29,8 @@ object FirebaseManager {
     private lateinit var dbCourier: DatabaseReference
     private lateinit var dbCourierTaskHistory: DatabaseReference
     private lateinit var dbCourierFeesTaskHistory: DatabaseReference
-     lateinit var mStorageRef: StorageReference
+    lateinit var mStorageRef: StorageReference
+
     private val mUploadTask: StorageTask<*>? = null
 
     private lateinit var firebaseDatabase: FirebaseDatabase
@@ -30,9 +39,10 @@ object FirebaseManager {
     private var fireBaseUser: FirebaseUser? = null
     private var dbNameCourier = "courier"
     private var dbNameTaskHistory = "task_history"
-
-
-
+    private var tasksImagesFolderName = "task_images"
+    private var tasksRecordsFolderName = "task_records"
+    lateinit var mImageStorage: StorageReference
+    lateinit var mAudioStorage: StorageReference
 
 
     private var courier = Courier()
@@ -58,7 +68,8 @@ object FirebaseManager {
         firebaseDatabase = FirebaseDatabase.getInstance()
         dbCourier = firebaseDatabase.getReference(dbNameCourier)
         dbCourierTaskHistory = firebaseDatabase.getReference(dbNameTaskHistory)
-
+        mImageStorage = FirebaseStorage.getInstance().getReference(tasksImagesFolderName)
+        mAudioStorage = FirebaseStorage.getInstance().getReference(tasksRecordsFolderName)
 
 
 //        clearDb()
@@ -183,7 +194,8 @@ object FirebaseManager {
                 .setValue(task.location)
         }
     }
-    fun updateTaskScreenShot(taskId: String, imagePath:String) {
+
+    fun updateTaskScreenShot(taskId: String, imagePath: String) {
         if (AppConstants.CurrentLocation != null) {
             dbCourierTaskHistory.child(taskId).child("task_picture_path")
                 .setValue(imagePath)
@@ -200,15 +212,13 @@ object FirebaseManager {
     }
 
 
-
     fun endTask(task: Task, courierId: Int) {
         updateCourierHaveTask(courierId, false)
         dbCourierTaskHistory.child(task.TaskId).child("active")
             .setValue(false)
     }
 
-    fun updateTaskLocationOneShot(task:Task)
-    {
+    fun updateTaskLocationOneShot(task: Task) {
 //        val map: MutableMap<String, Any> = HashMap()
 //        map["/courier/" + task.CourierID.toString() + "/location/"] = "Albert Einstein"
 //        map["/task_historey/" + task.TaskId.toString() + "/score/"] = 23
@@ -217,8 +227,7 @@ object FirebaseManager {
 //        fbDbRefRoot.updateChildren(map)
     }
 
-   fun updateTaskListOneShot(taskList:ArrayList<Task>)
-    {
+    fun updateTaskListOneShot(taskList: ArrayList<Task>) {
         val map: MutableMap<String, Any> = HashMap()
         taskList.forEach {
             updateTaskLocation(it)
@@ -230,7 +239,6 @@ object FirebaseManager {
 //        map["/user_detail_profile/" + currentUserId.toString() + "/comments/"] = 8
 //        fbDbRefRoot.updateChildren(map)
     }
-
 
 
     fun getCurrentActiveTask(courieId: String, listener: IFbOperation) {
@@ -298,7 +306,7 @@ object FirebaseManager {
     fun isCourierStartTask(courieId: String, listener: IFbOperation) {
 
 
-        val query =dbCourier
+        val query = dbCourier
         dbCourier.keepSynced(true)
 
 
@@ -310,9 +318,8 @@ object FirebaseManager {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (currentTask in dataSnapshot.children) {
                     try {
-                        var curreentCourier=dataSnapshot.getValue(Courier::class.java)!!
-                        if(curreentCourier.CourierId.toString()==courieId)
-                        {
+                        var curreentCourier = dataSnapshot.getValue(Courier::class.java)!!
+                        if (curreentCourier.CourierId.toString() == courieId) {
 //                            var startTask = dataSnapshot.getValue(Boolean::class.java)!!
                             if (curreentCourier.startTask) {
                                 AppConstants.COURIERSTARTTASK = true
@@ -373,13 +380,60 @@ object FirebaseManager {
 
     }
 
+    fun uploadFile(
+        bitmap: Bitmap,
+        taskId: String, listener: IFbOperation
+    ) {
+        val baos = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val data = baos.toByteArray()
+        if (data != null) {
 
-     fun clearDb() {
+            val fileReference = mStorageRef.child(
+                taskId
+                        + "." + "jpeg"
+            )
+            fileReference.putBytes(data).continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    throw task.exception!!
+                }
+                fileReference.downloadUrl
+            }.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+
+                    val downloadUri = task.result
+                    fileReference.downloadUrl
+                    updateTaskScreenShot(
+                        taskId, downloadUri.toString()
+//                        fileReference.downloadUrl.result?.path.toString()
+                    )
+                    listener.onSuccess(1)
+                } else {
+                    listener.onFailure("upload failed: " + task.exception!!.message)
+                    Toast.makeText(
+                        AppController.getContext(),
+                        "upload failed: " + task.exception!!.message,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+
+    fun clearDb() {
         var applesQuery = dbCourierTaskHistory.setValue(null)
 //        var applesQuery1 = dbCourierFeesTaskHistory.setValue(null)
     }
 
 
+    fun getTaskRecord(taskId:String, completion: (success: Boolean,data: Uri?) -> Unit)
+    {
+
+        mAudioStorage.child(taskId).downloadUrl.addOnSuccessListener {
+            completion(true,it)
+        }.addOnFailureListener { completion(false,null) }
+    }
 //endregion
 
 

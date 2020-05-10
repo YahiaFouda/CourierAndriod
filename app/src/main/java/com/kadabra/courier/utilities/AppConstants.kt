@@ -49,7 +49,6 @@ object AppConstants {
     var token = ""
     //endregion
     //region Auth
-
     const val URL_LOGIN = "Login"
     const val URL_LOG_OUT = "Logout"
     const val URL_SET_USER_TOKEN = "SetCourierToken"
@@ -58,16 +57,11 @@ object AppConstants {
     const val URL_GET_NOTIFICATION = "GetAllCourierNotification"
     const val URL_GET_TASKS_HOSTORY = "GetHistoryOfCourier"
     const val URL_UPDATE_TASK_COURIER_FEES = "UpdateTaskCourierFees"
-
-
     const val URL_ACCEPT_TAKS = "UpdateAcceptTask"
     const val URL_END_TAKS = "UpdateEndTask"
     const val URL_UPDATE_NOTIFICATION = "UpdateReadedNotification"
-
     const val URL_GET_TAKS_DETAILS = "GetTaskByID"
     const val URL_GET_VERSION_CODE = "GetVersionCode"
-
-
     //endregion
 
     //region  app variables
@@ -88,8 +82,8 @@ object AppConstants {
     var CurrentLocation: Location? = null
     var ALL_TASKS_DATA = ArrayList<Task>()
     var CurrentSelectedNotification = Notification()
-    var COURIERSTARTTASK=false
-    var CURRENTTOTALNOTIFICATIONS=0
+    var COURIERSTARTTASK = false
+    var CURRENTTOTALNOTIFICATIONS = 0
 
     //endregion
 
@@ -104,10 +98,10 @@ object AppConstants {
     const val FIREBASE_HAVE_TASK = "haveTask"
     const val FIREBASE_START_TASK = "startTask"
 
-    var IN_PROGRESS="In progress"
-    var NEW="New"
-    var COMPLETED="Completed"
-
+    var IN_PROGRESS = "In progress"
+    var NEW = "New"
+    var COMPLETED = "Completed"
+    var WAITING = "Waiting For Pickup"
     //endregion
 
     val ERROR_DIALOG_REQUEST = 9001

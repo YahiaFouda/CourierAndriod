@@ -1,5 +1,9 @@
 package com.kadabra.courier.model
 
+import com.kadabra.courier.R
+import com.kadabra.courier.utilities.AppController
+import kotlinx.android.synthetic.main.activity_crash.view.*
+
 class TripData {
     var days = 0L
     var hours = 0L
@@ -7,6 +11,7 @@ class TripData {
     var seconds = 0L
     var distance = 0.0
 
+    constructor()
     constructor(days: Long, hours: Long, minutes: Long, seconds: Long, distance: Double) {
         this.days = days
         this.hours = hours
@@ -18,11 +23,11 @@ class TripData {
     override fun toString(): String {
         var data = ""
         if (days > 0)
-            data = days.toString() + "Day "
+            data = days.toString() +AppController.getContext().getString(R.string.day) +" "
         if (hours > 0)
-            data += "$hours hr "
+            data += "$hours "+AppController.getContext().getString(R.string.hour)+" "
         if (minutes > 0)
-            data += "$minutes mins"
+                data += "$minutes "+AppController.getContext().getString(R.string.minutes)+"."
         return data
     }
 }

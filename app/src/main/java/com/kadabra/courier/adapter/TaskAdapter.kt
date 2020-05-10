@@ -66,10 +66,18 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
         if (!task.TaskName.isNullOrEmpty())
             holder.tvTaskName.text = task.TaskName
 
-        if (task.Status == "In progress")
-            holder.tvStatus.text = context.getString(R.string.in_progress)
-        else
-            holder.tvStatus.text = context.getString(R.string.new_task)
+        when (task.Status) {
+            AppConstants.NEW -> {
+                holder.tvStatus.text = context.getString(R.string.new_task)
+            }
+            AppConstants.WAITING -> {
+                holder.tvStatus.text = context.getString(R.string.ready_to_start)
+            }
+            AppConstants.IN_PROGRESS -> {
+                holder.tvStatus.text = context.getString(R.string.in_progress)
+            }
+        }
+
 
 
         task.stopsmodel.forEach {
@@ -116,7 +124,7 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
 
 //        return position
 //        return if (AppConstants.CurrentAcceptedTask.TaskId == tasksList[position].TaskId) {
-        return if (tasksList[position].Status == "In progress") {
+        return if (tasksList[position].Status == AppConstants.IN_PROGRESS) {
             Log.d("task", AppConstants.CurrentAcceptedTask.TaskId)
             AppConstants.CurrentAcceptedTask = tasksList[position]
             2 // R.layout.task_layout_accepted

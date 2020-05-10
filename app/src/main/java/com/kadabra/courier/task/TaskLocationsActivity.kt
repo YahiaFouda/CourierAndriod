@@ -94,6 +94,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     var pickUpStop = Stop()
     var dropOffStop = Stop()
     var meters = 0L
+    var tripData=TripData()
     //endregion
 
 
@@ -112,12 +113,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 finish()
             }
 
-            R.id.fab -> {
-                loadPlacePicker()
-            }
+//            R.id.fab -> {
+//                loadPlacePicker()
+//            }
 
             R.id.btnStart -> {
 //                if (!AppConstants.COURIERSTARTTASK) {
+
+                //empty the previous selected Stop
+                AppConstants.currentSelectedStop=Stop()
                 isACcepted =
                     AppConstants.CurrentSelectedTask.IsStarted//isStartedTask(AppConstants.CurrentSelectedTask)
                 if (!isACcepted) { // not started yet
@@ -155,7 +159,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun init() {
 
         ivBack.setOnClickListener(this)
-        fab.setOnClickListener(this)
+//        fab.setOnClickListener(this)
         btnStart.setOnClickListener(this)
 
         polylines = ArrayList()
@@ -632,7 +636,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun calculateDirections(
         origin: LatLng,
         dest: LatLng,
-        isStop: Boolean,
+         isStop: Boolean,
         showAlternatives: Boolean
     ) {
         Log.d(
@@ -676,7 +680,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         directions.destination(destination)
             .setCallback(object : PendingResult.Callback<DirectionsResult?> {
                 override fun onResult(result: DirectionsResult?) {
-
                     result!!.routes[0].legs.forEach {
                         Log.d(
                             TAG,
@@ -706,8 +709,11 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         TAG,
                         "calculateDirections: Failed to get directions: " + e.message
                     )
+
+                    Alert.showMessage(this@TaskLocationsActivity,"Can't find a way there.")
                 }
             })
+
     }
 
 
@@ -789,6 +795,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         TAG,
                         "calculateDirections: Failed to get directions: " + e.message
                     )
+                    Alert.showMessage(this@TaskLocationsActivity,"Can't find a way there.")
                 }
             })
 
@@ -868,11 +875,14 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             }
             if (!isStop)
                 setTripStopsMarker(AppConstants.CurrentSelectedTask)
+
         }
+
     }
 
 
     private fun setTripStopsMarker(task: Task) {
+        var speciaMarker:Marker?=null
         task.stopsmodel.forEach {
             when (it.StopTypeID) {
                 1 -> {
@@ -887,19 +897,25 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     mTripMarkers.add(marker)
                     marker.tag = it
                     Log.d("MARKER DATA", it.StopName)
-                    marker.showInfoWindow()
+//                    marker.showInfoWindow()
                 }
                 2 -> {
-                    val marker: Marker = map.addMarker(
+                    var snippetData =
+                        getString(R.string.distance) + " " + tripData.distance.toString() + " - " + (getString(
+                            R.string.duration
+                        ) + " " + tripData.toString())
+
+                    speciaMarker = map.addMarker(
                         MarkerOptions()
                             .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location))
                             .position(LatLng(it.Latitude!!, it.Longitude!!))
-                            .title(it.StopName)
+                            .snippet(snippetData)
                     )
-                    mTripMarkers.add(marker)
-                    marker.tag = it
+
+                    mTripMarkers.add(speciaMarker!!)
+                    speciaMarker?.tag = it
                     Log.d("MARKER DATA", it.StopName)
-                    marker.showInfoWindow()
+                    speciaMarker?.showInfoWindow()
                 }
                 3 -> {
 //                    val marker: Marker = map.addMarker(
@@ -926,12 +942,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     Log.d("Longitude", it.Longitude.toString())
 
 
-                    marker.showInfoWindow()
+//                    marker.showInfoWindow()
                 }
             }
         }
 
-
+        speciaMarker!!.showInfoWindow()
     }
 
     override fun onPolylineClick(polyline: Polyline?) {
@@ -1054,10 +1070,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
     private fun setTotalTripDirectionData() {
-        var data = prepareTripData()
-        tvExpectedTime.text = data.toString()
+        tripData = prepareTripData()
+        tvExpectedTime.text = tripData.toString()
         tvExpectedDistance.text =
-            "( " + data.distance + " Km" + "  )"
+            "( " + tripData.distance + getString(R.string.km) + "  )"
     }
 
 

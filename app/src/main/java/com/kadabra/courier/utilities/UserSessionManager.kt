@@ -61,7 +61,7 @@ class UserSessionManager(val context: Context) {
     }
 
     fun getLanguage(): String {
-        return sharedPreferences.getString(AppConstants.LANGUAGE,"")!!
+        return sharedPreferences.getString(AppConstants.LANGUAGE,AppConstants.ARABIC)!!
     }
 
     fun setLanguage(language: String) {

@@ -442,7 +442,16 @@ class LocationUpdatesService : Service() {
                 lastLocation!!.longitude.toString(),
                 isLocationEnabled()
             )
-            FirebaseManager.updateTaskLocation(AppConstants.CurrentAcceptedTask)
+            AppConstants.ALL_TASKS_DATA.forEach {
+               if(it.Status==AppConstants.IN_PROGRESS)
+                   it.location = location(
+                       lastLocation!!.latitude.toString(),
+                       lastLocation!!.longitude.toString(),
+                       isLocationEnabled()
+                   )
+                   FirebaseManager.updateTaskLocation(it)
+            }
+//            FirebaseManager.updateTaskLocation(AppConstants.CurrentAcceptedTask)
             FirebaseManager.updateCourierLocation(
                 AppConstants.CurrentAcceptedTask.CourierID.toString(),
                 location(

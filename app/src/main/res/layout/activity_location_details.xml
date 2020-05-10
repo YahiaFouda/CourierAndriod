@@ -28,7 +28,7 @@
         android:id="@+id/ivBack"
         android:layout_width="24dp"
         android:layout_height="24dp"
-       android:layout_margin="20dp"
+        android:layout_margin="20dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:clickable="true"
         android:src="@drawable/ic_back"
@@ -42,7 +42,7 @@
         android:layout_alignParentBottom="true"
         android:elevation="1dp"
         android:background="@color/white"
-        android:visibility="visible"
+        android:visibility="invisible"
         >
 
         <TextView

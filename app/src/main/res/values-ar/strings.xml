@@ -85,6 +85,7 @@
     <string name="status">الحالة</string>
     <string name="in_progress">قيد التنفيذ</string>
     <string name="started">بدأت</string>
+    <string name="ready_to_start">جاهز للبدء</string>
     <string name="nav_call">الأتصال بعميل</string>
     <string name="nav_logout">تسجيل خروج</string>
     <string name="nav_notification">تنبيهات</string>
@@ -109,6 +110,10 @@
     <string name="google_maps_key" translatable="false">مسافة:</string>
     <string name="msg_end_task">يرجى بدء هذه المهمة قبل إنهائها.</string>
     <string name="msg_end">هل أنت متأكد أنك تريد إنهاء هذه المهمة ؟.</string>
+    <string name="day">يوم</string>
+    <string name="hour">ساعة</string>
+<string name="error_calculate_distance">لا يمكن إيجاد طريق هناك.</string>
+    <string name="waiting">في انتظار البدأ</string>
 
 
 </resources>

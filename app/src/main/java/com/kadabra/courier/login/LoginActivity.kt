@@ -185,7 +185,9 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     }
 
     private fun validateData(): Boolean {
+
         var userName = etUsername.text.toString().trim()
+
         if (userName.isNullOrEmpty()) {
             AnimateScroll.scrollToView(scroll, tvBetaVersion)
             etUsername.requestFocus()

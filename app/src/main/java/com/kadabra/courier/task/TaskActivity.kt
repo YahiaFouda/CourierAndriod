@@ -124,7 +124,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private fun init() {
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
 
-        total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
+//        total = UserSessionManager.getInstance(this@TaskActivity).getTotalNotification()
 
         serviceCostView = View.inflate(this, R.layout.choose_language_layout, null)
         ivLanguageBack = serviceCostView!!.findViewById(R.id.ivBackLanguage)
@@ -141,6 +141,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         chooseLanguageWindow()
 
         refresh.setOnRefreshListener {
+            Log.d(TAG,"loadTasks- refresh.setOnRefreshListener")
             loadTasks()
 
         }
@@ -381,20 +382,18 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                             AppConstants.CURRENTTOTALNOTIFICATIONS =
                                 taskData.NoOfUnreadedNotification
                             total = taskData.NoOfUnreadedNotification
-                            UserSessionManager.getInstance(this@TaskActivity)
-                                .setTotalNotification(taskData.NoOfUnreadedNotification)
+                            if(total>0)
+                            {
+                                tvNotificationCounter.text=total.toString()
+                                tvNotificationCounter.visibility = View.VISIBLE
+                            }
 
-//                            if (taskData.NoOfUnreadedNotification > 0)
-//                                tvNotificationCounter.visibility = View.VISIBLE
-//
-//                            if (taskData.NoOfUnreadedNotification > 99)
-//                                tvNotificationCounter.text = "99+"
-//
-//
-//                            tvNotificationCounter.text =
-//                                taskData.NoOfUnreadedNotification.toString()
+//                            UserSessionManager.getInstance(this@TaskActivity)
+//                                .setTotalNotification(taskData.NoOfUnreadedNotification)
+
 
                             taskList = taskData.taskmodels!!
+
                             if (taskList.size > 0) {
                                 Log.d(TAG, "onSuccess: taskList.size > 0: ")
                                 AppConstants.ALL_TASKS_DATA = taskList
@@ -423,16 +422,30 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
 
                         } else {
-                            Log.d(TAG, "onSuccess: Enter method")
+
+                            var taskData = response.ResponseObj!!
+                            AppConstants.CURRENTTOTALNOTIFICATIONS =
+                                taskData.NoOfUnreadedNotification
+                            total = taskData.NoOfUnreadedNotification
+                            if(total>0)
+                            {
+                                tvNotificationCounter.text=total.toString()
+                                tvNotificationCounter.visibility = View.VISIBLE
+                            }
+
+                            Log.d(TAG, "onSuccess: NO Data")
                             refresh.isRefreshing = false
                             hideProgress()
                             tvEmptyData.visibility = View.VISIBLE
+                            taskList.clear()
+                            prepareTasks(taskList)
                         }
 
                     }
                 })
 
         } else {
+
             refresh.isRefreshing = false
             hideProgress()
             ivNoInternet.visibility = View.VISIBLE
@@ -622,7 +635,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
         if (checkMapServices()) {
             if (mLocationPermissionGranted) {
-                Log.d(TAG, "onResume-mLocationPermissionGranted-loadTasks")
+                Log.d(TAG,"loadTasks- On Resume")
                 loadTasks()
 //                getCurrentActiveTask()
                 getCurrentCourierLocation()
@@ -703,15 +716,18 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             }
 
             R.id.ivBackLanguage -> {
-                alertDialog!!.dismiss()
+                if (alertDialog != null)
+                    alertDialog!!.dismiss()
             }
             R.id.rbArabic -> {
-
+                Log.d(TAG, lang)
                 lang = UserSessionManager.getInstance(AppController.getContext())
                     .getLanguage()
+                Log.d(TAG, lang)
                 if (lang != AppConstants.ARABIC) {
                     updateLanguage(AppConstants.CurrentLoginCourier.CourierId, AppConstants.ARABIC)
-                    LocalizationHelper.setLocale(application, AppConstants.ARABIC)
+                    LocalizationHelper.setLocale(AppController.getContext(), AppConstants.ARABIC)
+                    Log.d(TAG, "setLocale")
                     startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
 
                 }
@@ -723,7 +739,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                     .getLanguage()
                 if (lang != AppConstants.ENGLISH) {
                     updateLanguage(AppConstants.CurrentLoginCourier.CourierId, AppConstants.ENGLISH)
-                    LocalizationHelper.setLocale(application, AppConstants.ENGLISH)
+                    LocalizationHelper.setLocale(AppController.getContext(), AppConstants.ENGLISH)
                     startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
                 }
 
@@ -753,9 +769,9 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Permission was granted.
-                Log.d(TAG, "onRequestPermissionsResult-mLocationPermissionGranted-loadTasks")
                 LocationUpdatesService.shared!!.requestLocationUpdates()
                 mLocationPermissionGranted = true
+                Log.d(TAG,"loadTasks- onRequestPermissionsResult-mLocationPermissionGranted")
                 loadTasks()
 //                getCurrentActiveTask()
                 getCurrentCourierLocation()
@@ -772,6 +788,16 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
             R.id.nav_task_history -> {
                 startActivity(Intent(this, TaskHistoryActivity::class.java))
+            }
+            R.id.nav_Settings ->
+            {
+                if(alertDialog!=null)
+                alertDialog?.show()
+                else
+                {
+                    chooseLanguageWindow()
+                    alertDialog?.show()
+                }
             }
 
             R.id.nav_Call -> {
@@ -798,6 +824,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+
+//        menu?.clear()
         menuInflater.inflate(R.menu.menu_option, menu)
 
         val menuItem = menu!!.findItem(R.id.action_notification)
@@ -923,7 +951,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 android.Manifest.permission.ACCESS_FINE_LOCATION
             ) === PackageManager.PERMISSION_GRANTED
         ) {
-            Log.d(TAG, "getLocationPermission-mLocationPermissionGranted-loadTasks")
+            Log.d(TAG, "loadTasks - getLocationPermission-mLocationPermissionGranted")
             mLocationPermissionGranted = true
             loadTasks()
 //            getCurrentActiveTask()
@@ -945,7 +973,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         when (requestCode) {
             AppConstants.PERMISSIONS_REQUEST_ENABLE_GPS -> {
                 if (mLocationPermissionGranted) {
-                    Log.d(TAG, "onActivityResult-mLocationPermissionGranted-loadTasks")
+                    Log.d(TAG, "loadTasks - onActivityResult-mLocationPermissionGranted")
 //                    LocationUpdatesService.shared!!.requestLocationUpdates()
                     loadTasks()
 //                    getCurrentActiveTask()

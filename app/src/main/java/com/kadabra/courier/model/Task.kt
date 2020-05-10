@@ -55,7 +55,7 @@ class Task {
     @Exclude
     @set:Exclude
     @get:Exclude
-    lateinit var location: location
+     var location=location()
     var isActive: Boolean = false
     @Exclude
     @set:Exclude

@@ -108,7 +108,9 @@
     <string name="notification_details">Notification Details</string>
     <string name="tasks_history">Tasks History</string>
     <string name="in_progress">In Progress</string>
+    <string name="waiting">Waiting For Pickup</string>
     <string name="started">Started</string>
+    <string name="ready_to_start">Ready to start</string>
 
     <string name="new_task">New</string>
     <string name="completed">Completed</string>
@@ -118,10 +120,15 @@
     <string name="duration">Duration: </string>
     <string name="distance">Distance: </string>
     <string name="trip">"Trip # </string>
-    <string name="minutes">min</string>
     <string name="km">km</string>
     <string name="fastest_route">Fastest route now due to traffic conditions</string>
     <string name="start">Start</string>
+    <string name="day">Day </string>
+    <string name="hour">hr </string>
+    <string name="minutes">mins </string>
+    <string name="error_calculate_distance">Can\'t find a way there.</string>
+
+
 
 
 

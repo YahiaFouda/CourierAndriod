@@ -2,10 +2,12 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:ripple="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rlParent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".task.TaskDetailsActivity">
+
     <RelativeLayout
         android:id="@+id/rlBack"
         android:layout_width="match_parent"
@@ -18,11 +20,11 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginStart="20dp"
+            android:layout_marginLeft="20dp"
             android:layout_marginTop="12dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:clickable="true"
-            android:src="@drawable/ic_back"
-            android:layout_marginLeft="20dp" />
+            android:src="@drawable/ic_back" />
 
         <TextView
             android:id="@+id/tvTaskDetails"
@@ -30,24 +32,55 @@
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginLeft="95.5dp"
             android:layout_marginTop="12dp"
-            android:layout_marginRight="128.5dp"
             android:text="@string/task_details"
             android:textAllCaps="false"
             android:textColor="@color/colorLabel"
             android:textSize="18sp" />
 
 
+
+            <ImageView
+                android:id="@+id/ivMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_email"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="24dp"
+                android:layout_alignParentEnd="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"/>
+<!--        <com.gauravbhola.ripplepulsebackground.RipplePulseLayout-->
+<!--            android:id="@+id/mRipplePulseLayout"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginEnd="24dp"-->
+<!--            android:layout_alignParentEnd="true"-->
+<!--            android:clipChildren="false"-->
+<!--            ripple:rippleColor="#E54728"-->
+<!--            ripple:rippleType="fill"-->
+<!--            ripple:strokeWidth="2dp"-->
+<!--            ripple:startRadius="42dp"-->
+<!--            ripple:endRadius="100dp"-->
+<!--            ripple:duration="2000"-->
+<!--            >-->
+
+<!--            <com.kadabra.courier.utilities.RoundedImageView-->
+<!--                android:layout_width="45dp"-->
+<!--                android:layout_height="45dp"-->
+<!--                android:src="@drawable/email"-->
+<!--                android:layout_centerInParent="true"-->
+<!--                />-->
+<!--        </com.gauravbhola.ripplepulsebackground.RipplePulseLayout>-->
+
     </RelativeLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@+id/rlBack"
         android:fillViewport="true"
         android:fitsSystemWindows="true"
-        android:scrollbars="none"
-        android:layout_below="@+id/rlBack">
+        android:scrollbars="none">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -67,8 +100,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
-                        android:layout_marginTop="5dp"
+                        android:layout_alignParentRight="true"
                         android:layout_marginStart="20dp"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginRight="10dp"
                         android:layout_marginBottom="10dp"
                         android:ellipsize="end"
                         android:gravity="center"
@@ -76,16 +111,15 @@
                         android:text="@string/status"
                         android:textColor="@color/colorApp"
                         android:textSize="18sp"
-                        android:textStyle="bold|italic"
-                        android:layout_alignParentRight="true"
-                        android:layout_marginRight="10dp" />
+                        android:textStyle="bold|italic" />
+
                     <TextView
                         android:id="@+id/tvTask"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="30dp"
                         android:layout_marginStart="10dp"
+                        android:layout_marginTop="30dp"
                         android:layout_marginEnd="10dp"
                         android:gravity="center"
                         android:text="@string/kadabra"
@@ -98,8 +132,8 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/tvTask"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="30dp"
                         android:layout_marginStart="10dp"
+                        android:layout_marginTop="30dp"
                         android:layout_marginEnd="10dp"
                         android:gravity="center"
                         android:text="Task Details"
@@ -112,14 +146,14 @@
                         android:layout_height="wrap_content"
                         android:layout_below="@+id/tvTaskDescription"
                         android:layout_centerHorizontal="true"
-                        android:layout_marginTop="30dp"
                         android:layout_marginStart="5dp"
+                        android:layout_marginLeft="5dp"
+                        android:layout_marginTop="30dp"
                         android:gravity="center"
                         android:text="@string/amount"
                         android:textColor="@color/link"
                         android:textSize="20sp"
-                        android:layout_marginLeft="5dp"
-                        android:visibility="gone"/>
+                        android:visibility="gone" />
 
                     <TextView
                         android:id="@+id/tvFrom"
@@ -163,10 +197,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
+                        android:elevation="2dp"
                         android:visibility="invisible"
                         app:indicatorColor="@color/colorPrimary"
-                        app:indicatorName="BallScaleRippleIndicator"
-                        android:elevation="2dp"/>
+                        app:indicatorName="BallScaleRippleIndicator" />
 
                     <TextView
                         android:id="@+id/tvStops"
@@ -184,14 +218,14 @@
                         android:id="@+id/rvStops"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_above="@+id/btnEndTask"
                         android:layout_below="@+id/tvStops"
                         android:layout_marginStart="10dp"
-                        android:layout_marginEnd="10dp"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginLeft="24dp"
 
-                        android:orientation="vertical"
-                        android:layout_above="@+id/btnEndTask"
-                        android:layout_marginLeft="24dp" />
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:orientation="vertical" />
 
                     <Button
                         android:id="@+id/btnLocation"
@@ -204,7 +238,8 @@
                         android:background="@drawable/rounded_button"
                         android:text="Add Location"
                         android:textColor="@color/colorSecondary"
-                        android:visibility="gone"/>
+                        android:visibility="gone" />
+
                     <Button
                         android:id="@+id/btnEndTask"
                         android:layout_width="match_parent"
@@ -212,15 +247,18 @@
 
                         android:layout_alignParentBottom="true"
                         android:layout_marginStart="24dp"
-                        android:layout_marginEnd="24dp"
                         android:layout_marginTop="20dp"
+                        android:layout_marginEnd="24dp"
                         android:layout_marginBottom="20dp"
                         android:background="@drawable/rounded_button"
                         android:text="@string/accept_task"
                         android:textColor="@color/colorSecondary" />
 
+
+
                 </RelativeLayout>
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
         </RelativeLayout>
     </ScrollView>
 
