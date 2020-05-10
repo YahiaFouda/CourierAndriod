@@ -127,9 +127,7 @@
     <string name="hour">hr </string>
     <string name="minutes">mins </string>
     <string name="error_calculate_distance">Can\'t find a way there.</string>
-
-
-
+    <string name="error_no_audio">No audio message for this task.</string>
 
 
 </resources>

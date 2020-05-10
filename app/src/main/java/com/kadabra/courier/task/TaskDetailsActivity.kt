@@ -525,7 +525,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                         }
                         mediaPlayer.prepareAsync()
                     } else {
-                        Alert.showMessage(this, "Wait a second.")
+                        Alert.showMessage(this, getString(R.string.error_no_audio))
                     }
 
 

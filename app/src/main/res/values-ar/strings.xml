@@ -114,6 +114,5 @@
     <string name="hour">ساعة</string>
 <string name="error_calculate_distance">لا يمكن إيجاد طريق هناك.</string>
     <string name="waiting">في انتظار البدأ</string>
-
-
+    <string name="error_no_audio">لا يوجد رسالة صوتية لهذة المهمة.</string>
 </resources>
