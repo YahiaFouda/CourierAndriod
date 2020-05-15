@@ -31,11 +31,15 @@ object Alert {
     }
 
     fun hideProgress() {
+        if(mLoadingDialog!=null)
         mLoadingDialog?.hide()
     }
 
     fun showMessage(context: Context, message: String) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+ fun showMessage( message: String) {
+        Toast.makeText(AppController.getContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     fun showAlertMessage(context: Context, title: String, message: String) {

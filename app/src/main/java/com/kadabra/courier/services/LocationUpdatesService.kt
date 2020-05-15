@@ -136,7 +136,7 @@ class LocationUpdatesService : Service() {
 //                .setContentText(text)
                 .setContentTitle(getString(R.string.app_name))
                 .setOngoing(true)
-                .setPriority(Notification.PRIORITY_HIGH)
+                .setPriority(Notification.PRIORITY_LOW)
                 .setSmallIcon(R.mipmap.ic_launcher)
 //                .setTicker(text)
                 .setWhen(System.currentTimeMillis())

@@ -87,7 +87,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var rbArabic: RadioButton? = null
     private var rbEnglish: RadioButton? = null
     private var lang = ""
-    private lateinit var tvNotificationCounter: TextView
+    private  var tvNotificationCounter: TextView?=null
     private lateinit var ivNotification: ImageView
     var total = 0
 
@@ -382,10 +382,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                             AppConstants.CURRENTTOTALNOTIFICATIONS =
                                 taskData.NoOfUnreadedNotification
                             total = taskData.NoOfUnreadedNotification
-                            if(total>0)
+                            if(total>0&&tvNotificationCounter!=null)
                             {
-                                tvNotificationCounter.text=total.toString()
-                                tvNotificationCounter.visibility = View.VISIBLE
+                                tvNotificationCounter?.text=total.toString()
+                                tvNotificationCounter?.visibility = View.VISIBLE
                             }
 
 //                            UserSessionManager.getInstance(this@TaskActivity)
@@ -429,8 +429,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                             total = taskData.NoOfUnreadedNotification
                             if(total>0)
                             {
-                                tvNotificationCounter.text=total.toString()
-                                tvNotificationCounter.visibility = View.VISIBLE
+                                tvNotificationCounter?.text=total.toString()
+                                tvNotificationCounter?.visibility = View.VISIBLE
                             }
 
                             Log.d(TAG, "onSuccess: NO Data")
@@ -836,13 +836,13 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             notificationView.findViewById(R.id.ivNotification) as ImageView
 
         if (total > 0)
-            tvNotificationCounter.visibility = View.VISIBLE
+            tvNotificationCounter?.visibility = View.VISIBLE
 //
 //        if (total > 99)
 //            tvNotificationCounter.text = "99+"
 
 
-        tvNotificationCounter.text = total.toString()
+        tvNotificationCounter?.text = total.toString()
 
 
 

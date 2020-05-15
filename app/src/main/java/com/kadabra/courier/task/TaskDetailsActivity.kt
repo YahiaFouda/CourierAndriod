@@ -55,7 +55,6 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private var lastLocation: Location? = null
     private var mBound = false
     private var myReceiver: MyReceiver? = null
-    private var alertDialog: AlertDialog? = null
     var isStarted = false
     private val mServiceConnection = object : ServiceConnection {
 
@@ -280,7 +279,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
                 override fun onSuccess(response: ApiResponse<Task>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
-                        tvStatus.text = task.Status//getString(R.string.in_progress)
+                        tvStatus.text = getString(R.string.ready_to_start)//task.Status//
                         task.Status = AppConstants.WAITING
                         AppConstants.CurrentAcceptedTask = task
                         AppConstants.CurrentSelectedTask = task
@@ -426,7 +425,11 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
         )
         if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty())
+        {
             loadTaskDetails(AppConstants.CurrentSelectedTask)
+            Log.d(TAG,"ON RESUME")
+        }
+
 
 
     }
@@ -542,8 +545,6 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
         override fun onBackPressed() {
             super.onBackPressed()
-            if (alertDialog!! != null)
-                alertDialog!!.dismiss()
             finish()
         }
 

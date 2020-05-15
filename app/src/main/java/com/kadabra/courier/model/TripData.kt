@@ -23,11 +23,11 @@ class TripData {
     override fun toString(): String {
         var data = ""
         if (days > 0)
-            data = days.toString() +AppController.getContext().getString(R.string.day) +" "
+            data = days.toString() +AppController.getContext().resources.getString(R.string.day) +" "
         if (hours > 0)
-            data += "$hours "+AppController.getContext().getString(R.string.hour)+" "
+            data += " $hours "+AppController.getContext().resources.getString(R.string.hour)+" "
         if (minutes > 0)
-                data += "$minutes "+AppController.getContext().getString(R.string.minutes)+"."
+                data += " $minutes "+AppController.getContext().resources.getString(R.string.minutes)+"."
         return data
     }
 }

@@ -52,10 +52,13 @@ import com.kadabra.courier.location.MarkerAnimation
 import com.kadabra.courier.model.*
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
+import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.utilities.UtilHelper
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_location_details.*
 import java.lang.Exception
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 
 class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
@@ -94,7 +97,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     var pickUpStop = Stop()
     var dropOffStop = Stop()
     var meters = 0L
-    var tripData=TripData()
+    var tripData = TripData()
     //endregion
 
 
@@ -121,7 +124,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 //                if (!AppConstants.COURIERSTARTTASK) {
 
                 //empty the previous selected Stop
-                AppConstants.currentSelectedStop=Stop()
+                AppConstants.currentSelectedStop = Stop()
                 isACcepted =
                     AppConstants.CurrentSelectedTask.IsStarted//isStartedTask(AppConstants.CurrentSelectedTask)
                 if (!isACcepted) { // not started yet
@@ -159,7 +162,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun init() {
 
         ivBack.setOnClickListener(this)
-//        fab.setOnClickListener(this)
         btnStart.setOnClickListener(this)
 
         polylines = ArrayList()
@@ -225,8 +227,9 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         ) && !AppConstants.CurrentSelectedTask.IsStarted
                     ) // Courier  start  journey from details view
                     {
+
                         map.isMyLocationEnabled = false
-                        AppConstants.currentSelectedStop = Stop()
+
                         if (NetworkManager().isNetworkAvailable(this@TaskLocationsActivity)) {
 //////////////////////////////////////////////////// prevent interact with map untill snapshot for map is taken ////////////////////////////////////////////////////
 //                            map.uiSettings.setAllGesturesEnabled(false)
@@ -249,6 +252,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                             waypoints = ArrayList()
 
                             calculateDirections(pickUp, dropOff, false, false)
+                            btnStart.visibility = View.VISIBLE
                             btnStart.text = getString(R.string.start_task)
                         } else
                             Alert.showMessage(
@@ -636,13 +640,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun calculateDirections(
         origin: LatLng,
         dest: LatLng,
-         isStop: Boolean,
+        isStop: Boolean,
         showAlternatives: Boolean
     ) {
-        Log.d(
-            TAG,
-            "calculateDirections: calculating directions."
-        )
+
         val destination = com.google.maps.model.LatLng(
             dest.latitude,
             dest.longitude
@@ -697,20 +698,24 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
                     }
+                    Log.d(TAG, "totalKilometers: $totalKilometers")
+                    Log.d(TAG, "METERS:  $meters")
                     totalKilometers = conevrtMetersToKilometers(meters)
-
+                    meters = 0L
                     addPolylinesToMap(result!!, isStop)
 
                 }
 
                 override fun onFailure(e: Throwable) {
-//                    Alert.hideProgress()
-                    Log.e(
-                        TAG,
-                        "calculateDirections: Failed to get directions: " + e.message
-                    )
-
-                    Alert.showMessage(this@TaskLocationsActivity,"Can't find a way there.")
+                    runOnUiThread {
+                        Alert.hideProgress()
+                        Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
+                        totalKilometers = 0.0f
+                        Log.e(
+                            TAG,
+                            "calculateDirections: Failed to get directions: " + e.message
+                        )
+                    }
                 }
             })
 
@@ -719,10 +724,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     private fun calculateTwoDirections(origin: LatLng, dest: LatLng): Float {
         Alert.showProgress(this)
-        Log.d(
-            TAG,
-            "calculateDirections: calculating directions."
-        )
         val destination = com.google.maps.model.LatLng(
             dest.latitude,
             dest.longitude
@@ -760,18 +761,18 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     directionResult = result!!
                     Log.d(
                         TAG,
-                        "onResult: successfully retrieved directions."
+                        "calculateTwoDirections: successfully retrieved directions."
                     )
                     result!!.routes[0].legs.forEach {
                         Log.d(
                             TAG,
-                            "LEG: duration: " + it.duration
+                            "calculateTwoDirections -> LEG: duration: " + it.duration
                         );
                         Log.d(
                             TAG,
-                            "LEG: distance: " + it.distance
+                            "calculateTwoDirections -> LEG: distance: " + it.distance
                         );
-                        Log.d("LEG DATA", it.toString())
+                        Log.d(TAG, "calculateTwoDirections -> LEG DATA $it")
 
                         meters += it.distance.inMeters
                         totalDistance += it.distance.inMeters
@@ -779,10 +780,21 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
                     }
+
                     totalKilometers = conevrtMetersToKilometers(meters)
-                    if (totalKilometers > 0.0)
-                        startTrip(AppConstants.CurrentSelectedTask, totalKilometers)
-                    else {
+                    var b = totalKilometers.roundToInt()
+//
+                    Log.d(TAG, "Near $b")
+                    meters = 0L
+                    if (totalKilometers > 0.0) {
+//                        prepareMapView(mTripMarkers)
+                        Log.d(TAG, "totalKilometers: $totalKilometers")
+                        runOnUiThread {
+
+                            startTrip(AppConstants.CurrentSelectedTask, totalKilometers)
+                        }
+
+                    } else {
                         Alert.hideProgress()
                         Alert.showMessage(this@TaskLocationsActivity, "press start again.")
                     }
@@ -790,12 +802,16 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 }
 
                 override fun onFailure(e: Throwable) {
-                    Alert.hideProgress()
+
                     Log.e(
                         TAG,
-                        "calculateDirections: Failed to get directions: " + e.message
+                        "calculateTwoDirections: Failed to get directions: " + e.message
                     )
-                    Alert.showMessage(this@TaskLocationsActivity,"Can't find a way there.")
+                    runOnUiThread {
+                        Alert.hideProgress()
+                        Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
+                        totalKilometers = 0.0f
+                    }
                 }
             })
 
@@ -876,13 +892,14 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             if (!isStop)
                 setTripStopsMarker(AppConstants.CurrentSelectedTask)
 
+
         }
 
     }
 
 
     private fun setTripStopsMarker(task: Task) {
-        var speciaMarker:Marker?=null
+        var speciaMarker: Marker? = null
         task.stopsmodel.forEach {
             when (it.StopTypeID) {
                 1 -> {
@@ -901,7 +918,9 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 }
                 2 -> {
                     var snippetData =
-                        getString(R.string.distance) + " " + tripData.distance.toString() + " - " + (getString(
+                        getString(R.string.distance) + " " + tripData.distance.toString() + " " + getString(
+                            R.string.km
+                        ) + " - " + (getString(
                             R.string.duration
                         ) + " " + tripData.toString())
 
@@ -918,16 +937,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     speciaMarker?.showInfoWindow()
                 }
                 3 -> {
-//                    val marker: Marker = map.addMarker(
-//                        MarkerOptions()
-//                            .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location_stops))
-//                            .position(LatLng(it.Latitude!!, it.Longitude!!))
-//                            .title(it.StopName)
-//                    )
-//                    mTripMarkers.add(marker)
-//                    marker.tag = it
-//                    Log.d("MARKER DATA",it.StopName)
-//                    marker.showInfoWindow()
 
                     val marker: Marker = map.addMarker(
                         MarkerOptions()
@@ -948,6 +957,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         }
 
         speciaMarker!!.showInfoWindow()
+
     }
 
     override fun onPolylineClick(polyline: Polyline?) {
@@ -992,6 +1002,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
                 )
+                Log.d(TAG,"ANASS")
                 mTripMarkers.add(marker)
                 marker.showInfoWindow()
             } else {
@@ -1073,11 +1084,21 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         tripData = prepareTripData()
         tvExpectedTime.text = tripData.toString()
         tvExpectedDistance.text =
-            "( " + tripData.distance + getString(R.string.km) + "  )"
+            "( " + tripData.distance + " " + getString(R.string.km) + "  )"
     }
 
 
     private fun startTrip(task: Task, totalKilometers: Float) {
+//        if (mTripMarkers.size > 0)
+//            prepareMapView(mTripMarkers)
+        Log.d(TAG, "startTrip")
+        //stop ingteract with map
+        map.uiSettings.setAllGesturesEnabled(false)
+        map.uiSettings.isScrollGesturesEnabled = false
+        map.uiSettings.isZoomGesturesEnabled = false
+        mapFragment.view?.isClickable = false
+        mapFragment.view?.isFocusable = false
+        Log.d(TAG, "Start Trip : " + task.TaskId)
         if (NetworkManager().isNetworkAvailable(this)) {
 
             if (!task.TaskId.isNullOrEmpty()) {
@@ -1087,6 +1108,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     endPoint,
                     object : INetworkCallBack<ApiResponse<Task>> {
                         override fun onFailed(error: String) {
+                            Log.d(TAG, "Faild: $error")
+
                             Alert.hideProgress()
                             Alert.showMessage(
                                 this@TaskLocationsActivity,
@@ -1108,6 +1131,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 btnStart.text = getString(R.string.end_task)
                                 map.isMyLocationEnabled = true
                             } else {
+                                Log.d(TAG, "Some thing is wrong." + (response.Status.toString()))
                                 Alert.hideProgress()
                                 Alert.showMessage(
                                     this@TaskLocationsActivity,
@@ -1209,6 +1233,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun conevrtMetersToKilometers(meters: Long): Float {
         var kilometers = 0F
         kilometers = (meters * 0.001).toFloat()
+        Log.d(TAG, "totalKilometers: RESULT $kilometers")
 
         return kilometers
     }
@@ -1218,11 +1243,11 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             SnapshotReadyCallback { snapshot ->
 
                 UtilHelper.uploadFile(snapshot, taskId)
-//                map.uiSettings.setAllGesturesEnabled(true)
-//                map.uiSettings.isScrollGesturesEnabled = true
-//                map.uiSettings.isZoomGesturesEnabled = true
-//                mapFragment.view?.isClickable = true
-//                mapFragment.view?.isFocusable = true
+                map.uiSettings.setAllGesturesEnabled(true)
+                map.uiSettings.isScrollGesturesEnabled = true
+                map.uiSettings.isZoomGesturesEnabled = true
+                mapFragment.view?.isClickable = true
+                mapFragment.view?.isFocusable = true
             }
         mMap.snapshot(callback)
     }
@@ -1256,5 +1281,28 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
         return durationData
     }
+
+    private fun prepareMapView(
+        markersList: java.util.ArrayList<Marker>
+    ) {
+
+
+        var builder = LatLngBounds.builder()
+        markersList.forEach { marker ->
+            builder.include(marker.position)
+
+        }
+        var bounds = builder.build()
+        // begin new code:
+        var width = resources.displayMetrics.widthPixels;
+        var height = resources.displayMetrics.heightPixels;
+        var padding = (width * 0.12).toInt()
+//        var padding = 0 // offset from edges of the mMap in pixels
+        var cu = CameraUpdateFactory.newLatLngBounds(bounds, width, 2000, padding)
+//        var cu = CameraUpdateFactory.newLatLngBounds(bounds,100, 2000, 0)
+
+        map.animateCamera(cu)
+    }
+
 
 }

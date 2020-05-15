@@ -427,12 +427,12 @@ object FirebaseManager {
     }
 
 
-    fun getTaskRecord(taskId:String, completion: (success: Boolean,data: Uri?) -> Unit)
-    {
-
-        mAudioStorage.child(taskId).downloadUrl.addOnSuccessListener {
-            completion(true,it)
-        }.addOnFailureListener { completion(false,null) }
+    fun getTaskRecord(taskId: String, completion: (success: Boolean, data: Uri?) -> Unit) {
+        if (!taskId.isNullOrEmpty()) {
+            mAudioStorage.child(taskId).downloadUrl.addOnSuccessListener {
+                completion(true, it)
+            }.addOnFailureListener { completion(false, null) }
+        }
     }
 //endregion
 
