@@ -60,8 +60,11 @@ object AppConstants {
     const val URL_ACCEPT_TAKS = "UpdateAcceptTask"
     const val URL_END_TAKS = "UpdateEndTask"
     const val URL_UPDATE_NOTIFICATION = "UpdateReadedNotification"
+    const val URL_START_TASK = "StartTask"
     const val URL_GET_TAKS_DETAILS = "GetTaskByID"
     const val URL_GET_VERSION_CODE = "GetVersionCode"
+
+
     //endregion
 
     //region  app variables
@@ -76,6 +79,7 @@ object AppConstants {
     var CurrentLoginCourier: Courier = Courier()
     var CurrentSelectedTask: Task = Task()
     var CurrentAcceptedTask: Task = Task()
+    var CurrentSelectedMessage: NotificationServiceData = NotificationServiceData()
 
     var CurrentCourierLocation: location = location()
     var currentSelectedStop: Stop = Stop()
@@ -102,6 +106,7 @@ object AppConstants {
     var NEW = "New"
     var COMPLETED = "Completed"
     var WAITING = "Waiting For Pickup"
+    var CANCELLED = "Cancelled"
     //endregion
 
     val ERROR_DIALOG_REQUEST = 9001
@@ -109,8 +114,9 @@ object AppConstants {
     val PERMISSIONS_REQUEST_ENABLE_GPS = 9003
     var FIRE_BASE_LOGOUT = false
     var FIRE_BASE_NEW_TASK = false
-    var FIRE_BASE_EDIT_TASK = false
+//    var FIRE_BASE_EDIT_TASK = false
     var FIRE_BASE_DELETE_TASK = false
+    var FIRE_BASE_CANCEL_TASK = false
     var FIRE_BASE_REASSIGN_TASK = false
     var isCountDownTimerIsFinished = false
 

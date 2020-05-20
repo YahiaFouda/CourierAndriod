@@ -15,7 +15,7 @@ import retrofit2.http.Query
 interface ApiServices {
 
     @GET(AppConstants.URL_LOGIN)
-        fun logIn(@Query("userName") userName: String, @Query("password") password: String, @Query("deviceType") deviceType: Int)
+    fun logIn(@Query("userName") userName: String, @Query("password") password: String, @Query("deviceType") deviceType: Int)
             : Call<ApiResponse<Courier>>
 
     @POST(AppConstants.URL_UPDATE_LANGUAGE)
@@ -28,7 +28,7 @@ interface ApiServices {
             : Call<ApiResponse<Courier>>
 
     @POST(AppConstants.URL_SET_USER_TOKEN)
-    fun setCourierToken(@Query("CourierId") CourierId:Int,@Query("Token") token:String)
+    fun setCourierToken(@Query("CourierId") CourierId: Int, @Query("Token") token: String)
             : Call<ApiResponse<Boolean>>
 
 
@@ -67,8 +67,13 @@ interface ApiServices {
 
     @POST(AppConstants.URL_UPDATE_TASK_COURIER_FEES)
     fun updateTaskCourierFees(
-        @Query("taskId") taskId: String,  @Query("Kilometers") kilometers: Float
+        @Query("taskId") taskId: String, @Query("Kilometers") kilometers: Float
     )
+            : Call<ApiResponse<Task>>
+
+    @POST(AppConstants.URL_START_TASK)
+    fun startTask(
+        @Query("taskId") taskId: String, @Query("Kilometeres") kilometers: Float)
             : Call<ApiResponse<Task>>
 
 }

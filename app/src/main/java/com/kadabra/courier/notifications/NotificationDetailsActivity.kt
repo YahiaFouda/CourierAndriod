@@ -39,8 +39,8 @@ class NotificationDetailsActivity : BaseNewActivity() {
 
     private fun updateNotificationRead(id: String) {
         Log.d(TAG, "loadNotifications: Enter method")
+        runOnUiThread { showProgress(this) }
 
-        showProgress(this)
         if (NetworkManager().isNetworkAvailable(this)) {
 
             var request = NetworkManager().create(ApiServices::class.java)

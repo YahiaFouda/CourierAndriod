@@ -140,13 +140,21 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 tvStatus.text = getString(R.string.ready_to_start)
                 btnEndTask.text = getString(R.string.start)
             }
+            AppConstants.CANCELLED -> {
+                tvStatus.text = getString(R.string.cancelled)
+                btnEndTask.text = getString(R.string.start)
+                btnEndTask.isEnabled = false
+                btnEndTask.setBackgroundResource(R.drawable.rounded_button_disenaple)
+            }
             AppConstants.IN_PROGRESS -> {
 
                 tvStatus.text = getString(R.string.in_progress)
                 btnEndTask.text = getString(R.string.end_task)
 
             }
+
         }
+
 
 
         if (task.Amount!! > 0)
@@ -400,6 +408,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         init()
 
 
+
     }
 
 
@@ -416,6 +425,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         )
 
 
+
+
     }
 
     override fun onResume() {
@@ -424,12 +435,20 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             myReceiver!!,
             IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
         )
-        if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty())
-        {
-            loadTaskDetails(AppConstants.CurrentSelectedTask)
-            Log.d(TAG,"ON RESUME")
+
+        if (intent.hasExtra("editTAskId")) {
+            var taskId=intent.getStringExtra("editTAskId")
+            if(!taskId.isNullOrEmpty())
+            {
+                getTaskDetails(taskId)
+                // startActivity(Intent(this, TaskDetailsActivity::class.java).putExtra("editTaskId",AppConstants.CurrentSelectedMessage.taskId))
+            }
         }
 
+        else if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty()) {
+            loadTaskDetails(AppConstants.CurrentSelectedTask)
+            Log.d(TAG, "ON RESUME")
+        }
 
 
     }
@@ -516,6 +535,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 finish()
             }
             R.id.ivMessage -> {
+                ivMessage.isEnabled=false
                 var media = MediaPlayer()
 
                 FirebaseManager.getTaskRecord(AppConstants.CurrentSelectedTask.TaskId)
@@ -527,8 +547,11 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             player.start()
                         }
                         mediaPlayer.prepareAsync()
+                   mediaPlayer.setOnCompletionListener { ivMessage.isEnabled=true }
+
                     } else {
                         Alert.showMessage(this, getString(R.string.error_no_audio))
+                        ivMessage.isEnabled=true
                     }
 
 
@@ -539,242 +562,242 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         }
     }
 
-        override fun locationResponse(locationResult: LocationResult) {
-            lastLocation = locationResult.lastLocation
-        }
+    override fun locationResponse(locationResult: LocationResult) {
+        lastLocation = locationResult.lastLocation
+    }
 
-        override fun onBackPressed() {
-            super.onBackPressed()
-            finish()
-        }
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finish()
+    }
 
-        private fun checkPermissions(): Boolean {
-            return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
+    private fun checkPermissions(): Boolean {
+        return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
+
+    private fun requestPermissions() {
+        val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationale) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.")
+            Snackbar.make(
+                findViewById(R.id.rlParent),
+                R.string.permission_rationale,
+                Snackbar.LENGTH_INDEFINITE
+            )
+                .setAction(R.string.ok) {
+                    // Request permission
+                    ActivityCompat.requestPermissions(
+                        this@TaskDetailsActivity,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+                    )
+                }
+                .show()
+        } else {
+            Log.i(TAG, "Requesting permission")
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(
+                this@TaskDetailsActivity,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
             )
         }
+    }
 
-        private fun requestPermissions() {
-            val shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            )
-
-            // Provide an additional rationale to the user. This would happen if the user denied the
-            // request previously, but didn't check the "Don't ask again" checkbox.
-            if (shouldProvideRationale) {
-                Log.i(TAG, "Displaying permission rationale to provide additional context.")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
+    ) {
+        Log.i(TAG, "onRequestPermissionResult")
+        if (requestCode == AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (grantResults.size <= 0) {
+                // If user interaction was interrupted, the permission request is cancelled and you
+                // receive empty arrays.
+                Log.i(TAG, "User interaction was cancelled.")
+            } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission was granted.
+                LocationUpdatesService.shared!!.requestLocationUpdates()
+            } else {
+                // Permission denied.
+//                setButtonsState(false)
                 Snackbar.make(
                     findViewById(R.id.rlParent),
-                    R.string.permission_rationale,
+                    R.string.permission_denied_explanation,
                     Snackbar.LENGTH_INDEFINITE
                 )
-                    .setAction(R.string.ok) {
-                        // Request permission
-                        ActivityCompat.requestPermissions(
-                            this@TaskDetailsActivity,
-                            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                            AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+                    .setAction(R.string.settings) {
+                        // Build intent that displays the App settings screen.
+                        val intent = Intent()
+                        intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        val uri = Uri.fromParts(
+                            "package",
+                            BuildConfig.APPLICATION_ID, null
                         )
+                        intent.data = uri
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(intent)
                     }
                     .show()
-            } else {
-                Log.i(TAG, "Requesting permission")
-                // Request permission. It's possible this can be auto answered if device policy
-                // sets the permission in a given state or the user denied the permission
-                // previously and checked "Never ask again".
-                ActivityCompat.requestPermissions(
-                    this@TaskDetailsActivity,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-                )
             }
         }
+    }
 
-        override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<String>, grantResults: IntArray
-        ) {
-            Log.i(TAG, "onRequestPermissionResult")
-            if (requestCode == AppConstants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
-                if (grantResults.size <= 0) {
-                    // If user interaction was interrupted, the permission request is cancelled and you
-                    // receive empty arrays.
-                    Log.i(TAG, "User interaction was cancelled.")
-                } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission was granted.
-                    LocationUpdatesService.shared!!.requestLocationUpdates()
-                } else {
-                    // Permission denied.
-//                setButtonsState(false)
-                    Snackbar.make(
-                        findViewById(R.id.rlParent),
-                        R.string.permission_denied_explanation,
-                        Snackbar.LENGTH_INDEFINITE
-                    )
-                        .setAction(R.string.settings) {
-                            // Build intent that displays the App settings screen.
-                            val intent = Intent()
-                            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                            val uri = Uri.fromParts(
-                                "package",
-                                BuildConfig.APPLICATION_ID, null
-                            )
-                            intent.data = uri
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            startActivity(intent)
-                        }
-                        .show()
-                }
-            }
-        }
-
-        private fun logOut() {
+    private fun logOut() {
 //        if(AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty())
 //        {
-            showProgress()
-            if (NetworkManager().isNetworkAvailable(this)) {
-                if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //no accepted task
-                {
-                    var request = NetworkManager().create(ApiServices::class.java)
-                    var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
-                    NetworkManager().request(
-                        endPoint,
-                        object : INetworkCallBack<ApiResponse<Courier>> {
-                            override fun onFailed(error: String) {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+            if (AppConstants.CurrentAcceptedTask.TaskId.isNullOrEmpty()) //no accepted task
+            {
+                var request = NetworkManager().create(ApiServices::class.java)
+                var endPoint = request.logOut(AppConstants.CurrentLoginCourier.CourierId)
+                NetworkManager().request(
+                    endPoint,
+                    object : INetworkCallBack<ApiResponse<Courier>> {
+                        override fun onFailed(error: String) {
+                            hideProgress()
+                            Alert.showMessage(
+                                this@TaskDetailsActivity,
+                                getString(R.string.no_internet)
+                            )
+                        }
+
+                        override fun onSuccess(response: ApiResponse<Courier>) {
+                            if (response.Status == AppConstants.STATUS_SUCCESS) {
+                                //stop  tracking service
+                                stopTracking()
+                                FirebaseManager.logOut()
+
+                                UserSessionManager.getInstance(this@TaskDetailsActivity)
+                                    .logout()
+                                startActivity(
+                                    Intent(
+                                        this@TaskDetailsActivity,
+                                        LoginActivity::class.java
+                                    )
+                                )
+
+
+                                //remove location update
+//                        LocationHelper.shared.stopUpdateLocation()
+                                finish()
+                                hideProgress()
+
+                            } else {
                                 hideProgress()
                                 Alert.showMessage(
                                     this@TaskDetailsActivity,
-                                    getString(R.string.no_internet)
+                                    getString(R.string.error_network)
                                 )
                             }
 
-                            override fun onSuccess(response: ApiResponse<Courier>) {
-                                if (response.Status == AppConstants.STATUS_SUCCESS) {
-                                    //stop  tracking service
-                                    stopTracking()
-                                    FirebaseManager.logOut()
-
-                                    UserSessionManager.getInstance(this@TaskDetailsActivity)
-                                        .logout()
-                                    startActivity(
-                                        Intent(
-                                            this@TaskDetailsActivity,
-                                            LoginActivity::class.java
-                                        )
-                                    )
-
-
-                                    //remove location update
-//                        LocationHelper.shared.stopUpdateLocation()
-                                    finish()
-                                    hideProgress()
-
-                                } else {
-                                    hideProgress()
-                                    Alert.showMessage(
-                                        this@TaskDetailsActivity,
-                                        getString(R.string.error_network)
-                                    )
-                                }
-
-                            }
-                        })
-                } else //accepted task prevent logout
-                {
-                    hideProgress()
-                    Alert.showMessage(
-                        this@TaskDetailsActivity,
-                        getString(R.string.end_first)
-                    )
-                }
-            } else {
+                        }
+                    })
+            } else //accepted task prevent logout
+            {
                 hideProgress()
                 Alert.showMessage(
                     this@TaskDetailsActivity,
-                    getString(R.string.no_internet)
+                    getString(R.string.end_first)
                 )
             }
-
-
-        }
-
-        private fun stopTracking() {
-            if (LocationUpdatesService.shared != null)
-                LocationUpdatesService.shared!!.removeLocationUpdates()
-        }
-
-
-        //endregion
-
-        private inner class MyReceiver : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                val location =
-                    intent.getParcelableExtra<Location>(LocationUpdatesService.EXTRA_LOCATION)
-
-            }
-        }
-
-        private fun endTask(task: Task) {
-            Alert.showProgress(this)
-            if (NetworkManager().isNetworkAvailable(this)) {
-                var request = NetworkManager().create(ApiServices::class.java)
-                var endPoint = request.endTask(task.TaskId)
-                NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
-                    override fun onFailed(error: String) {
-                        Alert.hideProgress()
-                        Alert.showMessage(
-                            this@TaskDetailsActivity,
-                            getString(R.string.error_login_server_unknown_error)
-                        )
-                    }
-
-                    override fun onSuccess(response: ApiResponse<Task>) {
-                        if (response.Status == AppConstants.STATUS_SUCCESS) {
-
-                            FirebaseManager.endTask(
-                                AppConstants.CurrentSelectedTask,
-                                AppConstants.CurrentLoginCourier.CourierId
-                            )
-
-                            AppConstants.CurrentAcceptedTask = Task()
-                            AppConstants.CurrentSelectedTask = Task()
-                            AppConstants.COURIERSTARTTASK = false
-                            AppConstants.ALL_TASKS_DATA.remove(AppConstants.CurrentSelectedTask) //removed when life cycle
-                            Alert.hideProgress()
-                            AppConstants.endTask = true
-                            //load new task or shoe empty tasks view
-                            startActivity(
-                                Intent(
-                                    this@TaskDetailsActivity,
-                                    TaskActivity::class.java
-                                )
-                            )
-                            finish()
-
-
-                        } else {
-                            Alert.hideProgress()
-                            Alert.showMessage(
-                                this@TaskDetailsActivity,
-                                getString(R.string.error_network)
-                            )
-                        }
-
-                    }
-                })
-
-            } else {
-                Alert.hideProgress()
-                Alert.showMessage(
-                    this@TaskDetailsActivity,
-                    getString(R.string.no_internet)
-                )
-            }
-
-
+        } else {
+            hideProgress()
+            Alert.showMessage(
+                this@TaskDetailsActivity,
+                getString(R.string.no_internet)
+            )
         }
 
 
     }
+
+    private fun stopTracking() {
+        if (LocationUpdatesService.shared != null)
+            LocationUpdatesService.shared!!.removeLocationUpdates()
+    }
+
+
+    //endregion
+
+    private inner class MyReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val location =
+                intent.getParcelableExtra<Location>(LocationUpdatesService.EXTRA_LOCATION)
+
+        }
+    }
+
+    private fun endTask(task: Task) {
+        Alert.showProgress(this)
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.endTask(task.TaskId)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
+                override fun onFailed(error: String) {
+                    Alert.hideProgress()
+                    Alert.showMessage(
+                        this@TaskDetailsActivity,
+                        getString(R.string.error_login_server_unknown_error)
+                    )
+                }
+
+                override fun onSuccess(response: ApiResponse<Task>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+
+                        FirebaseManager.endTask(
+                            AppConstants.CurrentSelectedTask,
+                            AppConstants.CurrentLoginCourier.CourierId
+                        )
+
+                        AppConstants.CurrentAcceptedTask = Task()
+                        AppConstants.CurrentSelectedTask = Task()
+                        AppConstants.COURIERSTARTTASK = false
+                        AppConstants.ALL_TASKS_DATA.remove(AppConstants.CurrentSelectedTask) //removed when life cycle
+                        Alert.hideProgress()
+                        AppConstants.endTask = true
+                        //load new task or shoe empty tasks view
+                        startActivity(
+                            Intent(
+                                this@TaskDetailsActivity,
+                                TaskActivity::class.java
+                            )
+                        )
+                        finish()
+
+
+                    } else {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskDetailsActivity,
+                            getString(R.string.error_network)
+                        )
+                    }
+
+                }
+            })
+
+        } else {
+            Alert.hideProgress()
+            Alert.showMessage(
+                this@TaskDetailsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+
+
+    }
+
+
+}

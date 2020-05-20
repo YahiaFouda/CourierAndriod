@@ -86,6 +86,7 @@
     <string name="in_progress">قيد التنفيذ</string>
     <string name="started">بدأت</string>
     <string name="ready_to_start">جاهز للبدء</string>
+    <string name="cancelled">ألغيت</string>
     <string name="nav_call">الأتصال بعميل</string>
     <string name="nav_logout">تسجيل خروج</string>
     <string name="nav_notification">تنبيهات</string>

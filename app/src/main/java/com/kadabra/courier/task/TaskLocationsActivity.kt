@@ -32,7 +32,9 @@ import com.google.android.gms.maps.GoogleMap.SnapshotReadyCallback
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.gms.tasks.Tasks.await
 import com.google.android.material.snackbar.Snackbar
+import com.google.maps.DirectionsApi
 import com.google.maps.DirectionsApiRequest
 import com.google.maps.GeoApiContext
 import com.google.maps.PendingResult
@@ -56,6 +58,8 @@ import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.utilities.UtilHelper
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_location_details.*
+import okhttp3.internal.wait
+import org.joda.time.Instant
 import java.lang.Exception
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -84,7 +88,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private var mPolyLinesData: ArrayList<PolylineData> = ArrayList()
     private val mTripMarkers = ArrayList<Marker>()
     private var mSelectedMarker: Marker? = null
-    private var totalKilometers: Float = 0F
+    private var totalKilometers = 0
     private var totalDuration: Float = 0F
     var totalDistance = 0L
     var totalSeconds = 0L
@@ -659,23 +663,24 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         )
         Log.d(TAG, "calculateDirections: destination: $destination")
 
+
         if (!isStop) {
             AppConstants.CurrentAcceptedTask.stopsmodel.forEach {
 
                 if (it.StopTypeID == 3) {
+                    Log.d(TAG, "default Stop:" + it.StopName)
                     directions.waypoints(
                         com.google.maps.model.LatLng(
                             it.Latitude!!,
                             it.Longitude!!
                         )
-                    )
+                    ).optimizeWaypoints(true)
 
                 }
 
             }
-            directions.optimizeWaypoints(true)
         }
-
+        directions.optimizeWaypoints(true)
 
 
         directions.destination(destination)
@@ -695,8 +700,6 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         meters += it.distance.inMeters
                         totalDistance += it.distance.inMeters
                         totalSeconds += it.duration.inSeconds
-
-
                     }
                     Log.d(TAG, "totalKilometers: $totalKilometers")
                     Log.d(TAG, "METERS:  $meters")
@@ -710,7 +713,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     runOnUiThread {
                         Alert.hideProgress()
                         Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
-                        totalKilometers = 0.0f
+                        totalKilometers = 0
                         Log.e(
                             TAG,
                             "calculateDirections: Failed to get directions: " + e.message
@@ -722,7 +725,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
 
-    private fun calculateTwoDirections(origin: LatLng, dest: LatLng): Float {
+    private fun calculateTwoDirections(origin: LatLng, dest: LatLng): Int {
         Alert.showProgress(this)
         val destination = com.google.maps.model.LatLng(
             dest.latitude,
@@ -747,7 +750,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                             it.Latitude!!,
                             it.Longitude!!
                         )
-                    )
+                    ).optimizeWaypoints(true)
 
                 }
 
@@ -782,16 +785,13 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     }
 
                     totalKilometers = conevrtMetersToKilometers(meters)
-                    var b = totalKilometers.roundToInt()
-//
-                    Log.d(TAG, "Near $b")
                     meters = 0L
                     if (totalKilometers > 0.0) {
 //                        prepareMapView(mTripMarkers)
                         Log.d(TAG, "totalKilometers: $totalKilometers")
                         runOnUiThread {
 
-                            startTrip(AppConstants.CurrentSelectedTask, totalKilometers)
+                            startTrip(AppConstants.CurrentSelectedTask, totalKilometers.toFloat())
                         }
 
                     } else {
@@ -810,7 +810,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     runOnUiThread {
                         Alert.hideProgress()
                         Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
-                        totalKilometers = 0.0f
+                        totalKilometers = 0
                     }
                 }
             })
@@ -918,7 +918,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 }
                 2 -> {
                     var snippetData =
-                        getString(R.string.distance) + " " + tripData.distance.toString() + " " + getString(
+                        getString(R.string.distance) + " " + totalKilometers.toString() + " " + getString(
                             R.string.km
                         ) + " - " + (getString(
                             R.string.duration
@@ -1002,7 +1002,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
                 )
-                Log.d(TAG,"ANASS")
+                Log.d(TAG, "ANASS")
                 mTripMarkers.add(marker)
                 marker.showInfoWindow()
             } else {
@@ -1076,15 +1076,17 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     private fun setTripDirectionData(polylineData: PolylineData) {
 
         tvExpectedTime.text = polylineData.leg.duration.toString()
+//        tvExpectedDistance.text =
+//            "( " + polylineData.leg.distance.toString() + "  )"
         tvExpectedDistance.text =
-            "( " + polylineData.leg.distance.toString() + "  )"
+            "( " + totalKilometers.toString() + " " + getString(R.string.km) + "  )"
     }
 
     private fun setTotalTripDirectionData() {
         tripData = prepareTripData()
         tvExpectedTime.text = tripData.toString()
         tvExpectedDistance.text =
-            "( " + tripData.distance + " " + getString(R.string.km) + "  )"
+            "( " + totalKilometers.toString() + " " + getString(R.string.km) + "  )"
     }
 
 
@@ -1103,7 +1105,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
             if (!task.TaskId.isNullOrEmpty()) {
                 var request = NetworkManager().create(ApiServices::class.java)
-                var endPoint = request.updateTaskCourierFees(task.TaskId, totalKilometers)
+                var endPoint = request.startTask(task.TaskId, totalKilometers)
                 NetworkManager().request(
                     endPoint,
                     object : INetworkCallBack<ApiResponse<Task>> {
@@ -1230,9 +1232,13 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     }
 
 
-    private fun conevrtMetersToKilometers(meters: Long): Float {
-        var kilometers = 0F
-        kilometers = (meters * 0.001).toFloat()
+    private fun conevrtMetersToKilometers(meters: Long): Int {
+        var kilometers = 0
+        if (meters in 100..999) //grater than 100 meters and ess than 1000 meters consider as 1 kilometer
+            kilometers = 1
+        else
+            kilometers = ceil((meters * 0.001).toFloat()).toInt()
+
         Log.d(TAG, "totalKilometers: RESULT $kilometers")
 
         return kilometers
@@ -1271,7 +1277,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         var hours = (totalSeconds - days * 86400) / 3600
         var minutes = (totalSeconds - days * 86400 - hours * 3600) / 60
         var seconds = totalSeconds - days * 86400 - hours * 3600 - minutes * 60
-        var distance = calculateDistance(totalDistance)
+        var distance = totalKilometers//calculateDistance(totalDistance)
         var durationData = TripData(days, hours, minutes, seconds, distance)
 
         Log.d(
@@ -1303,6 +1309,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
         map.animateCamera(cu)
     }
+
+
 
 
 }

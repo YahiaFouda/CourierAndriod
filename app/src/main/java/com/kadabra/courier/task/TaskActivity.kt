@@ -87,7 +87,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var rbArabic: RadioButton? = null
     private var rbEnglish: RadioButton? = null
     private var lang = ""
-    private  var tvNotificationCounter: TextView?=null
+    private var tvNotificationCounter: TextView? = null
     private lateinit var ivNotification: ImageView
     var total = 0
 
@@ -141,7 +141,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         chooseLanguageWindow()
 
         refresh.setOnRefreshListener {
-            Log.d(TAG,"loadTasks- refresh.setOnRefreshListener")
+            Log.d(TAG, "loadTasks- refresh.setOnRefreshListener")
             loadTasks()
 
         }
@@ -382,11 +382,11 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                             AppConstants.CURRENTTOTALNOTIFICATIONS =
                                 taskData.NoOfUnreadedNotification
                             total = taskData.NoOfUnreadedNotification
-                            if(total>0&&tvNotificationCounter!=null)
-                            {
-                                tvNotificationCounter?.text=total.toString()
+                            if (total > 0 && tvNotificationCounter != null) {
+                                tvNotificationCounter?.text = total.toString()
                                 tvNotificationCounter?.visibility = View.VISIBLE
-                            }
+                            } else
+                                tvNotificationCounter?.visibility = View.INVISIBLE
 
 //                            UserSessionManager.getInstance(this@TaskActivity)
 //                                .setTotalNotification(taskData.NoOfUnreadedNotification)
@@ -427,11 +427,11 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                             AppConstants.CURRENTTOTALNOTIFICATIONS =
                                 taskData.NoOfUnreadedNotification
                             total = taskData.NoOfUnreadedNotification
-                            if(total>0)
-                            {
-                                tvNotificationCounter?.text=total.toString()
+                            if (total > 0) {
+                                tvNotificationCounter?.text = total.toString()
                                 tvNotificationCounter?.visibility = View.VISIBLE
-                            }
+                            } else
+                                tvNotificationCounter?.visibility = View.INVISIBLE
 
                             Log.d(TAG, "onSuccess: NO Data")
                             refresh.isRefreshing = false
@@ -635,7 +635,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
         if (checkMapServices()) {
             if (mLocationPermissionGranted) {
-                Log.d(TAG,"loadTasks- On Resume")
+                Log.d(TAG, "loadTasks- On Resume")
                 loadTasks()
 //                getCurrentActiveTask()
                 getCurrentCourierLocation()
@@ -673,13 +673,20 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         )
 
 
-
-
         if (AppConstants.endTask)
             AppConstants.endTask = false
 
         if (AppConstants.FIRE_BASE_LOGOUT)
             logOut()
+
+        if (intent.hasExtra("editTAskId")) {
+            startActivity(
+                Intent(this, TaskDetailsActivity::class.java).putExtra(
+                    "editTaskId",
+                    AppConstants.CurrentSelectedMessage.taskId
+                )
+            )
+        }
 
 
     }
@@ -771,7 +778,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 // Permission was granted.
                 LocationUpdatesService.shared!!.requestLocationUpdates()
                 mLocationPermissionGranted = true
-                Log.d(TAG,"loadTasks- onRequestPermissionsResult-mLocationPermissionGranted")
+                Log.d(TAG, "loadTasks- onRequestPermissionsResult-mLocationPermissionGranted")
                 loadTasks()
 //                getCurrentActiveTask()
                 getCurrentCourierLocation()
@@ -789,12 +796,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             R.id.nav_task_history -> {
                 startActivity(Intent(this, TaskHistoryActivity::class.java))
             }
-            R.id.nav_Settings ->
-            {
-                if(alertDialog!=null)
-                alertDialog?.show()
-                else
-                {
+            R.id.nav_Settings -> {
+                if (alertDialog != null)
+                    alertDialog?.show()
+                else {
                     chooseLanguageWindow()
                     alertDialog?.show()
                 }
@@ -837,6 +842,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
         if (total > 0)
             tvNotificationCounter?.visibility = View.VISIBLE
+        else
+            tvNotificationCounter?.visibility = View.INVISIBLE
 //
 //        if (total > 99)
 //            tvNotificationCounter.text = "99+"
@@ -1032,24 +1039,16 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             var endPoint = request.updateCourierLanguage(courierId, languageType)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Boolean?>> {
                 override fun onFailed(error: String) {
-
+                    Log.d(TAG, "Task Activity-onFailed: $error")
                 }
 
                 override fun onSuccess(response: ApiResponse<Boolean?>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
-
-                    } else {
-
+                        Log.d(TAG, "Task Activity-updateLanguage: $languageType")
                     }
-
                 }
             })
-
-        } else {
-
         }
-
-
     }
 
     //endregion

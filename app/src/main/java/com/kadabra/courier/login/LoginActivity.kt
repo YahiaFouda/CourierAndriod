@@ -38,7 +38,6 @@ import kotlinx.android.synthetic.main.activity_login.etPassword
 import kotlinx.android.synthetic.main.activity_login.etUsername
 
 
-
 class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
 
     //region Members
@@ -46,7 +45,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     private var lastLocation: Location? = null
     private var userCustomEmail = ""
     private val TAG = this.javaClass.simpleName
-    private  var lang=""
+    private var lang = ""
 
     //endregion
 
@@ -67,8 +66,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 //        FirebaseManager.setUpFirebase()
         init()
 
-         lang = UserSessionManager.getInstance(AppController.getContext())
-                .getLanguage()
+        lang = UserSessionManager.getInstance(AppController.getContext())
+            .getLanguage()
         if (lang == AppConstants.ARABIC)
             rbArabic.isChecked = true
         else if (lang == AppConstants.ENGLISH)
@@ -101,16 +100,18 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
                 lang = UserSessionManager.getInstance(AppController.getContext())
                     .getLanguage()
-                if(lang!=AppConstants.ARABIC)
-                {   LocalizationHelper.setLocale(application, AppConstants.ARABIC)
-                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))}
+                if (lang != AppConstants.ARABIC) {
+                    LocalizationHelper.setLocale(application, AppConstants.ARABIC)
+                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
             }
             R.id.rbEnglish -> {
                 lang = UserSessionManager.getInstance(AppController.getContext())
                     .getLanguage()
-                if (lang != AppConstants.ENGLISH)
-                {  LocalizationHelper.setLocale(application, AppConstants.ENGLISH)
-                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))}
+                if (lang != AppConstants.ENGLISH) {
+                    LocalizationHelper.setLocale(application, AppConstants.ENGLISH)
+                    startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
             }
         }
     }
@@ -135,8 +136,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     }
 
     override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<String>, grantResults: IntArray
+        requestCode: Int,
+        permissions: Array<String>, grantResults: IntArray
     ) {
         when (requestCode) {
             LOCATION_PERMISSION_REQUEST_CODE -> {
@@ -146,23 +147,23 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
                     Snackbar.make(
-                            findViewById(R.id.rlParent),
-                            R.string.permission_denied_explanation,
-                            Snackbar.LENGTH_INDEFINITE
+                        findViewById(R.id.rlParent),
+                        R.string.permission_denied_explanation,
+                        Snackbar.LENGTH_INDEFINITE
                     )
-                            .setAction(R.string.settings) {
-                                // Build intent that displays the App settings screen.
-                                val intent = Intent()
-                                intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                                val uri = Uri.fromParts(
-                                        "package",
-                                        BuildConfig.APPLICATION_ID, null
-                                )
-                                intent.data = uri
-                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                startActivity(intent)
-                            }
-                            .show()
+                        .setAction(R.string.settings) {
+                            // Build intent that displays the App settings screen.
+                            val intent = Intent()
+                            intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                            val uri = Uri.fromParts(
+                                "package",
+                                BuildConfig.APPLICATION_ID, null
+                            )
+                            intent.data = uri
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            startActivity(intent)
+                        }
+                        .show()
 
 
                 }
@@ -209,7 +210,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
         if (NetworkManager().isNetworkAvailable(this)) {
 
             var request = NetworkManager().create(ApiServices::class.java)
-            var endPoint = request.logIn(userName, password,1)
+            var endPoint = request.logIn(userName, password, 1)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Courier>> {
                 override fun onFailed(error: String) {
                     hideProgress()
@@ -222,12 +223,13 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                 override fun onSuccess(response: ApiResponse<Courier>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS && response.ResponseObj != null) {
                         Log.d(TAG, "logIn - API - Success.$response")
-                        updateLanguage(
-                            AppConstants.CurrentLoginCourier.CourierId,lang
-                         //   UserSessionManager.getInstance(this@LoginActivity).getLanguage()
-                        )
                         courier = response.ResponseObj!!
                         AppConstants.CurrentLoginCourier = courier
+                        updateLanguage(
+                            AppConstants.CurrentLoginCourier.CourierId, lang
+                            //   UserSessionManager.getInstance(this@LoginActivity).getLanguage()
+                        )
+
                         var data = FirebaseManager.getCurrentUser()
                         if (FirebaseManager.getCurrentUser() == null) //create new user
                         {
@@ -392,14 +394,13 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     }
 
 
-
     private fun prepareCourierData() {
         courier.name = courier.CourierName
         var oldToken = FirebaseManager.getCurrentUser()!!.uid
         var token = FirebaseManager.token
         courier.token = token//FirebaseManager.getCurrentUser()!!.uid //token
         courier.isActive = true
-        courier.haveTask=false
+        courier.haveTask = false
 
     }
 
@@ -414,8 +415,8 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
     private fun showProgress() {
         avi.smoothToShow()
         window.setFlags(
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         )
     }
 
@@ -430,14 +431,14 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
             var endPoint = request.setCourierToken(id, token)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Boolean>> {
                 override fun onSuccess(response: ApiResponse<Boolean>) {
-                    Log.d(TAG, "SEND TOKEN - API - SUCCESSFULLY.")
+                    Log.d(TAG, "SEND TOKEN - API - SUCCESSFULLY. " + token)
                 }
 
                 override fun onFailed(error: String) {
                     Log.d(TAG, "SEND TOKEN - API - FAILED.")
                     Alert.showMessage(
-                            this@LoginActivity,
-                            getString(R.string.error_login_server_error)
+                        this@LoginActivity,
+                        getString(R.string.error_login_server_error)
                     )
                 }
             })
@@ -452,7 +453,7 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
 
     fun hideKeyboard(view: View) {
         val inputMethodManager =
-                getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager!!.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
@@ -471,12 +472,12 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
             var endPoint = request.updateCourierLanguage(courierId, languageType)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Boolean?>> {
                 override fun onFailed(error: String) {
-
+                    Log.d(TAG, "onFailed -updateLanguage: $error")
                 }
 
                 override fun onSuccess(response: ApiResponse<Boolean?>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
-
+                        Log.d(TAG, "Login Activity-updateLanguage: $languageType")
                     } else {
 
                     }

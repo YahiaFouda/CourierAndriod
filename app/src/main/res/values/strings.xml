@@ -111,6 +111,7 @@
     <string name="waiting">Waiting For Pickup</string>
     <string name="started">Started</string>
     <string name="ready_to_start">Ready to start</string>
+ <string name="cancelled">Cancelled</string>
 
     <string name="new_task">New</string>
     <string name="completed">Completed</string>

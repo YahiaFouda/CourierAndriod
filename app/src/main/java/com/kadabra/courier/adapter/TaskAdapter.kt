@@ -73,6 +73,10 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
             AppConstants.WAITING -> {
                 holder.tvStatus.text = context.getString(R.string.ready_to_start)
             }
+            AppConstants.CANCELLED ->
+            {
+                holder.tvStatus.text = context.getString(R.string.ready_to_start)
+            }
             AppConstants.IN_PROGRESS -> {
                 holder.tvStatus.text = context.getString(R.string.in_progress)
             }

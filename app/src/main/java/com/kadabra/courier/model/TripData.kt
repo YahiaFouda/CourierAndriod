@@ -9,10 +9,10 @@ class TripData {
     var hours = 0L
     var minutes = 0L
     var seconds = 0L
-    var distance = 0.0
+    var distance = 0
 
     constructor()
-    constructor(days: Long, hours: Long, minutes: Long, seconds: Long, distance: Double) {
+    constructor(days: Long, hours: Long, minutes: Long, seconds: Long, distance: Int) {
         this.days = days
         this.hours = hours
         this.minutes = minutes
