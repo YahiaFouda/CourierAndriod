@@ -1,7 +1,11 @@
 package com.kadabra.courier.api
 
 
-import com.kadabra.courier.model.*
+import com.kadabra.courier.googleDirection.Directions
+import com.kadabra.courier.model.Courier
+import com.kadabra.courier.model.NotificationData
+import com.kadabra.courier.model.Task
+import com.kadabra.courier.model.TaskData
 import com.kadabra.courier.utilities.AppConstants
 import retrofit2.Call
 import retrofit2.http.GET
@@ -73,8 +77,18 @@ interface ApiServices {
 
     @POST(AppConstants.URL_START_TASK)
     fun startTask(
-        @Query("taskId") taskId: String, @Query("Kilometeres") kilometers: Float)
+        @Query("taskId") taskId: String, @Query("Kilometeres") kilometers: Float
+    )
             : Call<ApiResponse<Task>>
+
+
+    @GET("maps/api/directions/json")
+    fun getFullJson(
+        @Query("origin") origin: String, @Query("destination") destination: String,
+        @Query("waypoints") waypoints: String?, @Query("key") key:String
+
+    ): Call<Directions?>
+
 
 }
 

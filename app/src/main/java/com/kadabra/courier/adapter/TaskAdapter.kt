@@ -106,6 +106,7 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
 
 
 
+
 //        if (task.Amount!! > 0)
 //            holder.tvTaskAmount.text =
 //                task.Amount.toString() + " " + context.getString(R.string.le)

@@ -87,6 +87,8 @@ class StopAdapter(private val context: Context, private val stopList: ArrayList<
             }
 
         }
+
+
     }
 
     override fun getItemViewType(position: Int): Int {

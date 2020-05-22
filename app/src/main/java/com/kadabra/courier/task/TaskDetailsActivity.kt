@@ -41,6 +41,8 @@ import com.kadabra.courier.utilities.AppController
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task_details.*
 import java.lang.Exception
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
@@ -115,6 +117,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private fun loadTaskStops(stopList: ArrayList<Stop>) {
         var adapter = StopAdapter(this@TaskDetailsActivity, stopList)
         rvStops.adapter = adapter
+        adapter.notifyDataSetChanged()
         rvStops?.layoutManager =
             GridLayoutManager(
                 AppController.getContext(),
@@ -170,8 +173,10 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                     getString(R.string.to) + " " + task.stopDropOff.StopName
 
             if (task.stopsmodel.size > 0) {
-                task.stopsmodel = prepareTaskStops(task.stopsmodel)
+                var stops = prepareTaskStops(task.stopsmodel)
+                task.stopsmodel = stops
                 loadTaskStops(task.stopsmodel)
+//                getTaskDetails(task.TaskId)
             }
 
         } else {
@@ -191,7 +196,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         normalStops.clear()
 
         if (stops.size > 0) {
-            stops.sortBy { it.StopTypeID }
+//            stops.sortBy { it.StopTypeID }
 
             stops.forEach {
 
@@ -213,11 +218,13 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
             if (pickUpStops.count() > 0)
                 stops.addAll(pickUpStops)
-            if (normalStops.count() > 0)
+            if (normalStops.count() > 0) {
+                normalStops.reverse()
                 stops.addAll(normalStops)
+            }
+
             if (dropOffStops.count() > 0)
                 stops.addAll(dropOffStops)
-
 
         }
 
@@ -408,7 +415,6 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         init()
 
 
-
     }
 
 
@@ -425,8 +431,6 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         )
 
 
-
-
     }
 
     override fun onResume() {
@@ -437,15 +441,12 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         )
 
         if (intent.hasExtra("editTAskId")) {
-            var taskId=intent.getStringExtra("editTAskId")
-            if(!taskId.isNullOrEmpty())
-            {
+            var taskId = intent.getStringExtra("editTAskId")
+            if (!taskId.isNullOrEmpty()) {
                 getTaskDetails(taskId)
                 // startActivity(Intent(this, TaskDetailsActivity::class.java).putExtra("editTaskId",AppConstants.CurrentSelectedMessage.taskId))
             }
-        }
-
-        else if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty()) {
+        } else if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty()) {
             loadTaskDetails(AppConstants.CurrentSelectedTask)
             Log.d(TAG, "ON RESUME")
         }
@@ -535,28 +536,31 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 finish()
             }
             R.id.ivMessage -> {
-                ivMessage.isEnabled=false
+                ivMessage.isEnabled = false
                 var media = MediaPlayer()
 
-                FirebaseManager.getTaskRecord(AppConstants.CurrentSelectedTask.TaskId)
-                { sucess, data ->
-                    if (sucess) {
-                        val mediaPlayer = MediaPlayer()
-                        mediaPlayer.setDataSource(data.toString())
-                        mediaPlayer.setOnPreparedListener { player ->
-                            player.start()
-                        }
-                        mediaPlayer.prepareAsync()
-                   mediaPlayer.setOnCompletionListener { ivMessage.isEnabled=true }
+                if (NetworkManager().isNetworkAvailable(this)) {
+                    FirebaseManager.getTaskRecord(AppConstants.CurrentSelectedTask.TaskId)
+                    { sucess, data ->
+                        if (sucess) {
+                            val mediaPlayer = MediaPlayer()
+                            mediaPlayer.setDataSource(data.toString())
+                            mediaPlayer.setOnPreparedListener { player ->
+                                player.start()
+                            }
+                            mediaPlayer.prepareAsync()
+                            mediaPlayer.setOnCompletionListener { ivMessage.isEnabled = true }
 
-                    } else {
-                        Alert.showMessage(this, getString(R.string.error_no_audio))
-                        ivMessage.isEnabled=true
+                        } else {
+                            Alert.showMessage(this, getString(R.string.error_no_audio))
+                            ivMessage.isEnabled = true
+                        }
+
+
                     }
 
-
-                }
-
+                } else
+                    Alert.showMessage(getString(R.string.no_internet))
 
             }
         }

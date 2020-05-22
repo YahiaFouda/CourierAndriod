@@ -72,6 +72,55 @@ class NetworkManager {
 
     }
 
+    fun <T> create(baseUrl:String,service: Class<T>): T {
+        // using interceptor for adding custom header
+        //region for chain
+//        var okHttpBuilder = OkHttpClient.Builder()
+//        val interceptor = Interceptor { chain ->
+//            val request = chain?.request()?.newBuilder()
+//                    ?.addHeader(AppConstants.token,"")?.build()
+//            chain?.proceed(request)
+//        }
+//        okHttpBuilder.networkInterceptors().add(interceptor)
+//
+//        var builder = Retrofit.Builder()
+//                .baseUrl(AppConstants.BASE_URL!!)
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .client(okHttpBuilder.build())
+//        var retrofit = builder.build()
+        //endregion
+
+//        var okHttpClient = OkHttpClient.Builder()
+//            .connectTimeout(2, TimeUnit.MINUTES)
+//            .readTimeout(2, TimeUnit.MINUTES)
+//            .writeTimeout(2, TimeUnit.MINUTES)
+//            //.sslSocketFactory(sslSocketFactory, trustManager)
+//            .followRedirects(false)
+//            .followSslRedirects(false)
+//            .retryOnConnectionFailure(false)
+//            .cache(null)//new Cache(sContext.getCacheDir(),10*1024*1024)
+//            .build()
+
+//this lines is to print the response and request in the console
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+        val client = OkHttpClient.Builder()
+            .addInterceptor(interceptor).build()
+//        val client = OkHttpClient.Builder()
+//            .addInterceptor(ResponseInterceptor())
+//            .build()
+/////
+        var builder = Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+        var retrofit = builder.build()
+
+
+        return retrofit.create(service)
+
+    }
+
     // request functionality
     fun <U> request(endPoint: Call<U>, callback: INetworkCallBack<U>) {
         var s = endPoint.request().url
