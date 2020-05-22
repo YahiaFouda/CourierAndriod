@@ -154,6 +154,7 @@ class NotificatinService : FirebaseMessagingService() {
                         "Message: " + message + "\n" +
                         "taskId: " + taskId
             )
+            AppConstants.CurrentEditedTask.TaskId=taskId
             if (courier != null && courier.CourierId > 0) {
                 var intent = Intent(
                     AppController.getContext(),
@@ -161,8 +162,9 @@ class NotificatinService : FirebaseMessagingService() {
                 ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     .setAction(Intent.ACTION_MAIN)
                     .addCategory(Intent.CATEGORY_LAUNCHER)
+                    .putExtra("editTaskId",taskId)
                 startActivity(
-                    intent.putExtra("editTaskId",taskId)
+                    intent
                 )
                 sendNotification(title!!, message, intent)
 

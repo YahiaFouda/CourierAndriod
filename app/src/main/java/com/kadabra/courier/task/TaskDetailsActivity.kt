@@ -1,7 +1,6 @@
 package com.kadabra.courier.task
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.location.Location
@@ -40,8 +39,6 @@ import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task_details.*
-import java.lang.Exception
-import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -187,6 +184,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             tvStops.visibility = View.INVISIBLE
         }
 
+        if(!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty())
+            btnEndTask.text=getString(R.string.start)
 
     }
 
@@ -254,6 +253,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             hideProgress()
                             task = response.ResponseObj!!
                             AppConstants.CurrentSelectedTask = task
+                            AppConstants.CurrentEditedTask=task
                             loadTaskDetails(task)
 
                         } else {
@@ -440,11 +440,13 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             IntentFilter(LocationUpdatesService.ACTION_BROADCAST)
         )
 
-        if (intent.hasExtra("editTAskId")) {
-            var taskId = intent.getStringExtra("editTAskId")
+        if (intent.hasExtra("editTAskId") || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+            var taskId =
+                AppConstants.CurrentEditedTask.TaskId// intent.getStringExtra("editTAskId")
             if (!taskId.isNullOrEmpty()) {
                 getTaskDetails(taskId)
                 // startActivity(Intent(this, TaskDetailsActivity::class.java).putExtra("editTaskId",AppConstants.CurrentSelectedMessage.taskId))
+
             }
         } else if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty()) {
             loadTaskDetails(AppConstants.CurrentSelectedTask)
@@ -492,7 +494,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             isStarted =
                                 AppConstants.CurrentSelectedTask.IsStarted
 
-                            if (!isStarted) {
+                            if (!isStarted||!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
                                 startActivity(
                                     Intent(
                                         this@TaskDetailsActivity,
@@ -500,7 +502,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                                     ).putExtra("startTask", true)
                                 )
 
-                            } else
+                            }
+                            else
                                 endTask(AppConstants.CurrentSelectedTask)
                         } else //accept task
                         {
@@ -533,7 +536,11 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             }
 
             R.id.ivBack -> {
-                finish()
+                if (!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+                    Alert.showMessage("This task cant be closed unless you confirm the new changes.Press accept.")
+
+                } else
+                    finish()
             }
             R.id.ivMessage -> {
                 ivMessage.isEnabled = false
@@ -571,8 +578,10 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()
-        finish()
+        if (!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+            Alert.showMessage("This task cant be closed unless you confirm the new changes.Press accept.")
+        } else
+            finish()
     }
 
     private fun checkPermissions(): Boolean {
@@ -764,9 +773,9 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             AppConstants.CurrentSelectedTask,
                             AppConstants.CurrentLoginCourier.CourierId
                         )
-
                         AppConstants.CurrentAcceptedTask = Task()
                         AppConstants.CurrentSelectedTask = Task()
+                        AppConstants.CurrentEditedTask=Task()
                         AppConstants.COURIERSTARTTASK = false
                         AppConstants.ALL_TASKS_DATA.remove(AppConstants.CurrentSelectedTask) //removed when life cycle
                         Alert.hideProgress()

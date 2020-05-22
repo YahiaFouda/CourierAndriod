@@ -79,7 +79,7 @@ object AppConstants {
     var CurrentLoginCourier: Courier = Courier()
     var CurrentSelectedTask: Task = Task()
     var CurrentAcceptedTask: Task = Task()
-    var CurrentSelectedMessage: NotificationServiceData = NotificationServiceData()
+    var CurrentEditedTask: Task = Task()
 
     var CurrentCourierLocation: location = location()
     var currentSelectedStop: Stop = Stop()

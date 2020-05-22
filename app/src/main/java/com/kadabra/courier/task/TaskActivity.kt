@@ -46,7 +46,6 @@ import com.kadabra.courier.notifications.NotificationActivity
 import com.kadabra.courier.services.LocationUpdatesService
 import com.kadabra.courier.utilities.*
 import com.reach.plus.admin.util.UserSessionManager
-import kotlinx.android.synthetic.main.activity_notification.*
 import kotlinx.android.synthetic.main.activity_task.*
 import kotlinx.android.synthetic.main.activity_task.avi
 import kotlinx.android.synthetic.main.activity_task.ivNoInternet
@@ -678,12 +677,13 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
         if (AppConstants.FIRE_BASE_LOGOUT)
             logOut()
-
-        if (intent.hasExtra("editTAskId")) {
+        Log.d(TAG,"On Start "+intent.hasExtra("editTAskId"))
+        if (intent.hasExtra("editTAskId")|| !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+            Log.d(TAG,"On Start "+intent.hasExtra("editTAskId"))
             startActivity(
                 Intent(this, TaskDetailsActivity::class.java).putExtra(
                     "editTaskId",
-                    AppConstants.CurrentSelectedMessage.taskId
+                    AppConstants.CurrentEditedTask.TaskId
                 )
             )
         }

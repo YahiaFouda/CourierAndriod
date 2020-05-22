@@ -130,22 +130,22 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 AppConstants.currentSelectedStop = Stop()
                 isACcepted =
                     AppConstants.CurrentSelectedTask.IsStarted//isStartedTask(AppConstants.CurrentSelectedTask)
-                if (!isACcepted) { // not started yet
+                if (!isACcepted|| !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) { // not started yet
                     btnStart.text = getString(R.string.start_task)
-                    var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
-                    var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
+                    var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID==1 }
+                    var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID==2 }
                     var pickUp = LatLng(
-                        firstStop.Latitude!!,
-                        firstStop.Longitude!!
+                        firstStop?.Latitude!!,
+                        firstStop?.Longitude!!
                     )
                     var dropOff = LatLng(
-                        lastStop.Latitude!!,
-                        lastStop.Longitude!!
+                        lastStop?.Latitude!!,
+                        lastStop?.Longitude!!
                     )
 
                     if (NetworkManager().isNetworkAvailable(this)) {
-                        calculateTwoDirections(pickUp, dropOff)
-//                        AppConstants.CurrentSelectedTask.IsStarted = true
+//                        calculateTwoDirections(pickUp, dropOff)
+                        calcTripDirection(pickUp, dropOff)
                     } else
                         Alert.showMessage(
                             this@TaskLocationsActivity,
@@ -227,7 +227,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     } else if (intent.getBooleanExtra(  // starting task
                             "startTask",
                             true
-                        ) && !AppConstants.CurrentSelectedTask.IsStarted
+                        ) && (!AppConstants.CurrentSelectedTask.IsStarted || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty())
                     ) // Courier  start  journey from details view
                     {
 
@@ -242,15 +242,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 //                            mapFragment.view?.isFocusable = false
 ///////////////////////////////////////////////////////////////////////////////////////////////
                             btnStart.visibility = View.VISIBLE
-                            var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.first()
-                            var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.last()
+                            var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID==1 }
+                            var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID==2}
                             var pickUp = LatLng(
-                                firstStop.Latitude!!,
-                                firstStop.Longitude!!
+                                firstStop?.Latitude!!,
+                                firstStop?.Longitude!!
                             )
                             var dropOff = LatLng(
-                                lastStop.Latitude!!,
-                                lastStop.Longitude!!
+                                lastStop?.Latitude!!,
+                                lastStop?.Longitude!!
                             )
                             waypoints = ArrayList()
 
@@ -759,12 +759,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(baseUrl, ApiServices::class.java)
 
-            var  endPoint = request.getFullJson(
-                    str_origin,
-                    str_dest,
-                    wayPoints,
-                    getString(R.string.google_map_key)
-                )
+            var endPoint = request.getFullJson(
+                str_origin,
+                str_dest,
+                wayPoints,
+                getString(R.string.google_map_key)
+            )
 
 
             endPoint?.enqueue(object : Callback<Directions?> {
@@ -809,10 +809,108 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
                         addPolylinesToMapNew(response.body()!!, isStop)
-                    }
-
-                    else
+                    } else
                         Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
+                }
+            })
+
+
+        } else {
+            Alert.hideProgress()
+            Alert.showMessage(
+                this@TaskLocationsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+
+    }
+
+
+    private fun calcTripDirection(origin: LatLng, dest: LatLng) {
+        var wayPoints = ""
+        var counter = 0
+
+        AppConstants.CurrentSelectedTask.stopsmodel.forEach {
+
+            if (it.StopTypeID == 3) {
+                Log.d(TAG, "default Stop:" + it.StopName)
+                if (counter == 0)
+                    wayPoints += "via:" + it.Latitude + "," + it.Longitude
+                else
+                    wayPoints += "|via:" + it.Latitude + "," + it.Longitude
+                counter += 1
+            }
+
+        }
+
+        counter = 0
+        Log.d(TAG, "way points: " + wayPoints)
+
+        var baseUrl = "https://maps.googleapis.com/"
+        val str_origin = origin.latitude.toString() + "," + origin.longitude.toString()
+        val str_dest = dest.latitude.toString() + "," + dest.longitude.toString()
+
+
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(baseUrl, ApiServices::class.java)
+
+            var endPoint = request.getFullJson(
+                str_origin,
+                str_dest,
+                wayPoints,
+                getString(R.string.google_map_key)
+            )
+
+
+            endPoint?.enqueue(object : Callback<Directions?> {
+                override fun onFailure(call: Call<Directions?>, t: Throwable) {
+                    Log.e(
+                        TAG,
+                        "calculateTwoDirections: Failed to get directions: " + t.message
+                    )
+                    runOnUiThread {
+                        Alert.hideProgress()
+                        Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
+                        totalKilometers = 0
+                    }
+                }
+
+                override fun onResponse(
+                    call: Call<Directions?>,
+                    response: Response<Directions?>
+                ) {
+
+                    if (response.isSuccessful && response.body()?.status.equals("OK")) {
+                        Log.d(TAG, "onResponse:isSuccessful " + response.isSuccessful)
+//                        drawRouteOnMap(map, response.body()!!.directionPolylines)
+                        var dist = response.body()?.routes?.get(0)?.legs?.get(0)?.distance?.text
+                        var dur = response.body()?.routes?.get(0)?.legs?.get(0)?.duration?.text
+
+                        var data = dist?.split(" km").toString()
+                        var value = dist?.split(" km").toString().trim()[0].toInt()
+                        totalKilometers =
+                            conevrtMetersToKilometers(response.body()?.routes?.get(0)?.legs?.get(0)?.distance?.value!!.toLong())
+                        totalDistanceValue =
+                            response.body()?.routes?.get(0)?.legs?.get(0)?.duration?.text.toString()
+                        totalSeconds =
+                            response.body()?.routes?.get(0)?.legs?.get(0)?.duration?.value!!.toLong()
+                        Log.d(TAG, "totalDistanceValue: " + totalDistanceValue)
+                        Log.d(TAG, "totalSeconds: " + totalSeconds)
+                        Log.d(TAG, "DIst: " + dist)
+                        Log.d(TAG, "value: " + value)
+                        Log.d(TAG, "dur: " + dur)
+                        Log.d(TAG, "totalKilometers: $totalKilometers")
+                        Log.d(TAG, "METERS:  $meters")
+
+                        runOnUiThread {
+
+                            startTrip(AppConstants.CurrentSelectedTask, totalKilometers.toFloat())
+                        }
+                    } else
+                        runOnUiThread {
+                            Alert.hideProgress()
+                            Alert.showMessage(this@TaskLocationsActivity, "press start again.")
+                        }
                 }
             })
 
@@ -1394,6 +1492,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 task.IsStarted = true
                                 AppConstants.CurrentAcceptedTask = task
                                 AppConstants.CurrentSelectedTask = task
+                                AppConstants.CurrentEditedTask=Task()
                                 AppConstants.COURIERSTARTTASK = true
                                 startTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
                                 Log.d(TAG, "START TASK READY TO END")
