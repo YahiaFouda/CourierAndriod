@@ -101,6 +101,7 @@
     <string name="nav_task_history">Task History</string>
     <string name="nav_setting">Settings</string>
     <string name="nav_call">Call Agent</string>
+    <string name="nav_wallet">Wallet</string>
     <string name="nav_logout">Logout</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -111,7 +112,7 @@
     <string name="waiting">Waiting For Pickup</string>
     <string name="started">Started</string>
     <string name="ready_to_start">Ready to start</string>
- <string name="cancelled">Cancelled</string>
+    <string name="cancelled">Cancelled</string>
 
     <string name="new_task">New</string>
     <string name="completed">Completed</string>
@@ -125,10 +126,15 @@
     <string name="fastest_route">Fastest route now due to traffic conditions</string>
     <string name="start">Start</string>
     <string name="day">Day </string>
-    <string name="hour">hr </string>
+    <string name="hour">hour </string>
     <string name="minutes">mins </string>
     <string name="error_calculate_distance">Can\'t find a way there.</string>
     <string name="error_no_audio">No audio message for this task.</string>
+    <string name="cash">Cash</string>
+    <string name="wallet">Wallet</string>
+    <string name="Credit">Credit</string>
+    <string name="enter_total">Choose Payment Method</string>
+    <string name="error_enter_total">Please Enter the total Cash.</string>
 
 
 </resources>

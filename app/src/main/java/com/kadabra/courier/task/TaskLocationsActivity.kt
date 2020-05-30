@@ -1,11 +1,13 @@
 package com.kadabra.courier.task
 
 import android.Manifest
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -19,7 +21,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.Toast
+import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
@@ -60,12 +62,15 @@ import com.kadabra.courier.model.Task
 import com.kadabra.courier.model.TripData
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
+import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.utilities.UtilHelper
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_location_details.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.ceil
 
 
@@ -106,6 +111,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     var meters = 0L
     var tripData = TripData()
     var snippetData = ""
+    private var alertDialog: AlertDialog? = null
+    private lateinit var rbCash: RadioButton
+    private lateinit var rbCredit: RadioButton
+    private lateinit var rbWallet: RadioButton
+    private lateinit var ivPaymentBack: ImageView
+    private lateinit var etAmount: EditText
+    private lateinit var btnPaymentEndTask: Button
+    private var paymentTypeView: View? = null
+
     //endregion
 
 
@@ -130,10 +144,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 AppConstants.currentSelectedStop = Stop()
                 isACcepted =
                     AppConstants.CurrentSelectedTask.IsStarted//isStartedTask(AppConstants.CurrentSelectedTask)
-                if (!isACcepted|| !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) { // not started yet
+                if (!isACcepted || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) { // not started yet
                     btnStart.text = getString(R.string.start_task)
-                    var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID==1 }
-                    var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID==2 }
+                    var firstStop =
+                        AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID == 1 }
+                    var lastStop =
+                        AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID == 2 }
                     var pickUp = LatLng(
                         firstStop?.Latitude!!,
                         firstStop?.Longitude!!
@@ -154,18 +170,87 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                 } else {
                     btnStart.text = getString(R.string.end_task)
-                    endTask(AppConstants.CurrentSelectedTask)
+//                    endTask(AppConstants.CurrentSelectedTask)
+                    if (alertDialog != null)
+                        alertDialog?.show()
+                    else {
+                        choosePaymentTypeWindow()
+                        alertDialog?.show()
+                    }
+
                 }
             }
+
+            R.id.ivPaymentBack -> {
+                if (alertDialog != null)
+                    alertDialog!!.dismiss()
+            }
+            R.id.btnPaymentEndTask -> {
+                if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
+                    var amount = etAmount.text.toString().toDouble()
+                    endTask(
+                        AppConstants.CurrentSelectedTask,
+                        1,
+                        amount
+                    )
+                } else if (rbWallet.isChecked) {
+                    endTask(
+                        AppConstants.CurrentSelectedTask,
+                        2,
+                        0.0
+                    )
+                } else if (rbCredit.isChecked) {
+                    endTask(
+                        AppConstants.CurrentSelectedTask,
+                        3,
+                        0.0
+                    )
+                } else
+                    Alert.showMessage(getString(R.string.error_enter_total))
+            }
+            R.id.rbCash -> {
+                etAmount.visibility = View.VISIBLE
+            }
+            R.id.rbCredit -> {
+                resetAmount()
+            }
+            R.id.rbWallet -> {
+                resetAmount()
+            }
+
+
         }
     }
 
+    private fun resetAmount() {
+        etAmount.visibility = View.INVISIBLE
+        etAmount.text.clear()
+        etAmount.hint = getString(R.string.le)
+    }
 
     //region Helper Function
     private fun init() {
 
+        paymentTypeView = View.inflate(this, R.layout.payment_type_layout, null)
+        ivPaymentBack = paymentTypeView!!.findViewById(R.id.ivPaymentBack)
+        rbCash = paymentTypeView!!.findViewById(R.id.rbCash)
+        rbCredit = paymentTypeView!!.findViewById(R.id.rbCredit)
+        rbWallet = paymentTypeView!!.findViewById(R.id.rbWallet)
+        etAmount = paymentTypeView!!.findViewById(R.id.etAmount)
+        btnPaymentEndTask = paymentTypeView!!.findViewById(R.id.btnPaymentEndTask)
+
+
+
         ivBack.setOnClickListener(this)
         btnStart.setOnClickListener(this)
+        ivPaymentBack.setOnClickListener(this)
+        rbCash.setOnClickListener(this)
+        rbCredit.setOnClickListener(this)
+        rbWallet.setOnClickListener(this)
+        btnPaymentEndTask.setOnClickListener(this)
+
+
+
 
         polylines = ArrayList()
 
@@ -213,6 +298,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                             lastLocation?.longitude!!
                                         ), destination, true, true
                                     )
+
                                 } else
                                     Alert.showMessage(
                                         this@TaskLocationsActivity,
@@ -242,8 +328,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 //                            mapFragment.view?.isFocusable = false
 ///////////////////////////////////////////////////////////////////////////////////////////////
                             btnStart.visibility = View.VISIBLE
-                            var firstStop = AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID==1 }
-                            var lastStop = AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID==2}
+                            var firstStop =
+                                AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID == 1 }
+                            var lastStop =
+                                AppConstants.CurrentAcceptedTask.stopsmodel.find { it.StopTypeID == 2 }
                             var pickUp = LatLng(
                                 firstStop?.Latitude!!,
                                 firstStop?.Longitude!!
@@ -360,15 +448,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     // places
     private fun loadPlacePicker() {
-        val builder = IntentBuilder()
-
-        try {
-            startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST)
-        } catch (e: GooglePlayServicesRepairableException) {
-            e.printStackTrace()
-        } catch (e: GooglePlayServicesNotAvailableException) {
-            e.printStackTrace()
-        }
+//        val builder = IntentBuilder()
+//
+//        try {
+//            startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST)
+//        } catch (e: GooglePlayServicesRepairableException) {
+//            e.printStackTrace()
+//        } catch (e: GooglePlayServicesNotAvailableException) {
+//            e.printStackTrace()
+//        }
     }
     //endregion
 
@@ -378,7 +466,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         setContentView(R.layout.activity_location_details)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-
+        Log.d("language", UserSessionManager.getInstance(this).getLanguage())
         isACcepted =
             AppConstants.CurrentSelectedTask.IsStarted// isStartedTask(AppConstants.CurrentSelectedTask)
 
@@ -666,23 +754,23 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         )
         Log.d(TAG, "calculateDirections: destination: $destination")
 
-
-        if (!isStop) {
-            AppConstants.CurrentAcceptedTask.stopsmodel.forEach {
-
-                if (it.StopTypeID == 3) {
-                    Log.d(TAG, "default Stop:" + it.StopName)
-                    directions.waypoints(
-                        com.google.maps.model.LatLng(
-                            it.Latitude!!,
-                            it.Longitude!!
-                        )
-                    ).optimizeWaypoints(true)
-
-                }
-            }
-        }
-        directions.optimizeWaypoints(true)
+//
+//        if (!isStop) {
+//            AppConstants.CurrentAcceptedTask.stopsmodel.forEach {
+//
+//                if (it.StopTypeID == 3) {
+//                    Log.d(TAG, "default Stop:" + it.StopName)
+//                    directions.waypoints(
+//                        com.google.maps.model.LatLng(
+//                            it.Latitude!!,
+//                            it.Longitude!!
+//                        )
+//                    ).optimizeWaypoints(true)
+//
+//                }
+//            }
+//        }
+//        directions.optimizeWaypoints(true)
 
 
         directions.destination(destination)
@@ -1265,7 +1353,17 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                             R.string.km
                         ) + " - " + (getString(
                             R.string.duration
-                        ) + " " + totalDistanceValue) //tripData.toString())
+                        ) + " " + tripData.getDuration(totalSeconds.toInt()))
+
+                    Log.d("snippetData", snippetData)
+                    Log.d("snippetDataD", tripData.getDuration(totalSeconds.toInt()))
+
+//                    snippetData =
+//                        getString(R.string.distance) + " " + totalKilometers.toString() + " " + getString(
+//                            R.string.km
+//                        ) + " - " + (getString(
+//                            R.string.duration
+//                        ) + " " + totalDistanceValue) //tripData.toString())
 
                     speciaMarker = map.addMarker(
                         MarkerOptions()
@@ -1332,8 +1430,12 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 var snippetData =
                     getString(R.string.distance) + " " + polylineData.leg.distance + " " + (getString(
                         R.string.duration
-                    ) + " " + polylineData.leg.duration)
-
+                    ) + " " + tripData.getDuration(polylineData.leg.duration.inSeconds.toInt()))
+                Log.d("snippetData", snippetData)
+                Log.d(
+                    "snippetDataD",
+                    tripData.getDuration(polylineData.leg.duration.inSeconds.toInt())
+                )
                 val marker: Marker = map.addMarker(
                     MarkerOptions()
                         .icon(bitmapDescriptorFromVector(this, R.drawable.ic_location))
@@ -1434,25 +1536,25 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         tvExpectedTime.text = polylineData.leg.duration?.text.toString()
 //        tvExpectedDistance.text =
 //            "( " + polylineData.leg.distance.toString() + "  )"
-        tvExpectedDistance.text = polylineData.leg.distance?.text.toString()
+        tvExpectedDistance.text =totalDistanceValue
+           // replaceData(totalDistanceValue)//polylineData.leg.distance?.text.toString()
 //            "( " + totalKilometers.toString() + " " + getString(R.string.km) + "  )"
     }
 
     private fun setTotalTripDirectionData() {
         tripData = prepareTripData()
-        tvExpectedTime.text = tripData.toString()
-        tvExpectedDistance.text =
-            "( " + totalKilometers.toString() + " " + getString(R.string.km) + "  )"
+        tvExpectedTime.text = tripData.getDuration()// tripData.toString()
+        tvExpectedDistance.text = totalDistanceValue//replaceData(totalDistanceValue)
+        // "( " + totalKilometers.toString() + " " + getString(R.string.km) + "  )"
     }
 
     private fun setTotalTripDirectionDataNew(polylineData: PolylineDataNew) {
         tripData = prepareTripData()
-        tvExpectedTime.text = polylineData.leg.duration?.text.toString()
-        tvExpectedDistance.text = polylineData.leg.distance?.text.toString()
+        tvExpectedTime.text =
+            tripData.getDuration(polylineData.leg.duration?.value!!)//polylineData.leg.duration?.text.toString()
+        tvExpectedDistance.text = """$totalKilometers ${getString(R.string.km)}"""
 
-//        tvExpectedTime.text = tripData.toString()
-//        tvExpectedDistance.text =
-//            "( " + totalKilometers.toString() + " " + getString(R.string.km) + "  )"
+
     }
 
 
@@ -1460,6 +1562,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 //        if (mTripMarkers.size > 0)
 //            prepareMapView(mTripMarkers)
         Log.d(TAG, "startTrip")
+        Log.d(TAG, "kilometers:" + totalKilometers)
+
         //stop ingteract with map
         map.uiSettings.setAllGesturesEnabled(false)
         map.uiSettings.isScrollGesturesEnabled = false
@@ -1492,7 +1596,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                                 task.IsStarted = true
                                 AppConstants.CurrentAcceptedTask = task
                                 AppConstants.CurrentSelectedTask = task
-                                AppConstants.CurrentEditedTask=Task()
+                                AppConstants.CurrentEditedTask = Task()
                                 AppConstants.COURIERSTARTTASK = true
                                 startTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
                                 Log.d(TAG, "START TASK READY TO END")
@@ -1598,6 +1702,65 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
     }
 
+    private fun endTask(task: Task, paymentType: Int, amount: Double) {
+        Alert.showProgress(this)
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.endTask(task.TaskId, paymentType, amount)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
+                override fun onFailed(error: String) {
+                    Alert.hideProgress()
+                    Alert.showMessage(
+                        this@TaskLocationsActivity,
+                        getString(R.string.error_login_server_unknown_error)
+                    )
+                }
+
+                override fun onSuccess(response: ApiResponse<Task>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+
+                        FirebaseManager.endTask(
+                            AppConstants.CurrentSelectedTask,
+                            AppConstants.CurrentLoginCourier.CourierId
+                        )
+                        FirebaseManager.updateCourierStartTask(
+                            AppConstants.CurrentLoginCourier.CourierId,
+                            false
+                        )
+
+                        AppConstants.CurrentAcceptedTask = Task()
+                        AppConstants.CurrentSelectedTask = Task()
+                        AppConstants.COURIERSTARTTASK = false
+                        AppConstants.ALL_TASKS_DATA.remove(AppConstants.CurrentSelectedTask) //removed when life cycle
+
+                        AppConstants.endTask = true
+                        //load new task or shoe empty tasks view
+                        Alert.hideProgress()
+                        startActivity(Intent(this@TaskLocationsActivity, TaskActivity::class.java))
+                        finish()
+
+                    } else {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskLocationsActivity,
+                            getString(R.string.error_network)
+                        )
+                    }
+
+                }
+            })
+
+        } else {
+            Alert.hideProgress()
+            Alert.showMessage(
+                this@TaskLocationsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+
+
+    }
+
 
     private fun conevrtMetersToKilometers(meters: Long): Int {
         var kilometers = 0
@@ -1649,7 +1812,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
         Log.d(
             "duration",
-            "$days days $hours hours $minutes mins$seconds seconds"
+            "$days days $hours hours $minutes mins$ seconds seconds"
         );
 
         return durationData
@@ -1677,57 +1840,36 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         map.animateCamera(cu)
     }
 
-    private fun getUrl(
-        origin: LatLng,
-        dest: LatLng,
-        directionMode: String
-    ): String? { // Origin of route
-        val str_origin = "origin=" + origin.latitude + "," + origin.longitude
-        // Destination of route
-        val str_dest = "destination=" + dest.latitude + "," + dest.longitude
-        // Mode
-        val mode = "mode=$directionMode"
-        // Building the parameters to the web service
-        val parameters = "$str_origin&$str_dest&$mode"
-        // Output format
-        val output = "json"
-        // Building the url to the web service
-        return "https://maps.googleapis.com/maps/api/directions/$output?$parameters&key=" + getString(
-            R.string.google_maps_key
-        )
+
+    private fun choosePaymentTypeWindow() {
+
+        var alert = AlertDialog.Builder(this)
+        alertDialog = alert.create()
+
+        alertDialog!!.setView(paymentTypeView)
+
+
     }
 
+    fun getStringByLocale(context: Activity, id: Int, locale: String?): String? {
+        val configuration = Configuration(context.resources.configuration)
+        configuration.setLocale(Locale(locale))
+        return context.createConfigurationContext(configuration).resources.getString(id)
+    }
 
-    private fun getDirectionsUrl(markerPoints: ArrayList<LatLng>): List<String> {
-        var mUrls = ArrayList<String>();
-        if (markerPoints.size > 1) {
-            var str_origin =
-                markerPoints[0].latitude.toString() + "," + markerPoints[0].longitude.toString()
-            var str_dest =
-                markerPoints[1].latitude.toString() + "," + markerPoints[1].longitude.toString();
+    fun replaceData(oldData: String): String {
+        //1 hour 42 mins
 
-            var sensor = "sensor=false";
-            var parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
-            var output = "json";
-            var url =
-                "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-
-            mUrls.add(url);
-
-            markerPoints.forEach {
-                str_origin = str_dest;
-                str_dest = it.latitude.toString() + ","
-                str_dest = it.latitude.toString() + "," + it.longitude.toString()
-                parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
-                url =
-                    "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-                mUrls.add(url);
-            }
-
-
+        var data = oldData
+        if (UserSessionManager.getInstance(this).getLanguage() == AppConstants.ARABIC) {
+            data = oldData.replace("hour", "mins")
+                .replace(
+                    getStringByLocale(this, R.string.hour, "ar")!!,
+                    getStringByLocale(this, R.string.minutes, "ar")!!
+                )
+            Log.d("datadata", data)
         }
-
-        return mUrls;
+        return data
     }
 
 

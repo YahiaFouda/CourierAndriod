@@ -60,6 +60,9 @@ interface ApiServices {
     @POST(AppConstants.URL_END_TAKS)
     fun endTask(@Query("taskId") taskID: String)
             : Call<ApiResponse<Task>>
+    @POST(AppConstants.URL_END_TAKS)
+    fun endTask(@Query("taskId") taskID: String,@Query("paymentmethod") paymentType: Int,@Query("treasury") amount: Double)
+            : Call<ApiResponse<Task>>
 
 
     @GET(AppConstants.URL_GET_TAKS_DETAILS)
@@ -85,10 +88,14 @@ interface ApiServices {
     @GET("maps/api/directions/json")
     fun getFullJson(
         @Query("origin") origin: String, @Query("destination") destination: String,
-        @Query("waypoints") waypoints: String?, @Query("key") key:String
+        @Query("waypoints") waypoints: String?, @Query("key") key: String
 
     ): Call<Directions?>
 
+
+    @GET(AppConstants.URL_GET_COURIER_TRESAURY)
+    fun getCourierTreasury(@Query("courierId") courierId: Int)
+            : Call<ApiResponse<Double?>>
 
 }
 

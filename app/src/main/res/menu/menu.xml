@@ -19,6 +19,11 @@
             android:icon="@drawable/ic_setting"
             android:title="@string/nav_setting"/>
         <item
+            android:id="@+id/nav_wallet"
+            android:icon="@drawable/ic_wallet"
+            android:title="@string/nav_wallet"
+            app:actionLayout="@layout/menu_wallet_value"/>
+        <item
             android:id="@+id/nav_Call"
             android:icon="@drawable/ic_call"
             android:title="@string/nav_call"/>

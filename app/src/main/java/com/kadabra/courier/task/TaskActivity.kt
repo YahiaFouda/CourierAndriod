@@ -20,6 +20,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
+import androidx.core.view.MenuItemCompat
 import androidx.core.view.forEach
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.GridLayoutManager
@@ -85,10 +86,13 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var ivLanguageBack: ImageView? = null
     private var rbArabic: RadioButton? = null
     private var rbEnglish: RadioButton? = null
+
     private var lang = ""
     private var tvNotificationCounter: TextView? = null
     private lateinit var ivNotification: ImageView
+    private lateinit var tvWallet:TextView
     var total = 0
+    var treasury = 0.0
 
     //endregion
 
@@ -159,9 +163,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         var tvPhoneNo = headerView.findViewById<TextView>(R.id.tvPhoneNo)
         tvName.text = AppConstants.CurrentLoginCourier.CourierName
         tvPhoneNo.text = AppConstants.CurrentLoginCourier.Mobile
-
-
         navigationView.setNavigationItemSelectedListener(this)
+//        setMenuWallet(R.id.nav_wallet, "0")
 
     }
 
@@ -202,7 +205,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                         hideProgress()
                         Alert.showMessage(
                             this@TaskActivity,
-                            getString(R.string.no_internet)
+                            getString(R.string.error_login_server_error)
                         )
                     }
 
@@ -545,7 +548,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                     hideProgress()
                     Alert.showMessage(
                         this@TaskActivity,
-                        getString(R.string.no_internet)
+                        getString(R.string.error_login_server_error)
                     )
                 }
 
@@ -622,7 +625,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         myReceiver = MyReceiver()
         FirebaseManager.updateCourierActive(AppConstants.CurrentLoginCourier.CourierId, true)
         init()
-//        forceUpdate()
+//        getCourierWallet()
     }
 
     override fun onResume() {
@@ -657,6 +660,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
         forceUpdate()
 
+        getCourierWallet()
+
     }
 
     override fun onStart() {
@@ -665,10 +670,8 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
         Log.d(TAG, "onStart")
         bindService(
-
             Intent(this, LocationUpdatesService::class.java), mServiceConnection,
             Context.BIND_AUTO_CREATE
-
         )
 
 
@@ -677,9 +680,9 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
         if (AppConstants.FIRE_BASE_LOGOUT)
             logOut()
-        Log.d(TAG,"On Start "+intent.hasExtra("editTAskId"))
-        if (intent.hasExtra("editTAskId")|| !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
-            Log.d(TAG,"On Start "+intent.hasExtra("editTAskId"))
+        Log.d(TAG, "On Start " + intent.hasExtra("editTAskId"))
+        if (intent.hasExtra("editTAskId") || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+            Log.d(TAG, "On Start " + intent.hasExtra("editTAskId"))
             startActivity(
                 Intent(this, TaskDetailsActivity::class.java).putExtra(
                     "editTaskId",
@@ -804,6 +807,10 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                     alertDialog?.show()
                 }
             }
+//            R.id.nav_wallet -> {
+////                item.title =
+////                    getString(R.string.wallet) + "/t" + treasury + " " + getString(R.string.le)
+//            }
 
             R.id.nav_Call -> {
                 val intent = Intent(Intent.ACTION_DIAL)
@@ -834,6 +841,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         menuInflater.inflate(R.menu.menu_option, menu)
 
         val menuItem = menu!!.findItem(R.id.action_notification)
+//        setMenuWallet(R.id.nav_wallet, "120")
         var notificationView = menuItem.actionView
         tvNotificationCounter =
             notificationView.findViewById(R.id.tvNotification) as TextView
@@ -870,6 +878,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             }
             startActivity(Intent(this, NotificationActivity::class.java))
         }
+
 
 
         return true
@@ -1051,7 +1060,61 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         }
     }
 
-    //endregion
+    private fun getCourierWallet() {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.getCourierTreasury(AppConstants.CurrentLoginCourier.CourierId)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Double?>> {
+                override fun onFailed(error: String) {
+                    hideProgress()
+                    Alert.showMessage(
+                        this@TaskActivity,
+                        getString(R.string.error_login_server_error)
+                    )
+                }
 
+                override fun onSuccess(response: ApiResponse<Double?>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+                        if (response.ResponseObj!! > 0.0)
+                        {   treasury = response.ResponseObj!!
+                            AppConstants.CurrentLoginCourier.TreasuryValue=treasury
+                            UserSessionManager.getInstance(this@TaskActivity).setUserData( AppConstants.CurrentLoginCourier)
+                            setMenuWallet(R.id.nav_wallet, treasury.toString())
+                            hideProgress()}
+
+                    } else {
+                        hideProgress()
+                        Alert.showMessage(
+                            this@TaskActivity,
+                            getString(R.string.error_network)
+                        )
+                    }
+
+                }
+            })
+
+        } else {
+            hideProgress()
+            Alert.showMessage(
+                this@TaskActivity,
+                getString(R.string.no_internet)
+            )
+
+        }
+    }
+
+    private fun setMenuWallet(  itemId: Int, amount: String) {
+        var item  = navigationView?.menu?.findItem(itemId)
+        var tvWallet=MenuItemCompat.getActionView(item).findViewById<TextView>(R.id.textMenuItemCount)
+        Log.d(TAG,"amount: $amount")
+        if (!amount.trim().isNullOrEmpty())
+            tvWallet.text = amount +" " + getString(R.string.le)
+        else
+            tvWallet.text =  0.toString() +" " + getString(R.string.le)
+
+    }
+
+    //endregion
 
 }

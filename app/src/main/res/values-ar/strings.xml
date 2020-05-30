@@ -108,7 +108,6 @@
     <string name="km">كم</string>
     <string name="fastest_route">أسرع مسار الآن بسبب أحوال حركة المرور</string>
     <string name="start">بدء</string>
-    <string name="google_maps_key" translatable="false">مسافة:</string>
     <string name="msg_end_task">يرجى بدء هذه المهمة قبل إنهائها.</string>
     <string name="msg_end">هل أنت متأكد أنك تريد إنهاء هذه المهمة ؟.</string>
     <string name="day">يوم</string>
@@ -116,4 +115,10 @@
 <string name="error_calculate_distance">لا يمكن إيجاد طريق هناك.</string>
     <string name="waiting">في انتظار البدأ</string>
     <string name="error_no_audio">لا يوجد رسالة صوتية لهذة المهمة.</string>
+    <string name="nav_wallet">محفظة نقود</string>
+    <string name="cash">كاش</string>
+    <string name="wallet">محفظة</string>
+    <string name="Credit">فيزا</string>
+    <string name="enter_total">اختر وسيلة الدفع</string>
+    <string name="error_enter_total">الرجاء إدخال إجمالي النقدية.</string>
 </resources>

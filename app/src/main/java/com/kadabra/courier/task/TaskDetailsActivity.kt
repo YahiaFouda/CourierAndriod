@@ -1,6 +1,7 @@
 package com.kadabra.courier.task
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.*
 import android.content.pm.PackageManager
 import android.location.Location
@@ -12,6 +13,10 @@ import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.RadioButton
 import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.GridLayoutManager
@@ -55,6 +60,15 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private var mBound = false
     private var myReceiver: MyReceiver? = null
     var isStarted = false
+    private var alertDialog: AlertDialog? = null
+    private lateinit var rbCash: RadioButton
+    private lateinit var rbCredit: RadioButton
+    private lateinit var rbWallet: RadioButton
+    private lateinit var ivPaymentBack: ImageView
+    private lateinit var etAmount: EditText
+    private lateinit var btnPaymentEndTask: Button
+    private var paymentTypeView: View? = null
+
     private val mServiceConnection = object : ServiceConnection {
 
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -83,7 +97,20 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         ivBack.setOnClickListener(this)
         ivMessage.setOnClickListener(this)
 
-//        mRipplePulseLayout.startRippleAnimation()
+        paymentTypeView = View.inflate(this, R.layout.payment_type_layout, null)
+        ivPaymentBack = paymentTypeView!!.findViewById(R.id.ivPaymentBack)
+        rbCash = paymentTypeView!!.findViewById(R.id.rbCash)
+        rbCredit = paymentTypeView!!.findViewById(R.id.rbCredit)
+        rbWallet = paymentTypeView!!.findViewById(R.id.rbWallet)
+        etAmount = paymentTypeView!!.findViewById(R.id.etAmount)
+        btnPaymentEndTask = paymentTypeView!!.findViewById(R.id.btnPaymentEndTask)
+
+        ivPaymentBack.setOnClickListener(this)
+        rbCash.setOnClickListener(this)
+        rbCredit.setOnClickListener(this)
+        rbWallet.setOnClickListener(this)
+        btnPaymentEndTask.setOnClickListener(this)
+
 
         task = AppConstants.CurrentSelectedTask
         loadTaskDetails(task)
@@ -184,8 +211,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             tvStops.visibility = View.INVISIBLE
         }
 
-        if(!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty())
-            btnEndTask.text=getString(R.string.start)
+        if (!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty())
+            btnEndTask.text = getString(R.string.start)
 
     }
 
@@ -218,7 +245,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             if (pickUpStops.count() > 0)
                 stops.addAll(pickUpStops)
             if (normalStops.count() > 0) {
-                normalStops.reverse()
+//                normalStops.reverse()
                 stops.addAll(normalStops)
             }
 
@@ -253,7 +280,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             hideProgress()
                             task = response.ResponseObj!!
                             AppConstants.CurrentSelectedTask = task
-                            AppConstants.CurrentEditedTask=task
+//                            AppConstants.CurrentEditedTask = task
                             loadTaskDetails(task)
 
                         } else {
@@ -327,6 +354,54 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(ApiServices::class.java)
             var endPoint = request.endTask(taskId)
+            NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
+                override fun onFailed(error: String) {
+                    hideProgress()
+                    Alert.showMessage(
+                        this@TaskDetailsActivity,
+                        getString(R.string.error_login_server_unknown_error)
+                    )
+                }
+
+                override fun onSuccess(response: ApiResponse<Task>) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+
+                        FirebaseManager.endTask(task, AppConstants.CurrentLoginCourier.CourierId)
+                        AppConstants.CurrentAcceptedTask = Task()
+                        AppConstants.CurrentSelectedTask = Task()
+                        AppConstants.ALL_TASKS_DATA.remove(task) //removed when life cycle
+                        hideProgress()
+                        AppConstants.endTask = true
+                        //load new task or shoe empty tasks view
+                        finish()
+
+                    } else {
+                        hideProgress()
+                        Alert.showMessage(
+                            this@TaskDetailsActivity,
+                            getString(R.string.error_network)
+                        )
+                    }
+
+                }
+            })
+
+        } else {
+            hideProgress()
+            Alert.showMessage(
+                this@TaskDetailsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+
+
+    }
+
+    private fun endTask(taskId: String, paymentType: Int, amount: Double) {
+        showProgress()
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.endTask(taskId, paymentType, amount)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
                 override fun onFailed(error: String) {
                     hideProgress()
@@ -494,7 +569,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             isStarted =
                                 AppConstants.CurrentSelectedTask.IsStarted
 
-                            if (!isStarted||!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+                            if (!isStarted || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
                                 startActivity(
                                     Intent(
                                         this@TaskDetailsActivity,
@@ -502,9 +577,17 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                                     ).putExtra("startTask", true)
                                 )
 
+                            } else {
+//                                endTask(AppConstants.CurrentSelectedTask)
+                                if (alertDialog != null)
+                                    alertDialog?.show()
+                                else {
+                                    choosePaymentTypeWindow()
+                                    alertDialog?.show()
+                                }
+
                             }
-                            else
-                                endTask(AppConstants.CurrentSelectedTask)
+
                         } else //accept task
                         {
                             AppConstants.CurrentAcceptedTask = AppConstants.CurrentSelectedTask
@@ -569,6 +652,48 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 } else
                     Alert.showMessage(getString(R.string.no_internet))
 
+            }
+
+            R.id.ivPaymentBack -> {
+                if (alertDialog != null)
+                    alertDialog!!.dismiss()
+            }
+            R.id.btnPaymentEndTask -> {
+                    if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
+                        var amount = etAmount.text.toString().toDouble()
+                        endTask(
+                            AppConstants.CurrentSelectedTask.TaskId,
+                            1,
+                            amount
+                        )
+                    }
+                    else if (rbWallet.isChecked) {
+                        endTask(
+                            AppConstants.CurrentSelectedTask.TaskId,
+                            2,
+                            0.0
+                        )
+                    }
+                    else if (rbCredit.isChecked) {
+                        endTask(
+                            AppConstants.CurrentSelectedTask.TaskId,
+                            3,
+                            0.0
+                        )
+                    }
+
+                 else
+                    Alert.showMessage(getString(R.string.error_enter_total))
+                //endTask
+            }
+            R.id.rbCash -> {
+                etAmount.visibility = View.VISIBLE
+            }
+            R.id.rbCredit -> {
+                resetAmount()
+            }
+            R.id.rbWallet -> {
+                resetAmount()
             }
         }
     }
@@ -775,7 +900,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                         )
                         AppConstants.CurrentAcceptedTask = Task()
                         AppConstants.CurrentSelectedTask = Task()
-                        AppConstants.CurrentEditedTask=Task()
+                        AppConstants.CurrentEditedTask = Task()
                         AppConstants.COURIERSTARTTASK = false
                         AppConstants.ALL_TASKS_DATA.remove(AppConstants.CurrentSelectedTask) //removed when life cycle
                         Alert.hideProgress()
@@ -812,5 +937,20 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
     }
 
+    private fun resetAmount() {
+        etAmount.visibility = View.INVISIBLE
+        etAmount.text.clear()
+        etAmount.hint = getString(R.string.le)
+    }
+
+    private fun choosePaymentTypeWindow() {
+
+        var alert = AlertDialog.Builder(this)
+        alertDialog = alert.create()
+
+        alertDialog!!.setView(paymentTypeView)
+
+
+    }
 
 }

@@ -63,6 +63,7 @@ object AppConstants {
     const val URL_START_TASK = "StartTask"
     const val URL_GET_TAKS_DETAILS = "GetTaskByID"
     const val URL_GET_VERSION_CODE = "GetVersionCode"
+    const val URL_GET_COURIER_TRESAURY = "GetCourierTreasuryById"
 
 
     //endregion
@@ -114,7 +115,7 @@ object AppConstants {
     val PERMISSIONS_REQUEST_ENABLE_GPS = 9003
     var FIRE_BASE_LOGOUT = false
     var FIRE_BASE_NEW_TASK = false
-//    var FIRE_BASE_EDIT_TASK = false
+    //    var FIRE_BASE_EDIT_TASK = false
     var FIRE_BASE_DELETE_TASK = false
     var FIRE_BASE_CANCEL_TASK = false
     var FIRE_BASE_REASSIGN_TASK = false

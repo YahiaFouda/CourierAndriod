@@ -53,7 +53,8 @@
             android:layout_marginTop="2dp"
             android:text=""
             android:textColor="@color/primary"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            />
 
         <TextView
             android:id="@+id/tvExpectedDistance"

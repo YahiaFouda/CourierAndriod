@@ -18,6 +18,10 @@ class Courier {
     @Exclude
     @set:Exclude
     @get:Exclude
+    var TreasuryValue: Double = 0.0
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var CourierName= ""
     @Exclude
     @set:Exclude
