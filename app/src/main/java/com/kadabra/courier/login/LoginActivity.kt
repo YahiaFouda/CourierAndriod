@@ -478,6 +478,12 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
                 override fun onSuccess(response: ApiResponse<Boolean?>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
                         Log.d(TAG, "Login Activity-updateLanguage: $languageType")
+                        startActivity(
+                            Intent(
+                                this@LoginActivity,
+                                TaskActivity::class.java
+                            )
+                        )
                     } else {
 
                     }

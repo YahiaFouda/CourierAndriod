@@ -139,6 +139,8 @@
     <string name="display_receipt">Display Receipt</string>
  <string name="error_total">Wrong Total Cost Value.</string>
     <string name="total">Total:</string>
+ <string name="message_choose">Please choose the payment type.</string>
+    <string name="error_edit_task">This task cant be closed unless you confirm the new changes.Press accept.</string>
 
 
 </resources>

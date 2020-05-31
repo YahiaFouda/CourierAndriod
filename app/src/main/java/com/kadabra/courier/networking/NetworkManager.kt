@@ -123,7 +123,7 @@ class NetworkManager {
 
     // request functionality
     fun <U> request(endPoint: Call<U>, callback: INetworkCallBack<U>) {
-        var s = endPoint.request().url
+//        var s = endPoint.request().url
         endPoint.enqueue(object : Callback<U> {
             override fun onResponse(call: Call<U>?, response: retrofit2.Response<U>?) {
 

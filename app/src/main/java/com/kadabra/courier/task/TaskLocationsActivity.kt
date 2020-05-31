@@ -185,16 +185,19 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     alertDialog!!.dismiss()
             }
             R.id.btnPaymentEndTask -> {
-                if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
+                btnPaymentEndTask.isEnabled=false
+                if(!rbCash.isChecked&&!rbWallet.isChecked&&!rbCredit.isChecked&&!rbNoCollection.isChecked)
+                {
+                    Alert.showMessage(getString(R.string.message_choose))
+                    btnPaymentEndTask.isEnabled=true
+                }
+                else if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
                     var amount = etAmount.text.toString().toDouble()
-                    if (amount == totalReceiptValue)
-                        endTask(
-                            AppConstants.CurrentSelectedTask,
-                            1,
-                            amount
-                        )
-                    else
-                        Alert.showMessage(getString(R.string.error_total))
+                    endTask(
+                        AppConstants.CurrentSelectedTask,
+                        1,
+                        amount
+                    )
                 } else if (rbWallet.isChecked) {
                     endTask(
                         AppConstants.CurrentSelectedTask,
@@ -1743,6 +1746,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         this@TaskLocationsActivity,
                         getString(R.string.error_login_server_unknown_error)
                     )
+                    btnPaymentEndTask.isEnabled=true
                 }
 
                 override fun onSuccess(response: ApiResponse<Task>) {
@@ -1765,6 +1769,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
                         Alert.hideProgress()
+                        btnPaymentEndTask.isEnabled=true
                         startActivity(Intent(this@TaskLocationsActivity, TaskActivity::class.java))
                         finish()
 
@@ -1774,6 +1779,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                             this@TaskLocationsActivity,
                             getString(R.string.error_network)
                         )
+                        btnPaymentEndTask.isEnabled=true
                     }
 
                 }
@@ -1785,6 +1791,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 this@TaskLocationsActivity,
                 getString(R.string.no_internet)
             )
+            btnPaymentEndTask.isEnabled=true
         }
 
 

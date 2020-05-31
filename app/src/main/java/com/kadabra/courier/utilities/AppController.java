@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 
 import androidx.annotation.NonNull;
+import androidx.multidex.MultiDex;
 
 import com.kadabra.courier.firebase.FirebaseManager;
 
@@ -20,6 +21,12 @@ public class AppController extends Application {
         FirebaseManager.INSTANCE.setUpFirebase();
 
     }
+//implement for android 4
+//    @Override
+//    protected void attachBaseContext(Context base) {
+//        super.attachBaseContext(base);
+//        MultiDex.install(this);
+//    }
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {

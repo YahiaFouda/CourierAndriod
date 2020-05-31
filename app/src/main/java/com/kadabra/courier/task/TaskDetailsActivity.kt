@@ -65,7 +65,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private lateinit var etAmount: EditText
     private lateinit var btnPaymentEndTask: Button
     private var paymentTypeView: View? = null
-    private var totalReceiptValue=0.0
+    private var totalReceiptValue = 0.0
 
     private val mServiceConnection = object : ServiceConnection {
 
@@ -413,6 +413,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                         this@TaskDetailsActivity,
                         getString(R.string.error_login_server_unknown_error)
                     )
+                    btnPaymentEndTask.isEnabled = true
                 }
 
                 override fun onSuccess(response: ApiResponse<Task>) {
@@ -425,6 +426,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                         Alert.hideProgress()
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
+                        btnPaymentEndTask.isEnabled = true
                         finish()
 
                     } else {
@@ -433,6 +435,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             this@TaskDetailsActivity,
                             getString(R.string.error_network)
                         )
+                        btnPaymentEndTask.isEnabled = true
                     }
 
                 }
@@ -444,6 +447,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 this@TaskDetailsActivity,
                 getString(R.string.no_internet)
             )
+            btnPaymentEndTask.isEnabled = true
         }
 
 
@@ -658,8 +662,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
             }
 
-            R.id.tvReceiptDetails ->
-            {
+            R.id.tvReceiptDetails -> {
                 //get receipt Data
                 getReceiptData(AppConstants.CurrentSelectedTask.TaskId)
             }
@@ -668,16 +671,17 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                     alertDialog!!.dismiss()
             }
             R.id.btnPaymentEndTask -> {
-                if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
+                btnPaymentEndTask.isEnabled = false
+                if (!rbCash.isChecked && !rbWallet.isChecked && !rbCredit.isChecked && !rbNoCollection.isChecked) {
+                    Alert.showMessage(getString(R.string.message_choose))
+                    btnPaymentEndTask.isEnabled = true
+                } else if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
                     var amount = etAmount.text.toString().toDouble()
-                    if(amount==totalReceiptValue)
                     endTask(
                         AppConstants.CurrentSelectedTask.TaskId,
                         1,
                         amount
                     )
-                    else
-                        Alert.showMessage(getString(R.string.error_total))
 
                 } else if (rbWallet.isChecked) {
                     endTask(
@@ -716,10 +720,10 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     }
 
     override fun onBackPressed() {
-        if (!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
-            Alert.showMessage("This task cant be closed unless you confirm the new changes.Press accept.")
+        if (AppConstants.CurrentEditedTask != null&& !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+            Alert.showMessage(getString(R.string.error_edit_task))
         } else
-            finish()
+        finish()
     }
 
     private fun checkPermissions(): Boolean {
@@ -966,8 +970,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
     }
 
-    private fun getReceiptData(taskId:String)
-    {
+    private fun getReceiptData(taskId: String) {
         Alert.showProgress(this)
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(ApiServices::class.java)
@@ -986,8 +989,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                     override fun onSuccess(response: ApiResponse<ReceiptData>) {
                         if (response.Status == AppConstants.STATUS_SUCCESS) {
                             hideProgress()
-                           var data = response.ResponseObj!!
-                            totalReceiptValue=data.Sum
+                            var data = response.ResponseObj!!
+                            totalReceiptValue = data.Sum
                             prepareReciptData(data)
                             Alert.hideProgress()
                         } else {
@@ -1010,19 +1013,17 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         }
     }
 
-    private fun prepareReciptData(data:ReceiptData):String
-    {
-        Log.d(TAG,data.ServiceCost.size.toString())
-        var receiptValue=""
-        if(data.ServiceCost?.size!!>0)
-        {
-            tvReceiptDetails.setCompoundDrawablesWithIntrinsicBounds(0,0,0,R.drawable.ic_up)
+    private fun prepareReciptData(data: ReceiptData): String {
+        Log.d(TAG, data.ServiceCost.size.toString())
+        var receiptValue = ""
+        if (data.ServiceCost?.size!! > 0) {
+            tvReceiptDetails.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, R.drawable.ic_up)
             data.ServiceCost.forEach {
-                receiptValue+=it.serviceCostName+" : "+it.cost+" "+getString(R.string.le)+"\n"
+                receiptValue += it.serviceCostName + " : " + it.cost + " " + getString(R.string.le) + "\n"
             }
-            receiptValue+="____________________________________\n"
-            receiptValue+="${getString(R.string.total)} ${data.Sum} ${getString(R.string.le)}"
-            runOnUiThread {  tvReceiptDetails.text=receiptValue }
+            receiptValue += "____________________________________\n"
+            receiptValue += "${getString(R.string.total)} ${data.Sum} ${getString(R.string.le)}"
+            runOnUiThread { tvReceiptDetails.text = receiptValue }
 
         }
 

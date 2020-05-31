@@ -33,7 +33,7 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="12dp"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
-                    app:srcCompat="@drawable/ic_back" />/>
+                    android:src="@drawable/ic_back" />/>
 
                 <TextView
                     android:id="@+id/tvLanguage"

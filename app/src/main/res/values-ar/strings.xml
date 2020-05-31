@@ -125,4 +125,7 @@
     <string name="display_receipt">عرض التفاصيل</string>
     <string name="error_total">إجمالي قيمة التكلفة غير صحيح.</string>
     <string name="total">الأجمالى:</string>
+    <string name="message_choose">يرجى اختيار نوع الدفع.</string>
+    <string name="error_edit_task">لا يمكن إغلاق هذه المهمة ما لم تؤكد التغييرات الجديدة.</string>
+
 </resources>
