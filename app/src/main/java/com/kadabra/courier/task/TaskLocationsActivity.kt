@@ -56,10 +56,7 @@ import com.kadabra.courier.googleDirection.PolylineDataNew
 import com.kadabra.courier.location.LatLngInterpolator
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.location.MarkerAnimation
-import com.kadabra.courier.model.PolylineData
-import com.kadabra.courier.model.Stop
-import com.kadabra.courier.model.Task
-import com.kadabra.courier.model.TripData
+import com.kadabra.courier.model.*
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
@@ -112,14 +109,16 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
     var tripData = TripData()
     var snippetData = ""
     private var alertDialog: AlertDialog? = null
+    private lateinit var tvReceiptDetails: TextView
     private lateinit var rbCash: RadioButton
     private lateinit var rbCredit: RadioButton
     private lateinit var rbWallet: RadioButton
+    private lateinit var rbNoCollection: RadioButton
     private lateinit var ivPaymentBack: ImageView
     private lateinit var etAmount: EditText
     private lateinit var btnPaymentEndTask: Button
     private var paymentTypeView: View? = null
-
+    private var totalReceiptValue = 0.0
     //endregion
 
 
@@ -188,11 +187,14 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             R.id.btnPaymentEndTask -> {
                 if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
                     var amount = etAmount.text.toString().toDouble()
-                    endTask(
-                        AppConstants.CurrentSelectedTask,
-                        1,
-                        amount
-                    )
+                    if (amount == totalReceiptValue)
+                        endTask(
+                            AppConstants.CurrentSelectedTask,
+                            1,
+                            amount
+                        )
+                    else
+                        Alert.showMessage(getString(R.string.error_total))
                 } else if (rbWallet.isChecked) {
                     endTask(
                         AppConstants.CurrentSelectedTask,
@@ -205,17 +207,24 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         3,
                         0.0
                     )
+                } else if (rbNoCollection.isChecked) {
+                    endTask(
+                        AppConstants.CurrentSelectedTask,
+                        4,
+                        0.0
+                    )
                 } else
                     Alert.showMessage(getString(R.string.error_enter_total))
             }
             R.id.rbCash -> {
                 etAmount.visibility = View.VISIBLE
             }
-            R.id.rbCredit -> {
+            R.id.rbCredit, R.id.rbWallet, R.id.rbNoCollection -> {
                 resetAmount()
             }
-            R.id.rbWallet -> {
-                resetAmount()
+            R.id.tvReceiptDetails -> {
+                //get receipt Data
+                getReceiptData(AppConstants.CurrentSelectedTask.TaskId)
             }
 
 
@@ -236,6 +245,9 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         rbCash = paymentTypeView!!.findViewById(R.id.rbCash)
         rbCredit = paymentTypeView!!.findViewById(R.id.rbCredit)
         rbWallet = paymentTypeView!!.findViewById(R.id.rbWallet)
+        rbNoCollection = paymentTypeView!!.findViewById(R.id.rbNoCollection)
+        tvReceiptDetails = paymentTypeView!!.findViewById(R.id.tvReceiptDetails)
+
         etAmount = paymentTypeView!!.findViewById(R.id.etAmount)
         btnPaymentEndTask = paymentTypeView!!.findViewById(R.id.btnPaymentEndTask)
 
@@ -247,6 +259,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         rbCash.setOnClickListener(this)
         rbCredit.setOnClickListener(this)
         rbWallet.setOnClickListener(this)
+        rbNoCollection.setOnClickListener(this)
+        tvReceiptDetails.setOnClickListener(this)
+
+
         btnPaymentEndTask.setOnClickListener(this)
 
 
@@ -845,6 +861,9 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
         if (NetworkManager().isNetworkAvailable(this)) {
+            runOnUiThread {
+                Alert.showProgress(this)
+            }
             var request = NetworkManager().create(baseUrl, ApiServices::class.java)
 
             var endPoint = request.getFullJson(
@@ -897,8 +916,17 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
                         addPolylinesToMapNew(response.body()!!, isStop)
+                        runOnUiThread {
+                            Alert.hideProgress()
+                        }
                     } else
-                        Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
+                    {
+                        runOnUiThread {
+                            Alert.hideProgress()
+                            Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
+                        }
+                    }
+
                 }
             })
 
@@ -940,6 +968,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
 
         if (NetworkManager().isNetworkAvailable(this)) {
+            runOnUiThread { Alert.showProgress(this) }
             var request = NetworkManager().create(baseUrl, ApiServices::class.java)
 
             var endPoint = request.getFullJson(
@@ -991,7 +1020,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         Log.d(TAG, "METERS:  $meters")
 
                         runOnUiThread {
-
+                            Alert.hideProgress()
                             startTrip(AppConstants.CurrentSelectedTask, totalKilometers.toFloat())
                         }
                     } else
@@ -1536,8 +1565,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         tvExpectedTime.text = polylineData.leg.duration?.text.toString()
 //        tvExpectedDistance.text =
 //            "( " + polylineData.leg.distance.toString() + "  )"
-        tvExpectedDistance.text =totalDistanceValue
-           // replaceData(totalDistanceValue)//polylineData.leg.distance?.text.toString()
+        tvExpectedDistance.text = totalDistanceValue
+        // replaceData(totalDistanceValue)//polylineData.leg.distance?.text.toString()
 //            "( " + totalKilometers.toString() + " " + getString(R.string.km) + "  )"
     }
 
@@ -1845,9 +1874,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
         var alert = AlertDialog.Builder(this)
         alertDialog = alert.create()
-
         alertDialog!!.setView(paymentTypeView)
-
 
     }
 
@@ -1870,6 +1897,67 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
             Log.d("datadata", data)
         }
         return data
+    }
+
+    private fun getReceiptData(taskId: String) {
+        Alert.showProgress(this)
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.displayReceiptData(taskId)
+            NetworkManager().request(
+                endPoint,
+                object : INetworkCallBack<ApiResponse<ReceiptData>> {
+                    override fun onFailed(error: String) {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskLocationsActivity,
+                            getString(R.string.error_login_server_error)
+                        )
+                    }
+
+                    override fun onSuccess(response: ApiResponse<ReceiptData>) {
+                        if (response.Status == AppConstants.STATUS_SUCCESS) {
+                            Alert.hideProgress()
+                            var data = response.ResponseObj!!
+                            totalReceiptValue = data.Sum
+                            prepareReciptData(data)
+                            Alert.hideProgress()
+                        } else {
+                            Alert.hideProgress()
+                            Alert.showMessage(
+                                this@TaskLocationsActivity,
+                                getString(R.string.error_network)
+                            )
+                        }
+
+                    }
+                })
+
+        } else {
+            Alert.hideProgress()
+            Alert.showMessage(
+                this@TaskLocationsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+    }
+
+    private fun prepareReciptData(data: ReceiptData): String {
+        Log.d(TAG, data.ServiceCost.size.toString())
+        var receiptValue = ""
+        if (data.ServiceCost?.size!! > 0) {
+            tvReceiptDetails.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, R.drawable.ic_up)
+            data.ServiceCost.forEach {
+                receiptValue += it.serviceCostName + " : " + it.cost + " " + getString(R.string.le) + "\n"
+            }
+            receiptValue += "____________________________________\n"
+            receiptValue += "${getString(R.string.total)} ${data.Sum} ${getString(R.string.le)}"
+            runOnUiThread { tvReceiptDetails.text = receiptValue }
+
+        }
+
+
+        return receiptValue
     }
 
 

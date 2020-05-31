@@ -13,10 +13,7 @@ import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.RadioButton
+import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.GridLayoutManager
@@ -34,10 +31,7 @@ import com.kadabra.courier.callback.ILocationListener
 import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.login.LoginActivity
-import com.kadabra.courier.model.Courier
-import com.kadabra.courier.model.Stop
-import com.kadabra.courier.model.Task
-import com.kadabra.courier.model.location
+import com.kadabra.courier.model.*
 import com.kadabra.courier.services.LocationUpdatesService
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
@@ -64,10 +58,14 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private lateinit var rbCash: RadioButton
     private lateinit var rbCredit: RadioButton
     private lateinit var rbWallet: RadioButton
+    private lateinit var rbNoCollection: RadioButton
+    private lateinit var tvReceiptDetails: TextView
+
     private lateinit var ivPaymentBack: ImageView
     private lateinit var etAmount: EditText
     private lateinit var btnPaymentEndTask: Button
     private var paymentTypeView: View? = null
+    private var totalReceiptValue=0.0
 
     private val mServiceConnection = object : ServiceConnection {
 
@@ -102,6 +100,9 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         rbCash = paymentTypeView!!.findViewById(R.id.rbCash)
         rbCredit = paymentTypeView!!.findViewById(R.id.rbCredit)
         rbWallet = paymentTypeView!!.findViewById(R.id.rbWallet)
+        rbNoCollection = paymentTypeView!!.findViewById(R.id.rbNoCollection)
+        tvReceiptDetails = paymentTypeView!!.findViewById(R.id.tvReceiptDetails)
+
         etAmount = paymentTypeView!!.findViewById(R.id.etAmount)
         btnPaymentEndTask = paymentTypeView!!.findViewById(R.id.btnPaymentEndTask)
 
@@ -109,6 +110,9 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         rbCash.setOnClickListener(this)
         rbCredit.setOnClickListener(this)
         rbWallet.setOnClickListener(this)
+        rbNoCollection.setOnClickListener(this)
+        tvReceiptDetails.setOnClickListener(this)
+
         btnPaymentEndTask.setOnClickListener(this)
 
 
@@ -398,13 +402,13 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     }
 
     private fun endTask(taskId: String, paymentType: Int, amount: Double) {
-        showProgress()
+        Alert.showProgress(this)
         if (NetworkManager().isNetworkAvailable(this)) {
             var request = NetworkManager().create(ApiServices::class.java)
             var endPoint = request.endTask(taskId, paymentType, amount)
             NetworkManager().request(endPoint, object : INetworkCallBack<ApiResponse<Task>> {
                 override fun onFailed(error: String) {
-                    hideProgress()
+                    Alert.hideProgress()
                     Alert.showMessage(
                         this@TaskDetailsActivity,
                         getString(R.string.error_login_server_unknown_error)
@@ -418,13 +422,13 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                         AppConstants.CurrentAcceptedTask = Task()
                         AppConstants.CurrentSelectedTask = Task()
                         AppConstants.ALL_TASKS_DATA.remove(task) //removed when life cycle
-                        hideProgress()
+                        Alert.hideProgress()
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
                         finish()
 
                     } else {
-                        hideProgress()
+                        Alert.hideProgress()
                         Alert.showMessage(
                             this@TaskDetailsActivity,
                             getString(R.string.error_network)
@@ -435,7 +439,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             })
 
         } else {
-            hideProgress()
+            Alert.hideProgress()
             Alert.showMessage(
                 this@TaskDetailsActivity,
                 getString(R.string.no_internet)
@@ -654,47 +658,56 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
             }
 
+            R.id.tvReceiptDetails ->
+            {
+                //get receipt Data
+                getReceiptData(AppConstants.CurrentSelectedTask.TaskId)
+            }
             R.id.ivPaymentBack -> {
                 if (alertDialog != null)
                     alertDialog!!.dismiss()
             }
             R.id.btnPaymentEndTask -> {
-                    if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
-                        var amount = etAmount.text.toString().toDouble()
-                        endTask(
-                            AppConstants.CurrentSelectedTask.TaskId,
-                            1,
-                            amount
-                        )
-                    }
-                    else if (rbWallet.isChecked) {
-                        endTask(
-                            AppConstants.CurrentSelectedTask.TaskId,
-                            2,
-                            0.0
-                        )
-                    }
-                    else if (rbCredit.isChecked) {
-                        endTask(
-                            AppConstants.CurrentSelectedTask.TaskId,
-                            3,
-                            0.0
-                        )
-                    }
+                if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
+                    var amount = etAmount.text.toString().toDouble()
+                    if(amount==totalReceiptValue)
+                    endTask(
+                        AppConstants.CurrentSelectedTask.TaskId,
+                        1,
+                        amount
+                    )
+                    else
+                        Alert.showMessage(getString(R.string.error_total))
 
-                 else
+                } else if (rbWallet.isChecked) {
+                    endTask(
+                        AppConstants.CurrentSelectedTask.TaskId,
+                        2,
+                        0.0
+                    )
+                } else if (rbCredit.isChecked) {
+                    endTask(
+                        AppConstants.CurrentSelectedTask.TaskId,
+                        3,
+                        0.0
+                    )
+                } else if (rbNoCollection.isChecked) {
+                    endTask(
+                        AppConstants.CurrentSelectedTask.TaskId,
+                        4,
+                        0.0
+                    )
+                } else
                     Alert.showMessage(getString(R.string.error_enter_total))
                 //endTask
             }
             R.id.rbCash -> {
                 etAmount.visibility = View.VISIBLE
             }
-            R.id.rbCredit -> {
+            R.id.rbCredit, R.id.rbWallet, R.id.rbNoCollection -> {
                 resetAmount()
             }
-            R.id.rbWallet -> {
-                resetAmount()
-            }
+
         }
     }
 
@@ -951,6 +964,70 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         alertDialog!!.setView(paymentTypeView)
 
 
+    }
+
+    private fun getReceiptData(taskId:String)
+    {
+        Alert.showProgress(this)
+        if (NetworkManager().isNetworkAvailable(this)) {
+            var request = NetworkManager().create(ApiServices::class.java)
+            var endPoint = request.displayReceiptData(taskId)
+            NetworkManager().request(
+                endPoint,
+                object : INetworkCallBack<ApiResponse<ReceiptData>> {
+                    override fun onFailed(error: String) {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskDetailsActivity,
+                            getString(R.string.error_login_server_error)
+                        )
+                    }
+
+                    override fun onSuccess(response: ApiResponse<ReceiptData>) {
+                        if (response.Status == AppConstants.STATUS_SUCCESS) {
+                            hideProgress()
+                           var data = response.ResponseObj!!
+                            totalReceiptValue=data.Sum
+                            prepareReciptData(data)
+                            Alert.hideProgress()
+                        } else {
+                            Alert.hideProgress()
+                            Alert.showMessage(
+                                this@TaskDetailsActivity,
+                                getString(R.string.error_network)
+                            )
+                        }
+
+                    }
+                })
+
+        } else {
+            Alert.hideProgress()
+            Alert.showMessage(
+                this@TaskDetailsActivity,
+                getString(R.string.no_internet)
+            )
+        }
+    }
+
+    private fun prepareReciptData(data:ReceiptData):String
+    {
+        Log.d(TAG,data.ServiceCost.size.toString())
+        var receiptValue=""
+        if(data.ServiceCost?.size!!>0)
+        {
+            tvReceiptDetails.setCompoundDrawablesWithIntrinsicBounds(0,0,0,R.drawable.ic_up)
+            data.ServiceCost.forEach {
+                receiptValue+=it.serviceCostName+" : "+it.cost+" "+getString(R.string.le)+"\n"
+            }
+            receiptValue+="____________________________________\n"
+            receiptValue+="${getString(R.string.total)} ${data.Sum} ${getString(R.string.le)}"
+            runOnUiThread {  tvReceiptDetails.text=receiptValue }
+
+        }
+
+
+        return receiptValue
     }
 
 }

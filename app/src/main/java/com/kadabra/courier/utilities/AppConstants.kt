@@ -64,6 +64,8 @@ object AppConstants {
     const val URL_GET_TAKS_DETAILS = "GetTaskByID"
     const val URL_GET_VERSION_CODE = "GetVersionCode"
     const val URL_GET_COURIER_TRESAURY = "GetCourierTreasuryById"
+    const val URL_GET_RECEIPT_DATA = "DisplayReceipts"
+
 
 
     //endregion

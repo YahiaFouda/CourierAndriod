@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 
 
 class TaskData {
-    var taskmodels: ArrayList<Task>? = null
-    var NoOfUnreadedNotification:Int=0
+        var taskmodels: ArrayList<Task>? = null
+        var NoOfUnreadedNotification:Int=0
 
 }

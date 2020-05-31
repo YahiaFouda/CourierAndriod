@@ -2,10 +2,7 @@ package com.kadabra.courier.api
 
 
 import com.kadabra.courier.googleDirection.Directions
-import com.kadabra.courier.model.Courier
-import com.kadabra.courier.model.NotificationData
-import com.kadabra.courier.model.Task
-import com.kadabra.courier.model.TaskData
+import com.kadabra.courier.model.*
 import com.kadabra.courier.utilities.AppConstants
 import retrofit2.Call
 import retrofit2.http.GET
@@ -63,6 +60,10 @@ interface ApiServices {
     @POST(AppConstants.URL_END_TAKS)
     fun endTask(@Query("taskId") taskID: String,@Query("paymentmethod") paymentType: Int,@Query("treasury") amount: Double)
             : Call<ApiResponse<Task>>
+
+    @GET(AppConstants.URL_GET_RECEIPT_DATA)
+    fun displayReceiptData(@Query("taskId") taskID: String)
+            : Call<ApiResponse<ReceiptData>>
 
 
     @GET(AppConstants.URL_GET_TAKS_DETAILS)
