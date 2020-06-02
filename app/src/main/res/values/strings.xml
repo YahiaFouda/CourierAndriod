@@ -141,6 +141,8 @@
     <string name="total">Total:</string>
  <string name="message_choose">Please choose the payment type.</string>
     <string name="error_edit_task">This task cant be closed unless you confirm the new changes.Press accept.</string>
+    <string name="agent_name">Agent Name</string>
+    <string name="error_agent_phone">This agent has no phone no.</string>
 
 
 </resources>

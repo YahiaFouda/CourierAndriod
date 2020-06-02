@@ -18,6 +18,14 @@ class Task {
     @Exclude
     @set:Exclude
     @get:Exclude
+    var AgentName: String = ""
+    @Exclude
+    @set:Exclude
+    @get:Exclude
+    var AgentMobile: String = ""
+    @Exclude
+    @set:Exclude
+    @get:Exclude
     var TaskDescription: String = ""
     var CourierID: Int? = null
     @Exclude

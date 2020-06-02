@@ -193,6 +193,9 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 }
                 else if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
                     var amount = etAmount.text.toString().toDouble()
+                    if(amount<=0)
+                        Alert.showMessage(getString(R.string.error_agent_phone))
+                    else
                     endTask(
                         AppConstants.CurrentSelectedTask,
                         1,

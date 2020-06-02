@@ -43,6 +43,7 @@
             android:textColor="@color/colorApp"
             android:textSize="15sp" />
 
+
         <TextView
             android:id="@+id/tvStatus"
             android:layout_width="wrap_content"
@@ -60,13 +61,24 @@
             android:textColor="@color/colorApp"
             android:textSize="11sp"
             android:textStyle="bold|italic" />
-
+        <TextView
+            android:id="@+id/tvAgentName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvTaskName"
+            android:layout_alignStart="@+id/tvTaskName"
+            android:layout_alignLeft="@+id/tvTaskName"
+            android:layout_marginTop="10dp"
+            android:text="Agent Name"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvPickupLocation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/tvTaskName"
+            android:layout_below="@+id/tvAgentName"
             android:layout_alignStart="@+id/tvTaskAmount"
             android:layout_alignLeft="@+id/tvTaskAmount"
             android:layout_marginTop="10dp"
@@ -85,6 +97,8 @@
             android:text="@string/to"
             android:textColor="@color/colorWelcome"
             android:textSize="13sp" />
+
+
 
         <TextView
             android:id="@+id/tvTaskAmount"

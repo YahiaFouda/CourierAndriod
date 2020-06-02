@@ -65,6 +65,8 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
 
         if (!task.TaskName.isNullOrEmpty())
             holder.tvTaskName.text = task.TaskName
+            holder.tvAgentName.text = task.AgentName
+
 
         when (task.Status) {
             AppConstants.NEW -> {
@@ -152,6 +154,7 @@ class TaskAdapter(private val context: Context, private var tasksList: ArrayList
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         var tvTaskName: TextView = itemView.findViewById(R.id.tvTaskName)
+        var tvAgentName: TextView = itemView.findViewById(R.id.tvAgentName)
         var tvTaskAmount: TextView = itemView.findViewById(R.id.tvTaskAmount)
         var tvPickupLocation: TextView =
             itemView.findViewById(R.id.tvPickupLocation)

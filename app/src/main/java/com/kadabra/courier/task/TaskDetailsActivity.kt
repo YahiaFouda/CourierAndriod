@@ -38,7 +38,6 @@ import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import com.reach.plus.admin.util.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task_details.*
-import kotlin.collections.ArrayList
 
 
 class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationListener {
@@ -66,6 +65,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     private lateinit var btnPaymentEndTask: Button
     private var paymentTypeView: View? = null
     private var totalReceiptValue = 0.0
+
 
     private val mServiceConnection = object : ServiceConnection {
 
@@ -97,12 +97,11 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
         paymentTypeView = View.inflate(this, R.layout.payment_type_layout, null)
         ivPaymentBack = paymentTypeView!!.findViewById(R.id.ivPaymentBack)
-        rbCash = paymentTypeView!!.findViewById(R.id.rbCash)
+        rbCash = paymentTypeView!!.findViewById<RadioButton>(R.id.rbCash)
         rbCredit = paymentTypeView!!.findViewById(R.id.rbCredit)
         rbWallet = paymentTypeView!!.findViewById(R.id.rbWallet)
         rbNoCollection = paymentTypeView!!.findViewById(R.id.rbNoCollection)
         tvReceiptDetails = paymentTypeView!!.findViewById(R.id.tvReceiptDetails)
-
         etAmount = paymentTypeView!!.findViewById(R.id.etAmount)
         btnPaymentEndTask = paymentTypeView!!.findViewById(R.id.btnPaymentEndTask)
 
@@ -112,9 +111,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         rbWallet.setOnClickListener(this)
         rbNoCollection.setOnClickListener(this)
         tvReceiptDetails.setOnClickListener(this)
-
         btnPaymentEndTask.setOnClickListener(this)
-
+        ivCall.setOnClickListener(this)
 
         task = AppConstants.CurrentSelectedTask
         loadTaskDetails(task)
@@ -160,6 +158,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
     private fun loadTaskDetails(task: Task) {
         tvTask.text = task.TaskName
+        tvAgentName.text = task.AgentName
         tvTaskDescription.text = task.TaskDescription
 
         when (task.Status) {
@@ -677,11 +676,14 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                     btnPaymentEndTask.isEnabled = true
                 } else if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
                     var amount = etAmount.text.toString().toDouble()
-                    endTask(
-                        AppConstants.CurrentSelectedTask.TaskId,
-                        1,
-                        amount
-                    )
+                    if (amount <= 0)
+                        Alert.showMessage(getString(R.string.error_total))
+                    else
+                        endTask(
+                            AppConstants.CurrentSelectedTask.TaskId,
+                            1,
+                            amount
+                        )
 
                 } else if (rbWallet.isChecked) {
                     endTask(
@@ -712,6 +714,20 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                 resetAmount()
             }
 
+            R.id.ivCall -> {
+                if(!AppConstants.CurrentSelectedTask.AgentMobile.isNullOrEmpty()) {
+                    Log.d(TAG,AppConstants.CurrentSelectedTask.AgentMobile)
+                    val intent = Intent()
+                    intent.action = Intent.ACTION_DIAL // Action for what intent called for
+                    intent.data =
+                        Uri.parse("tel: ${AppConstants.CurrentSelectedTask.AgentMobile}") // Data with intent respective action on intent
+                    startActivity(intent)
+                    Log.d(TAG,"DONE")
+                }
+                else
+                    Alert.showMessage("This agent has no phone no.")
+            }
+
         }
     }
 
@@ -720,10 +736,10 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
     }
 
     override fun onBackPressed() {
-        if (AppConstants.CurrentEditedTask != null&& !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+        if (AppConstants.CurrentEditedTask != null && !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
             Alert.showMessage(getString(R.string.error_edit_task))
         } else
-        finish()
+            finish()
     }
 
     private fun checkPermissions(): Boolean {

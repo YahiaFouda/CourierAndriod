@@ -127,5 +127,7 @@
     <string name="total">الأجمالى:</string>
     <string name="message_choose">يرجى اختيار نوع الدفع.</string>
     <string name="error_edit_task">لا يمكن إغلاق هذه المهمة ما لم تؤكد التغييرات الجديدة.</string>
+    <string name="agent_name">أسم العميل</string>
+    <string name="error_agent_phone">هذا المشرف ليس لديه رقم الهاتف.</string>
 
 </resources>
