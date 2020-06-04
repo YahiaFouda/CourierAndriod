@@ -143,6 +143,12 @@
     <string name="error_edit_task">This task cant be closed unless you confirm the new changes.Press accept.</string>
     <string name="agent_name">Agent Name</string>
     <string name="error_agent_phone">This agent has no phone no.</string>
+    <string name="error_end">This Task Already Ended Before.</string>
+    <string name="error_wallet">You Don\'t Have enough Balance In Wallet.</string>
+    <string name="error_credit">You don\'t have Credit card in kadabra.</string>
+    <string name="error_confirm">This task can not be closed unless you confirm the new changes.Press accept.</string>
+
+
 
 
 </resources>

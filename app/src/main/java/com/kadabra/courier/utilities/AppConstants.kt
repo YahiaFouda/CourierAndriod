@@ -19,7 +19,11 @@ object AppConstants {
     val DATA = "data"
     val STATUS_SUCCESS = 1
     val STATUS_FAILED = -1
+    val STATUS_FAILED_2 = -2
     val STATUS_INCORRECT_DATA = -3
+    val STATUS_FAILED_4 = -4
+
+
 
     //endregion
     // region CODE RESPONSE

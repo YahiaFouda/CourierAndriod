@@ -129,5 +129,9 @@
     <string name="error_edit_task">لا يمكن إغلاق هذه المهمة ما لم تؤكد التغييرات الجديدة.</string>
     <string name="agent_name">أسم العميل</string>
     <string name="error_agent_phone">هذا المشرف ليس لديه رقم الهاتف.</string>
+    <string name="error_end">هذه المهمة انتهت بالفعل من قبل.</string>
+    <string name="error_wallet">ليس لديك رصيد كافٍ في المحفظة.</string>
+    <string name="error_credit">ليس لديك بطاقة ائتمان في الكادبرا</string>
+    <string name="error_confirm">لا يمكن إغلاق هذه المهمة ما لم تؤكد التغييرات الجديدة.</string>
 
 </resources>

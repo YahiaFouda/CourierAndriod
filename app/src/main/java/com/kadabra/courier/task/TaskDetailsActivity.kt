@@ -428,14 +428,40 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                         btnPaymentEndTask.isEnabled = true
                         finish()
 
-                    } else {
+                    } else if (response.Status == AppConstants.STATUS_FAILED)  // -1  "this task already ended before"
+                    {
                         Alert.hideProgress()
                         Alert.showMessage(
                             this@TaskDetailsActivity,
-                            getString(R.string.error_network)
+                            getString(R.string.error_end)
+                        )
+                        btnPaymentEndTask.isEnabled = true
+                    } else if (response.Status == AppConstants.STATUS_FAILED_2) //-2  An Error Occured
+                    {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskDetailsActivity,
+                            getString(R.string.error_login_server_unknown_error)
+                        )
+                        btnPaymentEndTask.isEnabled = true
+                    } else if (response.Status == AppConstants.STATUS_INCORRECT_DATA) //-3  you don't have enough balance in wallet
+                    {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskDetailsActivity,
+                            getString(R.string.error_wallet)
+                        )
+                        btnPaymentEndTask.isEnabled = true
+                    } else if (response.Status == AppConstants.STATUS_FAILED_4) //-4  you don't have Credit card in kadabra
+                    {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskDetailsActivity,
+                            getString(R.string.error_credit)
                         )
                         btnPaymentEndTask.isEnabled = true
                     }
+
 
                 }
             })
@@ -627,8 +653,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
             R.id.ivBack -> {
                 if (!AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
-                    Alert.showMessage("This task cant be closed unless you confirm the new changes.Press accept.")
-
+                    Alert.showMessage(getString(R.string.error_confirm))
                 } else
                     finish()
             }
@@ -715,16 +740,15 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
             }
 
             R.id.ivCall -> {
-                if(!AppConstants.CurrentSelectedTask.AgentMobile.isNullOrEmpty()) {
-                    Log.d(TAG,AppConstants.CurrentSelectedTask.AgentMobile)
+                if (!AppConstants.CurrentSelectedTask.AgentMobile.isNullOrEmpty()) {
+                    Log.d(TAG, AppConstants.CurrentSelectedTask.AgentMobile)
                     val intent = Intent()
                     intent.action = Intent.ACTION_DIAL // Action for what intent called for
                     intent.data =
                         Uri.parse("tel: ${AppConstants.CurrentSelectedTask.AgentMobile}") // Data with intent respective action on intent
                     startActivity(intent)
-                    Log.d(TAG,"DONE")
-                }
-                else
+                    Log.d(TAG, "DONE")
+                } else
                     Alert.showMessage("This agent has no phone no.")
             }
 
@@ -947,6 +971,8 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                         )
                         finish()
 
+
+                    } else if (response.Status == AppConstants.STATUS_SUCCESS) {
 
                     } else {
                         Alert.hideProgress()

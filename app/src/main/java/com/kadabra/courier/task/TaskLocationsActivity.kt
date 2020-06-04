@@ -185,22 +185,20 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                     alertDialog!!.dismiss()
             }
             R.id.btnPaymentEndTask -> {
-                btnPaymentEndTask.isEnabled=false
-                if(!rbCash.isChecked&&!rbWallet.isChecked&&!rbCredit.isChecked&&!rbNoCollection.isChecked)
-                {
+                btnPaymentEndTask.isEnabled = false
+                if (!rbCash.isChecked && !rbWallet.isChecked && !rbCredit.isChecked && !rbNoCollection.isChecked) {
                     Alert.showMessage(getString(R.string.message_choose))
-                    btnPaymentEndTask.isEnabled=true
-                }
-                else if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
+                    btnPaymentEndTask.isEnabled = true
+                } else if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
                     var amount = etAmount.text.toString().toDouble()
-                    if(amount<=0)
+                    if (amount <= 0)
                         Alert.showMessage(getString(R.string.error_agent_phone))
                     else
-                    endTask(
-                        AppConstants.CurrentSelectedTask,
-                        1,
-                        amount
-                    )
+                        endTask(
+                            AppConstants.CurrentSelectedTask,
+                            1,
+                            amount
+                        )
                 } else if (rbWallet.isChecked) {
                     endTask(
                         AppConstants.CurrentSelectedTask,
@@ -925,8 +923,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         runOnUiThread {
                             Alert.hideProgress()
                         }
-                    } else
-                    {
+                    } else {
                         runOnUiThread {
                             Alert.hideProgress()
                             Alert.showMessage(this@TaskLocationsActivity, "Can't find a way there.")
@@ -1749,11 +1746,11 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         this@TaskLocationsActivity,
                         getString(R.string.error_login_server_unknown_error)
                     )
-                    btnPaymentEndTask.isEnabled=true
+                    btnPaymentEndTask.isEnabled = true
                 }
 
                 override fun onSuccess(response: ApiResponse<Task>) {
-                    if (response.Status == AppConstants.STATUS_SUCCESS) {
+                    if (response.Status == AppConstants.STATUS_SUCCESS) { //1 sucess
 
                         FirebaseManager.endTask(
                             AppConstants.CurrentSelectedTask,
@@ -1772,17 +1769,41 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         AppConstants.endTask = true
                         //load new task or shoe empty tasks view
                         Alert.hideProgress()
-                        btnPaymentEndTask.isEnabled=true
+                        btnPaymentEndTask.isEnabled = true
                         startActivity(Intent(this@TaskLocationsActivity, TaskActivity::class.java))
                         finish()
 
-                    } else {
+                    } else if (response.Status == AppConstants.STATUS_FAILED)  // -1  "this task already ended before"
+                    {
                         Alert.hideProgress()
                         Alert.showMessage(
                             this@TaskLocationsActivity,
-                            getString(R.string.error_network)
+                            getString(R.string.error_end))
+                        btnPaymentEndTask.isEnabled = true
+                    } else if (response.Status == AppConstants.STATUS_FAILED_2) //-2  An Error Occured
+                    {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskLocationsActivity,
+                            getString(R.string.error_login_server_unknown_error)
                         )
-                        btnPaymentEndTask.isEnabled=true
+                        btnPaymentEndTask.isEnabled = true
+                    } else if (response.Status == AppConstants.STATUS_INCORRECT_DATA) //-3  you don't have enough balance in wallet
+                    {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskLocationsActivity,
+                            getString(R.string.error_wallet)
+                        )
+                        btnPaymentEndTask.isEnabled = true
+                    } else if (response.Status == AppConstants.STATUS_FAILED_4) //-4  you don't have Credit card in kadabra
+                    {
+                        Alert.hideProgress()
+                        Alert.showMessage(
+                            this@TaskLocationsActivity,
+                           getString(R.string.error_credit)
+                        )
+                        btnPaymentEndTask.isEnabled = true
                     }
 
                 }
@@ -1794,7 +1815,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 this@TaskLocationsActivity,
                 getString(R.string.no_internet)
             )
-            btnPaymentEndTask.isEnabled=true
+            btnPaymentEndTask.isEnabled = true
         }
 
 
