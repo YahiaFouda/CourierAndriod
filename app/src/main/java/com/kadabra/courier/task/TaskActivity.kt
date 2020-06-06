@@ -52,6 +52,7 @@ import kotlinx.android.synthetic.main.activity_task.avi
 import kotlinx.android.synthetic.main.activity_task.ivNoInternet
 import kotlinx.android.synthetic.main.activity_task.refresh
 import kotlinx.android.synthetic.main.activity_task.tvEmptyData
+import java.lang.Exception
 
 
 class TaskActivity : BaseNewActivity(), View.OnClickListener,
@@ -90,7 +91,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var lang = ""
     private var tvNotificationCounter: TextView? = null
     private lateinit var ivNotification: ImageView
-    private lateinit var tvWallet:TextView
+    private lateinit var tvWallet: TextView
     var total = 0
     var treasury = 0.0
 
@@ -1076,12 +1077,18 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
                 override fun onSuccess(response: ApiResponse<Double?>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
-                        if (response.ResponseObj!=null)
-                        {   treasury = response.ResponseObj!!
-                            AppConstants.CurrentLoginCourier.TreasuryValue=treasury
-                            UserSessionManager.getInstance(this@TaskActivity).setUserData( AppConstants.CurrentLoginCourier)
-                            setMenuWallet(R.id.nav_wallet, treasury.toString())
-                            hideProgress()}
+                        try {
+                            if (response.ResponseObj != null) {
+                                treasury = response.ResponseObj!!
+                                AppConstants.CurrentLoginCourier.TreasuryValue = treasury
+                                UserSessionManager.getInstance(this@TaskActivity)
+                                    .setUserData(AppConstants.CurrentLoginCourier)
+                                setMenuWallet(R.id.nav_wallet, treasury.toString())
+                                hideProgress()
+                            }
+                        } catch (ex: Exception) {
+                            Log.d(TAG, ex.message)
+                        }
 
                     } else {
                         hideProgress()
@@ -1104,14 +1111,15 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         }
     }
 
-    private fun setMenuWallet(  itemId: Int, amount: String) {
-        var item  = navigationView?.menu?.findItem(itemId)
-        var tvWallet=MenuItemCompat.getActionView(item).findViewById<TextView>(R.id.textMenuItemCount)
-        Log.d(TAG,"amount: $amount")
+    private fun setMenuWallet(itemId: Int, amount: String) {
+        var item = navigationView?.menu?.findItem(itemId)
+        var tvWallet =
+            MenuItemCompat.getActionView(item).findViewById<TextView>(R.id.textMenuItemCount)
+        Log.d(TAG, "amount: $amount")
         if (!amount.trim().isNullOrEmpty())
-            tvWallet.text = amount +" " + getString(R.string.le)
+            tvWallet.text = amount + " " + getString(R.string.le)
         else
-            tvWallet.text =  0.toString() +" " + getString(R.string.le)
+            tvWallet.text = 0.toString() + " " + getString(R.string.le)
 
     }
 
