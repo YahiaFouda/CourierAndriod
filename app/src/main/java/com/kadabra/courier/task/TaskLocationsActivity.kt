@@ -299,6 +299,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 if (isFirstTime) {
 
                     if (AppConstants.currentSelectedStop != null && !AppConstants.currentSelectedStop.StopID.isNullOrEmpty()) { // destination stop
+                        Log.d(TAG, "Load: Stop Area")
+                        Log.d(TAG, "Load:"+AppConstants.currentSelectedStop.StopID)
+
+
                         btnStart.visibility = View.GONE
                         if (lastLocation != null && !AppConstants.currentSelectedStop.StopID.isNullOrEmpty()) {
 
@@ -330,12 +334,15 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                         }
 
-                    } else if (intent.getBooleanExtra(  // starting task
-                            "startTask",
-                            true
-                        ) && (!AppConstants.CurrentSelectedTask.IsStarted || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty())
-                    ) // Courier  start  journey from details view
+                    } else if (intent.hasExtra("editTAskId") || !AppConstants.CurrentSelectedTask.IsStarted || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty())
+                     // Courier  start  journey from details view
                     {
+                        Log.d(TAG, "Load: Edit Stop Area")
+                        Log.d(TAG, "Load:"+AppConstants.CurrentSelectedTask.IsStarted)
+                        Log.d(TAG, "Load:"+AppConstants.CurrentSelectedTask.TaskId)
+                        Log.d(TAG, "Load:"+AppConstants.CurrentEditedTask.TaskId)
+                        Log.d(TAG, "Load:"+AppConstants.CurrentEditedTask.IsStarted)
+
 
                         map.isMyLocationEnabled = false
 

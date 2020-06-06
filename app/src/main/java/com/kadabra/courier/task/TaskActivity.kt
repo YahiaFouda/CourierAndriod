@@ -1076,7 +1076,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
                 override fun onSuccess(response: ApiResponse<Double?>) {
                     if (response.Status == AppConstants.STATUS_SUCCESS) {
-                        if (response.ResponseObj!=null&&response.ResponseObj!! > 0.0)
+                        if (response.ResponseObj!=null)
                         {   treasury = response.ResponseObj!!
                             AppConstants.CurrentLoginCourier.TreasuryValue=treasury
                             UserSessionManager.getInstance(this@TaskActivity).setUserData( AppConstants.CurrentLoginCourier)

@@ -283,7 +283,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
                             hideProgress()
                             task = response.ResponseObj!!
                             AppConstants.CurrentSelectedTask = task
-//                            AppConstants.CurrentEditedTask = task
+                            AppConstants.CurrentEditedTask=task
                             loadTaskDetails(task)
 
                         } else {
@@ -549,6 +549,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
         )
 
         if (intent.hasExtra("editTAskId") || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty()) {
+            Log.d(TAG,"editTAskId:$AppConstants.CurrentEditedTask.TaskId")
             var taskId =
                 AppConstants.CurrentEditedTask.TaskId// intent.getStringExtra("editTAskId")
             if (!taskId.isNullOrEmpty()) {
@@ -557,7 +558,7 @@ class TaskDetailsActivity : BaseNewActivity(), View.OnClickListener, ILocationLi
 
             }
         } else if (!AppConstants.CurrentSelectedTask.TaskId.isNullOrEmpty()) {
-            loadTaskDetails(AppConstants.CurrentSelectedTask)
+            getTaskDetails(AppConstants.CurrentSelectedTask.TaskId)
             Log.d(TAG, "ON RESUME")
         }
 
