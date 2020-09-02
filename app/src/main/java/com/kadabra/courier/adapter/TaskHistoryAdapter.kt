@@ -21,7 +21,7 @@ import com.kadabra.courier.R
 import com.kadabra.courier.location.Location
 import com.kadabra.courier.location.LocationHelper
 import com.kadabra.courier.utilities.Alert
-import com.reach.plus.admin.util.UserSessionManager
+import com.kadabra.courier.utilities.UserSessionManager
 
 
 /**

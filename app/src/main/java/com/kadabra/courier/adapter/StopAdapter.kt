@@ -24,7 +24,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.kadabra.courier.location.LocationHelper
-import com.reach.plus.admin.util.UserSessionManager
+import com.kadabra.courier.utilities.UserSessionManager
 
 
 /**

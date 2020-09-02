@@ -61,7 +61,7 @@ import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
 import com.kadabra.courier.utilities.UtilHelper
-import com.reach.plus.admin.util.UserSessionManager
+import com.kadabra.courier.utilities.UserSessionManager
 import kotlinx.android.synthetic.main.activity_location_details.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -189,8 +189,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                 if (!rbCash.isChecked && !rbWallet.isChecked && !rbCredit.isChecked && !rbNoCollection.isChecked) {
                     Alert.showMessage(getString(R.string.message_choose))
                     btnPaymentEndTask.isEnabled = true
-                } else if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString().toDouble() > 0.0) {
-                    var amount = etAmount.text.toString().toDouble()
+                } else if (rbCash.isChecked && !etAmount.text.isNullOrEmpty() && etAmount.text.toString()
+                        .toDouble() > 0.0
+                ) {
+                    val amount = etAmount.text.toString().toDouble()
                     if (amount <= 0)
                         Alert.showMessage(getString(R.string.error_agent_phone))
                     else
@@ -300,7 +302,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                     if (AppConstants.currentSelectedStop != null && !AppConstants.currentSelectedStop.StopID.isNullOrEmpty()) { // destination stop
                         Log.d(TAG, "Load: Stop Area")
-                        Log.d(TAG, "Load:"+AppConstants.currentSelectedStop.StopID)
+                        Log.d(TAG, "Load:" + AppConstants.currentSelectedStop.StopID)
 
 
                         btnStart.visibility = View.GONE
@@ -335,13 +337,13 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         }
 
                     } else if (intent.hasExtra("editTAskId") || !AppConstants.CurrentSelectedTask.IsStarted || !AppConstants.CurrentEditedTask.TaskId.isNullOrEmpty())
-                     // Courier  start  journey from details view
+                    // Courier  start  journey from details view
                     {
                         Log.d(TAG, "Load: Edit Stop Area")
-                        Log.d(TAG, "Load:"+AppConstants.CurrentSelectedTask.IsStarted)
-                        Log.d(TAG, "Load:"+AppConstants.CurrentSelectedTask.TaskId)
-                        Log.d(TAG, "Load:"+AppConstants.CurrentEditedTask.TaskId)
-                        Log.d(TAG, "Load:"+AppConstants.CurrentEditedTask.IsStarted)
+                        Log.d(TAG, "Load:" + AppConstants.CurrentSelectedTask.IsStarted)
+                        Log.d(TAG, "Load:" + AppConstants.CurrentSelectedTask.TaskId)
+                        Log.d(TAG, "Load:" + AppConstants.CurrentEditedTask.TaskId)
+                        Log.d(TAG, "Load:" + AppConstants.CurrentEditedTask.IsStarted)
 
 
                         map.isMyLocationEnabled = false
@@ -513,6 +515,23 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
         map.setOnPolylineClickListener(this)
 
 
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
         fusedLocationClient.lastLocation.addOnSuccessListener(this) { location ->
 
             // Got last known location. In some rare situations this can be null.
@@ -1015,6 +1034,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                         var data = dist?.split(" km").toString()
                         var value = dist?.split(" km").toString().trim()[0].toInt()
+                        totalKilometers = 0
                         totalKilometers =
                             conevrtMetersToKilometers(response.body()?.routes?.get(0)?.legs?.get(0)?.distance?.value!!.toLong())
                         totalDistanceValue =
@@ -1031,7 +1051,10 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                         runOnUiThread {
                             Alert.hideProgress()
+                            if (totalKilometers > 6)
+                                totalKilometers += 2
                             startTrip(AppConstants.CurrentSelectedTask, totalKilometers.toFloat())
+//                            startTrip(AppConstants.CurrentSelectedTask, totalKilometers+2.toFloat())
                         }
                     } else
                         runOnUiThread {
@@ -1630,18 +1653,25 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
 
                         override fun onSuccess(response: ApiResponse<Task>) {
                             if (response.Status == AppConstants.STATUS_SUCCESS) {
-                                var task = response.ResponseObj!!
-                                captureScreen(map, task.TaskId)
-                                task.IsStarted = true
-                                AppConstants.CurrentAcceptedTask = task
-                                AppConstants.CurrentSelectedTask = task
-                                AppConstants.CurrentEditedTask = Task()
-                                AppConstants.COURIERSTARTTASK = true
-                                startTaskFirebase(task, AppConstants.CurrentLoginCourier.CourierId)
-                                Log.d(TAG, "START TASK READY TO END")
-                                Alert.hideProgress()
-                                btnStart.text = getString(R.string.end_task)
-                                map.isMyLocationEnabled = true
+                                try {
+                                    var task = response.ResponseObj!!
+                                    captureScreen(map, task.TaskId)
+                                    task.IsStarted = true
+                                    AppConstants.CurrentAcceptedTask = task
+                                    AppConstants.CurrentSelectedTask = task
+                                    AppConstants.CurrentEditedTask = Task()
+                                    AppConstants.COURIERSTARTTASK = true
+                                    startTaskFirebase(
+                                        task,
+                                        AppConstants.CurrentLoginCourier.CourierId
+                                    )
+                                    Log.d(TAG, "START TASK READY TO END")
+                                    Alert.hideProgress()
+                                    btnStart.text = getString(R.string.end_task)
+                                    map.isMyLocationEnabled = true
+                                } catch (ex: Exception) {
+                                    Log.d(TAG, ex.message)
+                                }
                             } else {
                                 Log.d(TAG, "Some thing is wrong." + (response.Status.toString()))
                                 Alert.hideProgress()
@@ -1785,7 +1815,8 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         Alert.hideProgress()
                         Alert.showMessage(
                             this@TaskLocationsActivity,
-                            getString(R.string.error_end))
+                            getString(R.string.error_end)
+                        )
                         btnPaymentEndTask.isEnabled = true
                     } else if (response.Status == AppConstants.STATUS_FAILED_2) //-2  An Error Occured
                     {
@@ -1808,7 +1839,7 @@ class TaskLocationsActivity : BaseNewActivity(), OnMapReadyCallback,
                         Alert.hideProgress()
                         Alert.showMessage(
                             this@TaskLocationsActivity,
-                           getString(R.string.error_credit)
+                            getString(R.string.error_credit)
                         )
                         btnPaymentEndTask.isEnabled = true
                     }

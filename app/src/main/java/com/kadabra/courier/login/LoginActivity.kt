@@ -8,7 +8,7 @@ import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import com.google.android.gms.location.*
-import com.reach.plus.admin.util.UserSessionManager
+import com.kadabra.courier.utilities.UserSessionManager
 import com.kadabra.Networking.INetworkCallBack
 import com.kadabra.Networking.NetworkManager
 import com.kadabra.courier.R
@@ -86,10 +86,10 @@ class LoginActivity : BaseNewActivity(), View.OnClickListener, ILocationListener
             R.id.btnLogin -> {
                 if (validateData()) {
                     hideKeyboard(btnLogin)
-                    var userName = etUsername.text.toString()
+                    val userName = etUsername.text.trim().toString()
                     userCustomEmail = ""
                     userCustomEmail = "$userName@gmail.com"
-                    var password = etPassword.text.toString()
+                    val password = etPassword.text.trim().toString()
 //                    etUsername.isFocusable=false
                     logIn(userName, password)
 //                    LocationHelper.shared.stopUpdateLocation()

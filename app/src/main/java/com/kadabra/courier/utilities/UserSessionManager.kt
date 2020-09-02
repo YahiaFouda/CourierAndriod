@@ -1,4 +1,4 @@
-package com.reach.plus.admin.util
+package com.kadabra.courier.utilities
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -8,7 +8,6 @@ import com.kadabra.courier.firebase.FirebaseManager
 import com.kadabra.courier.model.Courier
 import com.kadabra.courier.model.Notification
 import com.kadabra.courier.model.Task
-import com.kadabra.courier.utilities.AppConstants
 
 
 class UserSessionManager(val context: Context) {

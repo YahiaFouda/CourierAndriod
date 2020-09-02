@@ -46,7 +46,7 @@ import com.kadabra.courier.model.TaskData
 import com.kadabra.courier.notifications.NotificationActivity
 import com.kadabra.courier.services.LocationUpdatesService
 import com.kadabra.courier.utilities.*
-import com.reach.plus.admin.util.UserSessionManager
+import com.kadabra.courier.utilities.UserSessionManager
 import kotlinx.android.synthetic.main.activity_task.*
 import kotlinx.android.synthetic.main.activity_task.avi
 import kotlinx.android.synthetic.main.activity_task.ivNoInternet
@@ -73,6 +73,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     private var lastLocation: Location? = null
     private var courier: Courier = Courier()
     private var myReceiver: MyReceiver? = null
+
     // A reference to the service used to get location updates.
 //    private var mService: LocationUpdatesService? = null
     // Tracks the bound state of the service.
@@ -142,7 +143,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
 
         tvTimer.visibility = View.INVISIBLE
 
-        chooseLanguageWindow()
+        showLanguageWindow()
 
         refresh.setOnRefreshListener {
             Log.d(TAG, "loadTasks- refresh.setOnRefreshListener")
@@ -804,7 +805,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
                 if (alertDialog != null)
                     alertDialog?.show()
                 else {
-                    chooseLanguageWindow()
+                    showLanguageWindow()
                     alertDialog?.show()
                 }
             }
@@ -945,6 +946,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     }
 
     private fun buildAlertMessageNoGps() {
+
         val builder = AlertDialog.Builder(this)
         builder.setMessage(getString(R.string.error_gps_required))
             .setCancelable(false)
@@ -955,6 +957,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             }
         val alert = builder.create()
         alert.show()
+
     }
 
     private fun getLocationPermission() {
@@ -971,9 +974,9 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
             Log.d(TAG, "loadTasks - getLocationPermission-mLocationPermissionGranted")
             mLocationPermissionGranted = true
             loadTasks()
-//            getCurrentActiveTask()
+//          getCurrentActiveTask()
             getCurrentCourierLocation()
-//            forceUpdate()
+//          forceUpdate()
 
         } else {
             ActivityCompat.requestPermissions(
@@ -1005,6 +1008,9 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         }
     }
 
+
+
+
     private fun isLocationServiceRunning(): Boolean {
         val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
         for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
@@ -1017,7 +1023,7 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
         return false
     }
 
-    private fun chooseLanguageWindow() {
+    private fun showLanguageWindow() {
 
         var alert = AlertDialog.Builder(this)
         alertDialog = alert.create()
@@ -1112,14 +1118,14 @@ class TaskActivity : BaseNewActivity(), View.OnClickListener,
     }
 
     private fun setMenuWallet(itemId: Int, amount: String) {
-        var item = navigationView?.menu?.findItem(itemId)
+        val item = navigationView?.menu?.findItem(itemId)
         var tvWallet =
             MenuItemCompat.getActionView(item).findViewById<TextView>(R.id.textMenuItemCount)
         Log.d(TAG, "amount: $amount")
-        if (!amount.trim().isNullOrEmpty())
-            tvWallet.text = amount + " " + getString(R.string.le)
-        else
-            tvWallet.text = 0.toString() + " " + getString(R.string.le)
+//        if (!amount.trim().isNullOrEmpty())
+//            tvWallet.text = amount + " " + getString(R.string.le)
+//        else
+//            tvWallet.text = 0.toString() + " " + getString(R.string.le)
 
     }
 

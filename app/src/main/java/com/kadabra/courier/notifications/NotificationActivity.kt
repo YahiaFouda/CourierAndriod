@@ -20,7 +20,7 @@ import com.kadabra.courier.model.NotificationData
 import com.kadabra.courier.utilities.Alert
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
-import com.reach.plus.admin.util.UserSessionManager
+import com.kadabra.courier.utilities.UserSessionManager
 import kotlinx.android.synthetic.main.activity_notification.*
 import kotlinx.android.synthetic.main.activity_notification.avi
 import kotlinx.android.synthetic.main.activity_notification.ivNoInternet

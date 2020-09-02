@@ -4,7 +4,7 @@ import android.annotation.TargetApi
 import android.content.Context
 import android.os.Build
 import android.preference.PreferenceManager
-import com.reach.plus.admin.util.UserSessionManager
+import com.kadabra.courier.utilities.UserSessionManager
 import java.util.*
 
 object LocalizationHelper {

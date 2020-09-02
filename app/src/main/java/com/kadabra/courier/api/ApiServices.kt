@@ -16,7 +16,11 @@ import retrofit2.http.Query
 interface ApiServices {
 
     @GET(AppConstants.URL_LOGIN)
-    fun logIn(@Query("userName") userName: String, @Query("password") password: String, @Query("deviceType") deviceType: Int)
+    fun logIn(
+        @Query("userName") userName: String,
+        @Query("password") password: String,
+        @Query("deviceType") deviceType: Int
+    )
             : Call<ApiResponse<Courier>>
 
     @POST(AppConstants.URL_UPDATE_LANGUAGE)
@@ -57,8 +61,13 @@ interface ApiServices {
     @POST(AppConstants.URL_END_TAKS)
     fun endTask(@Query("taskId") taskID: String)
             : Call<ApiResponse<Task>>
+
     @POST(AppConstants.URL_END_TAKS)
-    fun endTask(@Query("taskId") taskID: String,@Query("paymentmethod") paymentType: Int,@Query("treasury") amount: Double)
+    fun endTask(
+        @Query("taskId") taskID: String,
+        @Query("paymentmethod") paymentType: Int,
+        @Query("treasury") amount: Double
+    )
             : Call<ApiResponse<Task>>
 
     @GET(AppConstants.URL_GET_RECEIPT_DATA)

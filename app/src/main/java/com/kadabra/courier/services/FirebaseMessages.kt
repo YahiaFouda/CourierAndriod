@@ -24,7 +24,7 @@ import com.kadabra.courier.login.LoginActivity
 import com.kadabra.courier.task.TaskActivity
 import com.kadabra.courier.utilities.AppConstants
 import com.kadabra.courier.utilities.AppController
-import com.reach.plus.admin.util.UserSessionManager
+import com.kadabra.courier.utilities.UserSessionManager
 import java.util.Objects
 
 class FirebaseMessages : FirebaseMessagingService() {
